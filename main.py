@@ -6,6 +6,9 @@ import time
 from parameters import DATA
 from concurrent.futures import ThreadPoolExecutor
 from threading import current_thread
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 
 class WQSession(requests.Session):
     def __init__(self, json_fn='credentials.json'):
@@ -16,6 +19,7 @@ class WQSession(requests.Session):
         self.json_fn = json_fn
         self.login()
         old_get, old_post = self.get, self.post
+
         def new_get(*args, **kwargs):
             try:    return old_get(*args, **kwargs)
             except: return new_get(*args, **kwargs)
@@ -31,7 +35,7 @@ class WQSession(requests.Session):
             creds = json.loads(f.read())
             email, password = creds['email'], creds['password']
             self.auth = (email, password)
-            r = self.post('https://api.worldquantbrain.com/authentication')
+            r = self.post('https://api.worldquantbrain.com/authentication', verify=False)
         if 'user' not in r.json():
             if 'inquiry' in r.json():
                 input(f"Please complete biometric authentication at {r.url}/persona?inquiry={r.json()['inquiry']} before continuing...")
