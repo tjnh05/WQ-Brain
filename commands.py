@@ -1,4 +1,10 @@
+import os
+import re
+
 from database import *
+import pandas as pd
+from functools import lru_cache
+
 
 def from_wq_1():
     commands = []
@@ -16,8 +22,9 @@ def from_wq_1():
                             commands.append(command)
     return commands
 
+
 def from_wq_2():
-    return [
+    commands = [
         'group_neutralize(volume/(ts_sum(volume,60)/60),sector)',
         'ts_step(20)*volume/(ts_sum(volume,60)/60)',
         'rank(close+ts_product(close, 5)^(0.2))',
@@ -34,12 +41,46 @@ def from_wq_2():
         '-rank(close-ts_max(high,5))/(ts_max(high,5)-ts_min(low,5))'
     ]
 
+    return commands
+
+
+def from_events():
+    # 增加事件条件
+    event_factors = [
+        'trade_when(earning_surprise>0.1, rank(volume), 0)',
+        'if(insider_buy>1e6, ts_delta(close,3), NaN)'
+    ]
+
+    return event_factors
+
+
+@lru_cache(maxsize=100)
+def from_sentiment():
+    """
+    新闻情绪衍生因子
+    """
+    return [
+        # 基础情绪指标
+        'ts_mean(news_sentiment, 5)',
+        'ts_delta(social_volume, 3)',
+
+        # 情绪与价格相关性
+        'ts_corr(news_sentiment, returns, 20)',
+        'group_neutralize(ts_regression(close, news_sentiment, 10).beta, industry)',
+
+        # 情绪事件驱动
+        'trade_when(news_sentiment>0.8, rank(volume), 0)',
+        'if(ts_arg_max(social_volume,5)<3, ts_mean(close,5), NaN)'
+    ]
+
+
 def from_wq_3():
     return sum([[
         *[f'{op}(pasteurize({p1}/{p2}, {d}))' for op in OP_one for d in [2, 3, 5, 7]],
         *[f'-ts_mean({p1}, {d1})*rank(sigmoid(ts_mean({p2}, {d2})))' for d1 in [17, 23] for d2 in [30, 60]],
         *[f'-(power(ts_mean({p1} - {p2}, {d}), {p}) / (power(ts_mean(high - low, {d}), {p}) + {eps}))' for eps in [0.001, 0.005] for d in [13, 17, 19] for p in [1.5, 1.7, 1.9]],
-        *[f'power(rank(-returns*adv20*vwap*({p1} - {p2}))*rank(-returns*adv20*vwap*(open - low)), {p})*rank(-(close - ts_mean(close, {d})))' for d in [30, 45, 60] for p in [1.5, 1.7, 1.9]]
+        *[f'power(rank(-returns*adv20*vwap*({p1} - {p2}))*rank(-returns*adv20*vwap*(open - low)), {p})*rank(-(close - ts_mean(close, {d})))' for d in [30, 45, 60] for p in [1.5, 1.7, 1.9]],
+        *[f'ts_corr({p1}, news_sentiment, {d})' for d in [10, 20, 60]]
     ] for p1 in PRICES for p2 in PRICES if p1 != p2], start=[])
 
 def scale_and_corr():
@@ -192,6 +233,103 @@ def sample_3():
                     commands.append(command)
     return commands
 
+
+# 在sample_1()基础上增加非线性组合
+def enhanced_sample(mode='both'):
+    base = {
+        'mode1': sample_1(),
+        'mode2': sample_2(),
+        'both': sample_1()+sample_2()
+    }[mode]
+    # return [f"tanh({cmd})" for cmd in base] + [f"sigmoid({cmd})" for cmd in base]
+    return [f"tanh({cmd})" for cmd in base]
+
+
+class SentimentFactorGenerator:
+    def __init__(self):
+        self.base_features = SENTIMENT_FEATURES
+
+    def generate(self):
+        return [
+            f'ts_rank({feat}, 10)'
+            for feat in self.base_features
+        ]
+
+
+# commands.py 增加稳定性处理
+def add_stability(factors):
+    """为因子添加稳定性增强"""
+    return [
+        f"0.7*{f} + 0.3*ts_mean({f},20)"  # 加入均值回复项
+        for f in factors
+    ]
+
+
+def ts_remove_duplicates(factors):
+    """基于表达式字符串的精确去重（保留首次出现顺序）"""
+    seen = set()
+    return [f for f in factors if not (f in seen or seen.add(f))]
+
+
+# 在commands.py中添加以下函数
+def filter_blacklisted_factors(factors, blacklist_ops=None):
+    """根据操作符黑名单过滤因子"""
+    if blacklist_ops is None:
+        blacklist_ops = BLACKLIST_OPERATORS  # 使用预设黑名单
+
+    safe_factors = []
+    for factor in factors:
+        # 提取所有操作符
+        used_ops = set(re.findall(r'\b([a-zA-Z_]\w*?)\(', factor))
+        # 检测黑名单
+        if not used_ops & blacklist_ops:
+            safe_factors.append(factor)
+        else:
+            print(f'过滤禁用因子: {factor}')
+    return safe_factors
+
+
+def validate_factor_syntax(factor):
+    # 先进行黑名单检测
+    used_ops = set(re.findall(r'(\w+)\(', factor))
+    blacklisted = used_ops & BLACKLIST_OPERATORS
+    if blacklisted:
+        raise ValueError(f'因子 {factor} 包含禁用操作符: {blacklisted}')
+
+    # 原有白名单校验
+    invalid_ops = used_ops - VALID_OPERATORS
+    if invalid_ops:
+        raise ValueError(f'因子 {factor} 包含无效操作符: {invalid_ops}')
+
+
+def main():
+    funcs = [from_arxiv, scale_and_corr, from_wq_1, from_wq_2, from_wq_3, sample_1, sample_2, sample_3,
+             from_events, from_sentiment]
+    # funcs = [from_arxiv]
+
+    # 生成所有预设因子
+    all_factors = []
+    for func in funcs:
+        all_factors.extend(func())
+
+    # 添加sentiment类因子
+    sent_gen = SentimentFactorGenerator()
+    all_factors.extend(sent_gen.generate())
+
+    # 初步筛选流程
+    all_factors = ts_remove_duplicates(all_factors)  # 去重
+
+    # 去除包含黑名单操作符的因子
+    all_factors = filter_blacklisted_factors(all_factors)
+
+    # 添加语法校验
+    for f in all_factors:
+        validate_factor_syntax(f)
+
+    # 保存到CSV便于后续分析
+    file_name = 'factor_library.csv'
+    pd.DataFrame({'factor': all_factors}).to_csv(file_name, index=False)
+
+
 if __name__ == '__main__':
-    funcs = [scale_and_corr, from_wq_1, from_wq_2, from_wq_3, from_arxiv, sample_1, sample_2, sample_3]
-    [print(f.__name__, len(f())) for f in funcs]
+    main()

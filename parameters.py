@@ -8,13 +8,5 @@ DATA = [{
     'delay': 1,
     'universe': 'TOP3000',
     'region': 'USA',
-    'code': 'open + close'
-}, {
-    'neutralization': 'SECTOR',
-    'decay': 10,
-    'truncation': 0.1,
-    'delay': 1,
-    'universe': 'TOP3000',
-    'region': 'CHN',
-    'code': 'open - close'
+    'code': '(rank(ts_arg_max(signed_power(((returns < 0) ? ts_std_dev(returns, 20) : close), 2.), 5)) -0.5)'
 }]
