@@ -159,8 +159,17 @@ class WQSession(requests.Session):
         return [sim for sim in data if sim not in self.rows_processed]
 
 if __name__ == '__main__':
+    # 从factor_library.csv中读取数据
+    with open('factor_library.csv', 'r') as csvfile:
+        reader = csv.reader(csvfile)
+        next(reader)  # 跳过第一行
+        DATA = [{'code': row[0]} for row in reader]  # 将第一列作为code
+
     TOTAL_ROWS = len(DATA)
     while DATA:
         wq = WQSession()
-        print(f'{TOTAL_ROWS-len(DATA)}/{TOTAL_ROWS} alpha simulations...')
+        print(f'{TOTAL_ROWS - len(DATA)}/{TOTAL_ROWS} alpha simulations...')
         DATA = wq.simulate(DATA)
+        if not DATA:
+            break
+
