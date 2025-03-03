@@ -57,7 +57,7 @@ class WQSession(requests.Session):
             universe = simulation.get('universe', 'TOP3000')
             truncation = simulation.get('truncation', 0.1)
             region = simulation.get('region', 'USA')
-            decay = simulation.get('decay', 6)
+            decay = simulation.get('decay', 8)
             neutralization = simulation.get('neutralization', 'SUBINDUSTRY').upper()
             pasteurization = simulation.get('pasteurization', 'ON')
             nan = simulation.get('nanHandling', 'OFF')

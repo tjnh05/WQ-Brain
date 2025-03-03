@@ -62,7 +62,6 @@ def from_sentiment():
     return [
         # 基础情绪指标
         'ts_mean(news_sentiment, 5)',
-        'ts_delta(social_volume, 3)',
 
         # 情绪与价格相关性
         'ts_corr(news_sentiment, returns, 20)',
@@ -70,7 +69,6 @@ def from_sentiment():
 
         # 情绪事件驱动
         'trade_when(news_sentiment>0.8, rank(volume), 0)',
-        'if(ts_arg_max(social_volume,5)<3, ts_mean(close,5), NaN)'
     ]
 
 
