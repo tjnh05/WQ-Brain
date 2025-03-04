@@ -3,10 +3,15 @@ import logging
 import requests
 import json
 import time
+
+from urllib3.exceptions import NotOpenSSLWarning
+
 from parameters import DATA
 from concurrent.futures import ThreadPoolExecutor
 from threading import current_thread
 import urllib3
+import warnings
+warnings.filterwarnings("ignore", category=NotOpenSSLWarning)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
@@ -152,7 +157,7 @@ class WQSession(requests.Session):
                     'subsharpe', 'correlation', 'universe', 'link', 'code'
                 ]
                 writer.writerow(header)
-                with ThreadPoolExecutor(max_workers=10) as executor: # 10 threads, only 3 can go in concurrently so this is no harm
+                with ThreadPoolExecutor(max_workers=2) as executor: # 10 threads, only 3 can go in concurrently so this is no harm
                     _ = executor.map(lambda sim: process_simulation(writer, f, sim), data)
         except Exception as e:
             print(f'Issue occurred! {type(e).__name__}: {e}')

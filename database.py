@@ -25,7 +25,6 @@ TS_OP_1D1P = [
     'ts_product', 'ts_std_dev', 'ts_rank',
     'ts_sum', 'ts_av_diff', 'ts_arg_max',
     'ts_decay_linear', 'ts_delay', 'ts_delta',
-    'ts_max', 'ts_min',
 ]
 
 TS_OP_1D1P += ['ts_mean', 'ts_std', 'ts_max']  # 扩展时间序列操作符
@@ -68,7 +67,7 @@ SENTIMENT_FEATURES = ['news_sentiment', 'social_volume']
 VALID_OPERATORS = {
     'group_neutralize', 'ts_mean',
     'rank', 'ts_corr', 'ts_std_dev', 'ts_arg_max', 'signed_power',
-    'log', 'ts_delta', 'ts_max', 'ts_min',
+    'log', 'ts_delta',
     'ts_sum', 'ts_std', 'ts_av_diff',
     'ts_decay_linear', 'ts_delay', 'ts_product', 'ts_scale',
     'ts_zscore', 'ts_rank', 'Ts_Rank', 'group_zscore', 'group_rank', 'group_mean',
@@ -78,5 +77,5 @@ VALID_OPERATORS = {
 }
 
 BLACKLIST_OPERATORS = {
-    'pasteurize', 'sigmoid',
+    'pasteurize', 'sigmoid', 'ts_max', 'ts_min',
 }
