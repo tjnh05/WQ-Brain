@@ -265,7 +265,9 @@ def add_stability(factors):
 
 def fundamental_factors():
     return [
-        'rank(0.5 * -ts_delta(debt_to_equity, 90) + 0.3 * ts_delta(roa, 90) + 0.2 * rank(-mom_252))',
+        'rank(-ts_delta(debt / equity, 90)）',
+        'rank(ts_delta(return_assets, 90)',
+        'rank(0.5 * -ts_delta(debt / equity, 90) + 0.3 * ts_delta(return_assets, 90)',
     ]
 
 
