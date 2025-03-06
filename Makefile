@@ -32,4 +32,15 @@ install:
 clean_backups:
 	rm -rf $(BACKUP_DIR)/*
 
+# 帮助信息目标
+help:
+	@echo "Usage: make [target]"
+	@echo ""
+	@echo "Available targets:"
+	@echo "  all              - 默认目标，依次执行 generate_factors 和 simulate"
+	@echo "  generate_factors - 生成因子库并备份到 $(BACKUP_DIR)"
+	@echo "  simulate         - 执行模拟运行 (main.py)"
+	@echo "  clean_backups    - 清理所有备份文件"
+	@echo "  help             - 显示此帮助信息"
+
 .PHONY: all factors simulate clean_backups
