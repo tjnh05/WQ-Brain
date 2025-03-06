@@ -61,7 +61,7 @@ def from_sentiment():
     """
     return [
         # 基础情绪指标
-        'ts_mean(news_sentiment, 5)',
+        'ts_mean(snt_social_volume, 5)',
 
         # 情绪与价格相关性
         'ts_corr(news_sentiment, returns, 20)',
