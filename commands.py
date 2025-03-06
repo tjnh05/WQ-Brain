@@ -263,6 +263,12 @@ def add_stability(factors):
     ]
 
 
+def fundamental_factors():
+    return [
+        'rank(0.5 * -ts_delta(debt_to_equity, 90) + 0.3 * ts_delta(roa, 90) + 0.2 * rank(-mom_252))',
+    ]
+
+
 def ts_remove_duplicates(factors):
     """基于表达式字符串的精确去重（保留首次出现顺序）"""
     seen = set()
@@ -301,9 +307,10 @@ def validate_factor_syntax(factor):
 
 
 def main():
-    funcs = [from_arxiv, scale_and_corr, from_wq_1, from_wq_2, from_wq_3, sample_1, sample_2, sample_3,
-             from_events, from_sentiment]
+    # funcs = [from_arxiv, scale_and_corr, from_wq_1, from_wq_2, from_wq_3, sample_1, sample_2, sample_3,
+    #          from_events, from_sentiment]
     # funcs = [from_arxiv]
+    funcs = [fundamental_factors,]
 
     # 生成所有预设因子
     all_factors = []
@@ -327,6 +334,7 @@ def main():
     # 保存到CSV便于后续分析
     file_name = 'factor_library.csv'
     pd.DataFrame({'factor': all_factors}).to_csv(file_name, index=False)
+    print(f'因子库保存到 {file_name}')
 
 
 if __name__ == '__main__':
