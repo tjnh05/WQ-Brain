@@ -1,5 +1,7 @@
 # 定义变量
-PYTHON = python
+ROOTDIR=/root/miniconda3/envs/wqbrain/bin/
+PYTHON = $(ROOTDIR)python
+PIP = $(ROOTDIR)pip
 BACKUP_DIR = backups
 FACTOR_FILE = factor_library.csv
 
@@ -22,6 +24,9 @@ factors:
 simulate:
 	# 执行main.py进行模拟
 	$(PYTHON) main.py
+
+install:
+	$(PIP) install -r requirements.txt
 
 # 清理备份文件
 clean_backups:
