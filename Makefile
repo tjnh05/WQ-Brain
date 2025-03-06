@@ -13,7 +13,7 @@ factors:
 	# 创建备份目录（如果不存在）
 	mkdir -p $(BACKUP_DIR)
 	# 如果存在factor_library.csv，则备份
-	if [ -f $(FACTOR_FILE) ]; then \
+	@if [ -f $(FACTOR_FILE) ]; then \
 		TIMESTAMP=$$(date +"%Y%m%d%H%M%S"); \
 		cp $(FACTOR_FILE) $(BACKUP_DIR)/$(FACTOR_FILE).$$TIMESTAMP; \
 	fi
