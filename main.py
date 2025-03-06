@@ -128,7 +128,7 @@ class WQSession(requests.Session):
                     break
 
                 try:
-                    logging.info(f"{thread} -- Waiting for simulation to end ({int(100 * r['progress'])}%)")
+                    logging.info(f"{thread} -- 【{alpha_link}】 ({int(100 * r['progress'])}%)")
                 except Exception as e:
                     ok = (False, r['message'])
                     break
