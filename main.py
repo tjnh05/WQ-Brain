@@ -157,6 +157,9 @@ class WQSession(requests.Session):
                         weight_check = check['result']
                     if check['name'] == 'LOW_SUB_UNIVERSE_SHARPE':
                         subsharpe = check['value']
+
+                self.rows_processed.append(simulation)
+
                 try:
                     subsharpe
                 except Exception as e:
@@ -174,7 +177,6 @@ class WQSession(requests.Session):
 
             writer.writerow(row)
             f.flush()
-            self.rows_processed.append(simulation)
             logging.info(f'{thread} -- Result added to CSV!')
 
         try:
