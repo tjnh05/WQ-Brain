@@ -213,7 +213,8 @@ class WQSession(requests.Session):
 def main():
     processed_file_name = 'processed.txt'
     factor_file_name = 'factor_library.csv'
-    proxies = {"http": "http://127.0.0.1:1080", "https": "http://127.0.0.1:1080"}
+    # proxies = {"http": "http://127.0.0.1:1080", "https": "http://127.0.0.1:1080"}
+    proxies = None
 
     # 从 processed.txt 中读取已处理的数据
     processed = set()
