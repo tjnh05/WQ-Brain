@@ -267,7 +267,7 @@ def fundamental_factors():
     return [
         'rank(-ts_delta(debt / equity, 90)）',
         'rank(ts_delta(return_assets, 90)',
-        'rank(0.5 * -ts_delta(debt / equity, 90) + 0.3 * ts_delta(return_assets, 90)',
+        'rank(0.7 * -ts_delta(debt / equity, 90) + 0.3 * ts_delta(return_assets, 90)',
     ]
 
 
