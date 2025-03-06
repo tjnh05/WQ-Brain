@@ -318,8 +318,8 @@ def main():
         all_factors.extend(func())
 
     # 添加sentiment类因子
-    sent_gen = SentimentFactorGenerator()
-    all_factors.extend(sent_gen.generate())
+    # sent_gen = SentimentFactorGenerator()
+    # all_factors.extend(sent_gen.generate())
 
     # 初步筛选流程
     all_factors = ts_remove_duplicates(all_factors)  # 去重
