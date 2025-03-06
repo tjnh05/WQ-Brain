@@ -4,10 +4,10 @@ BACKUP_DIR = backups
 FACTOR_FILE = factor_library.csv
 
 # 默认目标
-all: generate_factors simulate
+all: factors simulate
 
 # 生成因子库并备份
-generate_factors:
+factors:
 	# 创建备份目录（如果不存在）
 	mkdir -p $(BACKUP_DIR)
 	# 如果存在factor_library.csv，则备份
@@ -27,4 +27,4 @@ simulate:
 clean_backups:
 	rm -rf $(BACKUP_DIR)/*
 
-.PHONY: all generate_factors simulate clean_backups
+.PHONY: all factors simulate clean_backups
