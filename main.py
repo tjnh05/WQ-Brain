@@ -79,7 +79,7 @@ class WQSession(requests.Session):
             alpha = simulation['code'].strip()
             delay = simulation.get('delay', 1)
             universe = simulation.get('universe', 'TOP3000')
-            truncation = simulation.get('truncation', 0.1)
+            truncation = simulation.get('truncation', 0.02)
             region = simulation.get('region', 'USA')
             decay = simulation.get('decay', 8)
             neutralization = simulation.get('neutralization', 'SUBINDUSTRY').upper()
