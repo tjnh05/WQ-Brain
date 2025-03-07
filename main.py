@@ -10,12 +10,34 @@ from datetime import datetime
 import requests
 import json
 import time
-# from parameters import DATA
 from concurrent.futures import ThreadPoolExecutor
 from threading import current_thread
 import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# 获取本模块的 logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# 移除默认的日志处理器
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
+
+# 创建标准输出处理器
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
+console_handler.setFormatter(console_formatter)
+logger.addHandler(console_handler)
+
+# 创建文件处理器
+log_file = os.path.join('data', f"api_{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
+file_handler = logging.FileHandler(log_file, encoding='utf-8')
+file_handler.setLevel(logging.INFO)
+file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
+file_handler.setFormatter(file_formatter)
+logger.addHandler(file_handler)
 
 
 class WQSession(requests.Session):
@@ -23,32 +45,29 @@ class WQSession(requests.Session):
         super().__init__()
         self.lock = threading.Lock()
         self.max_workers = kwargs.get('max_workers', 2)
-        for handler in logging.root.handlers:
-            logging.root.removeHandler(handler)
-        logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s')
         self.json_fn = json_fn
         self.processed_file_name = kwargs.get('processed_file_name', 'processed.txt')
         self.auth_url = 'https://api.worldquantbrain.com/authentication'
         self.simulate_url = 'https://api.worldquantbrain.com/simulations'
         self.status_base_url = 'https://api.worldquantbrain.com/alphas/'
         self.proxies = kwargs.get('proxies')
-        old_get, old_post = self.get, self.post
+        # old_get, old_post = self.get, self.post
 
-        def new_get(*args, **kwargs):
-            try:
-                kwargs['proxies'] = self.proxies
-                return old_get(*args, **kwargs)
-            except:
-                return new_get(*args, **kwargs)
-
-        def new_post(*args, **kwargs):
-            try:
-                kwargs['proxies'] = self.proxies
-                return old_post(*args, **kwargs)
-            except:
-                return new_post(*args, **kwargs)
-
-        self.get, self.post = new_get, new_post
+        # def new_get(*args, **kwargs):
+        #     try:
+        #         kwargs['proxies'] = self.proxies
+        #         return old_get(*args, **kwargs)
+        #     except:
+        #         return new_get(*args, **kwargs)
+        #
+        # def new_post(*args, **kwargs):
+        #     try:
+        #         kwargs['proxies'] = self.proxies
+        #         return old_post(*args, **kwargs)
+        #     except:
+        #         return new_post(*args, **kwargs)
+        #
+        # self.get, self.post = new_get, new_post
         self.login_expired = False
         self.rows_processed = []
 
@@ -68,19 +87,19 @@ class WQSession(requests.Session):
                 else:
                     print(f'WARNING! {r.json()}')
                     input('Press enter to quit...')
-            logging.info('Logged into WQBrain!')
+            logger.info('Logged into WQBrain!')
         except Exception as e:
-            logging.error(f'login into WQBrain:{e}')
+            logger.error(f'login into WQBrain:{e}')
             raise
 
     def process_simulation(self, simulation):
         with self.lock:
             if self.login_expired:
-                logging.info(f'Login expired, re-logging in...')
+                logger.info(f'Login expired, re-logging in...')
                 try:
                     self.login()
                 except Exception as e:
-                    logging.error(f're-login into WQBrain:{e}')
+                    logger.error(f're-login into WQBrain:{e}')
                     raise
 
         thread = current_thread().name
@@ -93,7 +112,7 @@ class WQSession(requests.Session):
         neutralization = simulation.get('neutralization', 'SUBINDUSTRY').upper()
         pasteurization = simulation.get('pasteurization', 'ON')
         nan = simulation.get('nanHandling', 'OFF')
-        logging.info(f"{thread} -- Simulating alpha: {alpha}")
+        logger.info(f"{thread} -- Simulating alpha: {alpha}")
         while True:
             # keep sending a post request until the simulation link is found
             try:
@@ -124,9 +143,9 @@ class WQSession(requests.Session):
                         self.login_expired = True
                         return
                 except Exception as e:
-                    logging.info(f'{thread} -- {r.content}')  # usually gateway timeout
+                    logger.info(f'{thread} -- {r.content}')  # usually gateway timeout
                     return
-        logging.info(f'{thread} -- Obtained simulation link: {nxt}')
+        logger.info(f'{thread} -- Obtained simulation link: {nxt}')
         ok = True
         alpha_link = None
         while True:
@@ -136,7 +155,7 @@ class WQSession(requests.Session):
                 break
 
             try:
-                logging.info(f"{thread} -- 【{alpha}】 ({int(100 * r['progress'])}%)")
+                logger.info(f"{thread} -- 【{alpha}】 ({int(100 * r['progress'])}%)")
             except Exception as e:
                 ok = (False, r['message'])
                 break
@@ -147,7 +166,7 @@ class WQSession(requests.Session):
         subsharpe = None
 
         if ok is not True:
-            logging.info(f'{thread} -- Issue when sending simulation request [{alpha}]: {ok[1]}')
+            logger.info(f'{thread} -- Issue when sending simulation request [{alpha}]: {ok[1]}')
             row = [
                 0, delay, region,
                 neutralization, decay, truncation,
@@ -155,7 +174,7 @@ class WQSession(requests.Session):
             ]
         else:
             r = self.get(f'{self.status_base_url}{alpha_link}').json()
-            logging.info(
+            logger.info(
                 f'{thread} -- Obtained alpha link: https://platform.worldquantbrain.com/alpha/{alpha_link}')
             passed = 0
             for check in r['is']['checks']:
@@ -218,7 +237,7 @@ class WQSession(requests.Session):
                         if row:  # 如果row不为空，写入CSV
                             writer.writerow(row)
                             f.flush()  # 确保数据立即写入文件
-                            logging.info(f'Result added to CSV: {row[-1]}')  # 记录日志
+                            logger.info(f'Result added to CSV: {row[-1]}')  # 记录日志
         except Exception as e:
             print(f'Issue occurred! {type(e).__name__}: {e}')
         finally:
@@ -227,7 +246,7 @@ class WQSession(requests.Session):
                 for row in self.rows_processed:
                     processed_file.write(f"{row['code']}\n")
 
-        logging.info(f'total {len(self.rows_processed)} simulations completed!')
+        logger.info(f'total {len(self.rows_processed)} simulations completed!')
 
         return [sim for sim in data if sim not in self.rows_processed]
 
@@ -237,10 +256,6 @@ def main():
     factor_file_name = 'factor_library.csv'
     # proxies = {"http": "http://127.0.0.1:1080", "https": "http://127.0.0.1:1080"}
     proxies = None
-
-    log_file = os.path.join('data', f"api_{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
-    logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s',
-                        filename=log_file)
 
     # 从 processed.txt 中读取已处理的数据
     processed = set()
@@ -258,13 +273,18 @@ def main():
 
     total_rows = len(data)
     if data:
-        wq = WQSession(proxies=proxies)
-        logging.info('start alpha simulations')
-        processed_data = wq.simulate(data)
-        if processed_data:
-            logging.info(f'{total_rows - len(processed_data)}/{total_rows} alpha simulations completed.')
-        else:
-            logging.info(f'All {total_rows} alpha simulations completed.')
+        try:
+            wq = WQSession(proxies=proxies)
+            logger.info('start alpha simulations')
+            processed_data = wq.simulate(data)
+            if processed_data:
+                logger.info(f'{total_rows - len(processed_data)}/{total_rows} alpha simulations completed.')
+            else:
+                logger.info(f'All {total_rows} alpha simulations completed.')
+        except Exception as e:
+            logger.error(f'An error occurred: {e}')
+    else:
+        logger.info('No new alpha simulations to process.')
 
 
 if __name__ == '__main__':
