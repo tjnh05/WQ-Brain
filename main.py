@@ -63,9 +63,9 @@ class WQSession(requests.Session):
                 else:
                     print(f'WARNING! {r.json()}')
                     input('Press enter to quit...')
-            logging.info('Logged in to WQBrain!')
+            logging.info('Logged into WQBrain!')
         except Exception as e:
-            logging.info(f'failed to login to WQBrain:{e}')
+            logging.error(f'login into WQBrain:{e}')
             raise
 
     def simulate(self, data, **kwargs):
@@ -73,7 +73,9 @@ class WQSession(requests.Session):
 
         def process_simulation(writer, f, simulation):
             if self.login_expired:
-                return  # expired credentials
+                logging.info(f'Login expired, re-logging in...')
+                self.login()
+                # return  # expired credentials
 
             thread = current_thread().name
             alpha = simulation['code'].strip()
@@ -135,7 +137,6 @@ class WQSession(requests.Session):
 
                 time.sleep(10)
 
-            row = []
             weight_check = None
             subsharpe = None
 
