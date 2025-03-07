@@ -235,8 +235,8 @@ class WQSession(requests.Session):
 def main():
     processed_file_name = 'processed.txt'
     factor_file_name = 'factor_library.csv'
-    proxies = {"http": "http://127.0.0.1:1080", "https": "http://127.0.0.1:1080"}
-    # proxies = None
+    # proxies = {"http": "http://127.0.0.1:1080", "https": "http://127.0.0.1:1080"}
+    proxies = None
 
     log_file = os.path.join('data', f"api_{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
     logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s',
