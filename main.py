@@ -188,9 +188,7 @@ class WQSession(requests.Session):
 
         if not os.path.exists('data'):
             os.makedirs('data')
-
         csv_file = os.path.join("data", "api_results.csv")
-        log_file = os.path.join('data', f"api_{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
 
         self.login()
 
@@ -198,8 +196,7 @@ class WQSession(requests.Session):
         try:
             # for handler in logging.root.handlers:
             #     logging.root.removeHandler(handler)
-            logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s',
-                                filename=log_file)
+
 
             # 固定CSV文件名
             file_exists = os.path.isfile(csv_file)
@@ -238,8 +235,12 @@ class WQSession(requests.Session):
 def main():
     processed_file_name = 'processed.txt'
     factor_file_name = 'factor_library.csv'
-    # proxies = {"http": "http://127.0.0.1:1080", "https": "http://127.0.0.1:1080"}
-    proxies = None
+    proxies = {"http": "http://127.0.0.1:1080", "https": "http://127.0.0.1:1080"}
+    # proxies = None
+
+    log_file = os.path.join('data', f"api_{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
+    logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s',
+                        filename=log_file)
 
     # 从 processed.txt 中读取已处理的数据
     processed = set()
@@ -258,12 +259,12 @@ def main():
     total_rows = len(data)
     if data:
         wq = WQSession(proxies=proxies)
-        print(f'start alpha simulations...')
+        logging.info('start alpha simulations')
         processed_data = wq.simulate(data)
         if processed_data:
-            print(f'{total_rows - len(processed_data)}/{total_rows} alpha simulations completed.')
+            logging.info(f'{total_rows - len(processed_data)}/{total_rows} alpha simulations completed.')
         else:
-            print(f'All {total_rows} alpha simulations completed.')
+            logging.info(f'All {total_rows} alpha simulations completed.')
 
 
 if __name__ == '__main__':
