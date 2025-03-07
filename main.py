@@ -155,7 +155,7 @@ class WQSession(requests.Session):
                 break
 
             try:
-                logger.info(f"{thread} -- 【{alpha}】 ({int(100 * r['progress'])}%)")
+                logger.info(f"{thread} -- 【{alpha}】 - {int(100 * r['progress'])}%")
             except Exception as e:
                 ok = (False, r['message'])
                 break
