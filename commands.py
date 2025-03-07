@@ -1,3 +1,6 @@
+#! /usr/bin/python3
+# -*- coding: utf-8 -*-
+
 import os
 import re
 
@@ -335,7 +338,7 @@ def main():
 
     # 保存到CSV便于后续分析
     file_name = 'factor_library.csv'
-    pd.DataFrame({'factor': all_factors}).to_csv(file_name, index=False)
+    pd.DataFrame({'factor': all_factors}).to_csv(file_name, index=False, encoding='utf-8')
     print(f'因子库保存到 {file_name}')
 
 
