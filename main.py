@@ -50,6 +50,7 @@ class WQSession(requests.Session):
         self.auth_url = 'https://api.worldquantbrain.com/authentication'
         self.simulate_url = 'https://api.worldquantbrain.com/simulations'
         self.status_base_url = 'https://api.worldquantbrain.com/alphas/'
+        self.alpha_base_url = 'https://platform.worldquantbrain.com/alphas/'
         self.proxies = kwargs.get('proxies')
         # old_get, old_post = self.get, self.post
 
@@ -175,7 +176,7 @@ class WQSession(requests.Session):
         else:
             r = self.get(f'{self.status_base_url}{alpha_link}').json()
             logger.info(
-                f'{thread} -- Obtained alpha link: https://platform.worldquantbrain.com/alpha/{alpha_link}')
+                f'{thread} -- Obtained alpha link: {self.alpha_base_url}{alpha_link}')
             passed = 0
             for check in r['is']['checks']:
                 passed += check['result'] == 'PASS'
@@ -196,7 +197,7 @@ class WQSession(requests.Session):
                 subsharpe,
                 -1,
                 universe,
-                f'https://platform.worldquantbrain.com/alpha/{alpha_link}',
+                f'{self.alpha_base_url}{alpha_link}',
                 alpha
             ]
 
