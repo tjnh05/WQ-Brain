@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 # -*- coding: utf-8 -*-
-
+import csv
 import os
 import re
 
@@ -268,9 +268,30 @@ def add_stability(factors):
 
 def fundamental_factors():
     return [
-        'rank(-ts_delta(debt / equity, 90))',
-        'rank(ts_delta(return_assets, 90))',
-        '(rank(0.7 * -ts_delta(debt / equity, 90) + 0.3 * ts_delta(return_assets, 90))',
+        'rank(debt / equity)',
+        'rank(return_assets)',
+        'anl4_tbve_ft',
+        'fn_accrued_liab_a',
+        'fn_accrued_liab_curr_a',
+        'fn_accrued_liab_curr_q',
+        'fn_accrued_liab_q',
+        'fn_accum_depr_depletion_and_amortization_ppne_a',
+        'fn_accum_depr_depletion_and_amortization_ppne_q',
+        'fn_accum_oth_income_loss_fx_adj_net_of_tax_a',
+        'fn_accum_oth_income_loss_fx_adj_net_of_tax_q',
+        'fn_assets_fair_val_a',
+        'fn_assets_fair_val_q',
+        'fn_assets_fair_val_l1_q',
+        'fn_assets_fair_val_l2_a',
+        'fn_liab_fair_val_l1_a',
+        'fn_oth_income_loss_fx_transaction_and_tax_translation_adj_a',
+        'fn_accrued_liab_a',
+        'fn_def_tax_assets_liab_net_a',
+        'fnd2_a_dfdtxava',
+        'fn_accum_oth_income_loss_net_of_tax_a',
+        'fn_antidilutive_securities_excl_from_eps_a',
+        'fnd2_ebitfr',
+        'fn_new_shares_options_a',
     ]
 
 
@@ -338,7 +359,11 @@ def main():
 
     # 保存到CSV便于后续分析
     file_name = os.path.join('data', 'factor_library.csv')
-    pd.DataFrame({'factor': all_factors}).to_csv(file_name, index=False, encoding='utf-8')
+    with open(file_name, 'w', newline='', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['factor'])  # 写入表头
+        writer.writerows([[factor] for factor in all_factors])  # 逐行写入数据
+
     print(f'因子库保存到 {file_name}')
 
 
