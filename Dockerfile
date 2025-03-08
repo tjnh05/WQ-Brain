@@ -1,4 +1,4 @@
-FROM python:3.12-alpine
+FROM docker.m.daocloud.io/python:3.12-alpine
 
 # 安装必要的工具（adduser 和 su-exec）
 RUN apk add --no-cache shadow
