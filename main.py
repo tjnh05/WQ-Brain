@@ -88,11 +88,6 @@ class WQSession(requests.Session):
         self.auth = (self.email, self.password)
 
     def login(self):
-        with open(self.json_fn, 'r') as f:
-            creds = json.loads(f.read())
-            email, password = creds['email'], creds['password']
-            self.auth = (email, password)
-
         try:
             r = self.post(self.auth_url, proxies=self.proxies, verify=False)
             if 'user' not in r.json():
@@ -276,15 +271,23 @@ class WQSession(requests.Session):
         processed = set()
         try:
             with open(processed_file_name, 'r') as processed_file:
-                processed = set(line.strip() for line in processed_file)
+                for line in processed_file:
+                    stripped_line = line.strip()
+                    if not stripped_line.startswith('#'):  # 忽略以 # 开头的行
+                        processed.add(stripped_line)
         except FileNotFoundError:
             pass
 
         # 从 factor_library.csv 中读取数据，并排除已处理的数据
+        data = []
         with open(factor_file_name, 'r') as csvfile:
             reader = csv.reader(csvfile)
             next(reader)  # 跳过第一行
-            data = [{'code': row[0]} for row in reader if row[0] not in processed]  # 将第一列作为code，并排除已处理的数据
+            for row in reader:
+                if len(row) > 0:  # 确保行不为空
+                    code = row[0].strip()
+                    if not code.startswith('#') and code not in processed:  # 忽略以 # 开头的行，并排除已处理的数据
+                        data.append({'code': code})
 
         return data
 
