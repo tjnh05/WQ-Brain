@@ -337,7 +337,7 @@ def main():
         validate_factor_syntax(f)
 
     # 保存到CSV便于后续分析
-    file_name = 'factor_library.csv'
+    file_name = os.path.join('data', 'factor_library.csv')
     pd.DataFrame({'factor': all_factors}).to_csv(file_name, index=False, encoding='utf-8')
     print(f'因子库保存到 {file_name}')
 
