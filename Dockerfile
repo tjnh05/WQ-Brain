@@ -8,7 +8,7 @@ RUN adduser -D -u 1000 -g 1000 appuser
 
 
 # 创建 /app 和 /app/data 目录
-RUN mkdir -p /app/{data,logs}
+RUN mkdir -p /app/data && mkdir -p /app/log
 
 # 设置工作目录
 WORKDIR /app
