@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  wqbrain:
+    build: .
+    container_name: wqbrain
+    volumes:
+      - wqbrain_data:/app/data
+    environment:
+      - PYTHONUNBUFFERED=1
+    user: appuser
+    command: python main.py
+
+volumes:
+  wqbrain_data:
