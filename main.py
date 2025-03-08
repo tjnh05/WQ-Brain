@@ -52,23 +52,6 @@ class WQSession(requests.Session):
         self.status_base_url = 'https://api.worldquantbrain.com/alphas/'
         self.alpha_base_url = 'https://platform.worldquantbrain.com/alphas/'
         self.proxies = kwargs.get('proxies')
-        # old_get, old_post = self.get, self.post
-
-        # def new_get(*args, **kwargs):
-        #     try:
-        #         kwargs['proxies'] = self.proxies
-        #         return old_get(*args, **kwargs)
-        #     except:
-        #         return new_get(*args, **kwargs)
-        #
-        # def new_post(*args, **kwargs):
-        #     try:
-        #         kwargs['proxies'] = self.proxies
-        #         return old_post(*args, **kwargs)
-        #     except:
-        #         return new_post(*args, **kwargs)
-        #
-        # self.get, self.post = new_get, new_post
         self.login_expired = False
         self.rows_processed = []
 
@@ -86,9 +69,11 @@ class WQSession(requests.Session):
                         f"Please complete biometric authentication at {r.url}/persona?inquiry={r.json()['inquiry']} before continuing...")
                     self.post(f"{r.url}/persona", json=r.json())
                 else:
-                    print(f'WARNING! {r.json()}')
-                    input('Press enter to quit...')
+                    message = r.json()['detail']
+                    logging.warning(f'WARNING! {message}')
+                    raise Exception(f'failed! {message}')
             logger.info('Logged into WQBrain!')
+            self.login_expired = False
         except Exception as e:
             logger.error(f'login into WQBrain:{e}')
             raise
