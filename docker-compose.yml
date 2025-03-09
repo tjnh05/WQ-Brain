@@ -5,8 +5,8 @@ services:
     build: .
     container_name: wqbrain
     volumes:
-      - ./data:/app/data  # 挂载本地目录 ./data
-      #- wqbrain_data:/app/data
+      #- ./data:/app/data  # 挂载本地目录 ./data
+      - wqbrain_data:/app/data
     env_file: .env  # 从 .env 文件加载环境变量
     user: appuser
     command: python main.py
