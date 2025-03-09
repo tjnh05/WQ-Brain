@@ -96,7 +96,7 @@ class WQSession(requests.Session):
                         f"Please complete biometric authentication at {r.url}/persona?inquiry={r.json()['inquiry']} before continuing...")
                     self.post(f"{r.url}/persona", json=r.json())
                 else:
-                    message = r.json()['detail']
+                    message = r.json()
                     logging.warning(f'WARNING! {message}')
                     raise Exception(f'failed! {message}')
             logger.info('Logged into WQBrain!')
