@@ -1,10 +1,10 @@
 # 定义变量
 ROOTDIR=/root/miniconda3/envs/wqbrain/bin/
 DATADIR=data/
-LOGDIR=log/
+LOGDIR=$(DATADIR)log
 PYTHON = $(ROOTDIR)python
 PIP = $(ROOTDIR)pip
-BACKUP_DIR = backups
+BACKUP_DIR = $(DATADIR)backups
 FACTOR_FILE = $(DATADIR)factor_library.csv
 DOCKER_IMAGE_TAG = wq-brain-wqbrain:latest  # 新增变量定义
 
