@@ -1,6 +1,7 @@
 # 定义变量
 ROOTDIR=/root/miniconda3/envs/wqbrain/bin/
-DATADIR=data/
+CURRENT_DIR := $(abspath .)
+DATADIR=$(DATADIR)data/
 LOGDIR=$(DATADIR)log
 PYTHON = $(ROOTDIR)python
 PIP = $(ROOTDIR)pip
@@ -11,6 +12,9 @@ VOLUME_NAME = wqbrain_data
 
 # 默认目标
 all: factors simulate
+
+print_path:
+	@echo "Current directory: $(CURRENT_DIR)"
 
 # 生成因子库并备份
 factors:
