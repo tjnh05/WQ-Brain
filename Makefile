@@ -52,7 +52,7 @@ help:
 	@echo "Usage: make [target]"
 	@echo ""
 	@echo "Available targets:"
-	@echo "  all              - 默认目标，依次执行 generate_factors 和 simulate"
+	@echo "  all              - 默认目标，依次执行 factors 和 simulate"
 	@echo "  generate_factors - 生成因子库并备份到 $(BACKUP_DIR)"
 	@echo "  simulate         - 执行模拟运行 (main.py)"
 	@echo "  clean_backups    - 清理所有备份文件"
