@@ -14,7 +14,7 @@ RUN mkdir -p /app/data/log && mkdir -p /app/data/backup
 WORKDIR /app
 
 # 将指定文件复制到容器的 /app 目录
-COPY main.py scrape_alphas.py submit_alphas.py database.py alpha_miner.py arxiv.txt /app/
+COPY main.py commands.py scrape_alphas.py submit_alphas.py database.py alpha_miner.py arxiv.txt /app/
 COPY /data/factor_library.csv /app/data/
 
 # 复制 requirements.txt 并安装依赖（使用清华源）
