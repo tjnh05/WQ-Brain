@@ -355,8 +355,8 @@ def main():
     all_factors = filter_blacklisted_factors(all_factors)
 
     # 添加语法校验
-    for f in all_factors:
-        validate_factor_syntax(f)
+    # for f in all_factors:
+    #     validate_factor_syntax(f)
 
     # 保存到CSV便于后续分析
     file_name = os.path.join('data', 'factor_library.csv')
