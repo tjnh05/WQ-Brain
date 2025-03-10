@@ -287,7 +287,14 @@ class WQSession(requests.Session):
                 if len(row) > 0:  # 确保行不为空
                     code = row[0].strip()
                     if not code.startswith('#') and code not in processed:  # 忽略以 # 开头的行，并排除已处理的数据
-                        data.append({'code': code})
+                        try:
+                            # 尝试解析为 JSON 字符串
+                            json_data = json.loads(code)
+                            if isinstance(json_data, dict):  # 确保解析结果是字典
+                                data.append(json_data)
+                        except json.JSONDecodeError:
+                            # 如果不是 JSON 字符串，按原方式处理
+                            data.append({'code': code})
 
         return data
 
