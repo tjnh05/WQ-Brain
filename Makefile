@@ -5,7 +5,8 @@ PIP = $(ROOTDIR)pip
 DATADIR=$(abspath .)/data/
 LOGDIR=$(DATADIR)log
 BACKUP_DIR = $(abspath .)/backups
-FACTOR_FILE = $(DATADIR)factor_library.csv
+FACTOR_FILE_BASE_NAME = factor_library
+FACTOR_FILE = $(DATADIR)$(FACTOR_FILE_BASE_NAME)
 DOCKER_IMAGE_TAG = wq-brain-wqbrain:latest  # 新增变量定义
 VOLUME_NAME = wq-brain_wqbrain_data
 
@@ -24,7 +25,7 @@ factors:
 	# 如果存在factor_library.csv，则备份
 	@if [ -f $(FACTOR_FILE) ]; then \
 		TIMESTAMP=$$(date +"%Y%m%d%H%M%S"); \
-		cp $(FACTOR_FILE) $(BACKUP_DIR)/$(FACTOR_FILE).$$TIMESTAMP; \
+		cp $(FACTOR_FILE) $(BACKUP_DIR)/$(FACTOR_FILE_BASE_NAME).$$TIMESTAMP; \
 	fi
 	# 执行commands.py生成新的factor_library.csv
 	$(PYTHON) commands.py
