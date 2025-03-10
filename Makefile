@@ -1,7 +1,7 @@
 # 定义变量
 ROOTDIR=/root/miniconda3/envs/wqbrain/bin/
 CURRENT_DIR := $(abspath .)
-DATADIR=$(DATADIR)data/
+DATADIR=$(DATADIR)/data/
 LOGDIR=$(DATADIR)log
 PYTHON = $(ROOTDIR)python
 PIP = $(ROOTDIR)pip
