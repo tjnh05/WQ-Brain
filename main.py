@@ -34,7 +34,7 @@ logger.addHandler(console_handler)
 # 检查环境变量 WQ_LOG_TO_FILE 是否存在且值为 True
 if os.getenv('WQ_LOG_TO_FILE', '').lower() == 'true':
     # 创建日志目录
-    log_dir = os.path.join('log')
+    log_dir = os.path.join('data', 'log')
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
