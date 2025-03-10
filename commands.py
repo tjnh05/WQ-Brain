@@ -5,7 +5,6 @@ import os
 import re
 
 from database import *
-import pandas as pd
 from functools import lru_cache
 
 
