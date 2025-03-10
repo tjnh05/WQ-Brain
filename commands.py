@@ -291,6 +291,7 @@ def fundamental_factors():
         'fn_antidilutive_securities_excl_from_eps_a',
         'fnd2_ebitfr',
         'fn_new_shares_options_a',
+        'trade_when(pcr_oi_270 < 1, implied_volatility_call_270 - implied_volatility_put_270, -1)',
     ]
 
 
