@@ -7,7 +7,7 @@ PIP = $(ROOTDIR)pip
 BACKUP_DIR = $(DATADIR)backups
 FACTOR_FILE = $(DATADIR)factor_library.csv
 DOCKER_IMAGE_TAG = wq-brain-wqbrain:latest  # 新增变量定义
-VOLUME_NAME = wqbrain_data
+VOLUME_NAME = wq-brain_wqbrain_data
 
 # 默认目标
 all: factors simulate
@@ -77,7 +77,7 @@ log:
 copy_volumes:
 	@echo "Copying files from Docker volume $(VOLUME_NAME) to $(BACKUP_DIR)..."
 	@mkdir -p $(BACKUP_DIR)
-	@docker run --rm -v $(VOLUME_NAME):/volume_data -v $(BACKUP_DIR):/backup busybox cp -r /volume_data /backup
+	@docker run --rm -v $(VOLUME_NAME):/app/data -v $(BACKUP_DIR):/backup busybox cp -r /volume_data /backup
 	@echo "Files copied successfully."
 
 
