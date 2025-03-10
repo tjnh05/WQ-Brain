@@ -249,10 +249,12 @@ class WQSession(requests.Session):
         except Exception as e:
             print(f'Issue occurred! {type(e).__name__}: {e}')
         finally:
-            # 将 self.rows_processed 的数据追加到 data/processed.txt 文件中
+            # 将 self.rows_processed 的数据追加到 data/processed.txt 文件中，
             with open(self.processed_file_name, 'a') as processed_file:
                 for row in self.rows_processed:
-                    processed_file.write(f"{row['code']}\n")
+                    # 把每行以JSON形式保存
+                    processed_file.write(json.dumps(row) + '\n')
+                    # processed_file.write(f"{row['code']}\n")
 
         logger.info(f'total {len(self.rows_processed)} simulations completed!')
 
@@ -274,7 +276,7 @@ class WQSession(requests.Session):
                 for line in processed_file:
                     stripped_line = line.strip()
                     if not stripped_line.startswith('#'):  # 忽略以 # 开头的行
-                        processed.add(stripped_line)
+                        processed.add(json.loads(stripped_line))
         except FileNotFoundError:
             pass
 
@@ -286,14 +288,17 @@ class WQSession(requests.Session):
             for row in reader:
                 if len(row) > 0:  # 确保行不为空
                     code = row[0].strip()
-                    if not code.startswith('#') and code not in processed:  # 忽略以 # 开头的行，并排除已处理的数据
+                    if not code.startswith('#'):  # 忽略以 # 开头的行，并排除已处理的数据
                         try:
                             # 尝试解析为 JSON 字符串
                             json_data = json.loads(code)
-                            if isinstance(json_data, dict):  # 确保解析结果是字典
+                            if isinstance(json_data, dict) and json_data not in processed:  # 确保解析结果是字典
                                 data.append(json_data)
                         except json.JSONDecodeError:
                             # 如果不是 JSON 字符串，按原方式处理
+                            # processed是个字典列表，根据键'code'的值来搜索code值是否存在
+                            if code not in processed:
+                                logger.info(f'Adding {code} to data.')
                             data.append({'code': code})
 
         return data
