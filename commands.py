@@ -292,6 +292,7 @@ def fundamental_factors():
         'fnd2_ebitfr',
         'fn_new_shares_options_a',
         'trade_when(pcr_oi_270 < 1, implied_volatility_call_270 - implied_volatility_put_270, -1)',
+        'trade_when(and((pcr_oi_270 < 1), (implied_volatility_put_270 < 0.3)),(implied_volatility_call_270 - implied_volatility_put_270),0)',
     ]
 
 
