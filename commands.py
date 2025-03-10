@@ -50,7 +50,7 @@ def from_events():
     # 增加事件条件
     event_factors = [
         'trade_when(earning_surprise>0.1, rank(volume), 0)',
-        'if(insider_buy>1e6, ts_delta(close,3), NaN)'
+        'if(insider_buy>0.000001, ts_delta(close,3), NaN)'
     ]
 
     return event_factors
@@ -359,7 +359,7 @@ def main():
     # 保存到CSV便于后续分析
     file_name = os.path.join('data', 'factor_library.csv')
     with open(file_name, 'w', newline='', encoding='utf-8') as csvfile:
-        writer = csv.writer(csvfile)
+        writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
         writer.writerow(['factor'])  # 写入表头
         writer.writerows([[factor] for factor in all_factors])  # 逐行写入数据
 
