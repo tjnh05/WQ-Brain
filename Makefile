@@ -29,6 +29,12 @@ factors:
 	# 执行commands.py生成新的factor_library.csv
 	$(PYTHON) commands.py
 
+# 在 Docker 容器中生成因子库并备份
+docker_factors:
+	@echo "Running commands.py in Docker container..."
+	@docker run --rm -v $(VOLUME_NAME):/app/data -w /app $(DOCKER_IMAGE_TAG) python commands.py
+	@echo "Factor library generated in Docker container."
+
 # 模拟运行
 simulate:
 	# 执行main.py进行模拟
@@ -74,8 +80,8 @@ log:
 	docker compose logs -f
 
 # 新增从 Docker 卷复制文件到本地备份目录的目标
-copy_volumes:
-	@echo "Copying files from Docker volume $(VOLUME_NAME) to $(BACKUP_DIR)..."
+backup:
+	@echo "Copying files from Docker volume $(VOLUME_NAME) to $(BACKUP_DIR) ..."
 	@mkdir -p $(BACKUP_DIR)
 	@docker run --rm -v $(VOLUME_NAME):/app/data -v $(BACKUP_DIR):/backup busybox cp -r /app/data /backup
 	@echo "Files copied successfully."
