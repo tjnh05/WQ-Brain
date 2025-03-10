@@ -7,6 +7,7 @@ PIP = $(ROOTDIR)pip
 BACKUP_DIR = $(DATADIR)backups
 FACTOR_FILE = $(DATADIR)factor_library.csv
 DOCKER_IMAGE_TAG = wq-brain-wqbrain:latest  # 新增变量定义
+VOLUME_NAME = wqbrain_data
 
 # 默认目标
 all: factors simulate
