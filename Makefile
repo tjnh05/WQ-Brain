@@ -71,4 +71,11 @@ down:
 log:
 	docker compose logs -f
 
+# 新增从 Docker 卷复制文件到本地备份目录的目标
+copy_volumes:
+	@echo "Copying files from Docker volume $(VOLUME_NAME) to $(BACKUP_DIR)..."
+	@docker run --rm -v $(VOLUME_NAME):/volume_data -v $(BACKUP_DIR):/backup busybox cp -r /volume_data /backup
+	@echo "Files copied successfully."
+
+
 .PHONY: all factors simulate clean_backups build help
