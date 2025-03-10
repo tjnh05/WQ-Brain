@@ -77,7 +77,7 @@ log:
 copy_volumes:
 	@echo "Copying files from Docker volume $(VOLUME_NAME) to $(BACKUP_DIR)..."
 	@mkdir -p $(BACKUP_DIR)
-	@docker run --rm -v $(VOLUME_NAME):/app/data -v $(BACKUP_DIR):/backup busybox cp -r /volume_data /backup
+	@docker run --rm -v $(VOLUME_NAME):/app/data -v $(BACKUP_DIR):/backup busybox cp -r /app/data /backup
 	@echo "Files copied successfully."
 
 
