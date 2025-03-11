@@ -284,12 +284,17 @@ class WQSession(requests.Session):
                 for line in lines:
                     stripped_line = line.strip()
                     if not stripped_line.startswith('#'):  # 忽略以 # 开头的行
-                        simulation = json.loads(stripped_line)
+                        try:
+                            simulation = json.loads(stripped_line)
+                        except Exception as e:
+                            logger.warning(f'Ignored! Error parsing line: {line}')
+                            continue
                         if simulation not in processed:
                             processed.append(simulation)
             processed_codes = {item['code'] for item in processed}
         except FileNotFoundError:
             pass
+
 
         # 从 parameters.py 中加载 FORMULAS 变量
         from parameters import FORMULAS
