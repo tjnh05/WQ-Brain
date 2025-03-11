@@ -14,6 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import current_thread
 import urllib3
 
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # 获取本模块的 logger
@@ -27,7 +28,7 @@ for handler in logging.root.handlers[:]:
 # 创建标准输出处理器
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
-console_formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
+console_formatter = logging.Formatter('%(asctime)s - %(filename)s - %(lineno)d - %(message)s')
 console_handler.setFormatter(console_formatter)
 logger.addHandler(console_handler)
 
@@ -42,7 +43,7 @@ if os.getenv('WQ_LOG_TO_FILE', '').lower() == 'true':
     log_file = os.path.join(log_dir, f"api_{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
     file_handler = logging.FileHandler(log_file, encoding='utf-8')
     file_handler.setLevel(logging.INFO)
-    file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
+    file_formatter = logging.Formatter('%(asctime)s - %(filename)s - %(lineno)d - %(message)s')
     file_handler.setFormatter(file_formatter)
     logger.addHandler(file_handler)
 
@@ -132,6 +133,7 @@ class WQSession(requests.Session):
         logger.info(f"{thread} -- Simulating alpha: {alpha}")
         while True:
             # keep sending a post request until the simulation link is found
+            r = None
             try:
                 payload = {
                     'regular': alpha,
@@ -152,15 +154,19 @@ class WQSession(requests.Session):
                     }
                 }
                 r = self.post(self.simulate_url, json=payload)
-                nxt = r.headers['Location']
+                if r is not None:
+                    nxt = r.headers['Location']
                 break
             except Exception as e:
                 try:
-                    if 'credentials' in r.json()['detail']:
+                    if r is not None and 'credentials' in r.json()['detail']:
                         self.login_expired = True
                         return
                 except Exception as e:
-                    logger.info(f'{thread} -- {r.content}')  # usually gateway timeout
+                    if r is not None:
+                        logger.error(f'{thread} -- {r.content}')  # usually gateway timeout
+                    else:
+                        logger.error(f'{thread} -- {e}')
                     return
         logger.info(f'{thread} -- Obtained simulation link: {nxt}')
         ok = True
@@ -247,7 +253,7 @@ class WQSession(requests.Session):
                             f.flush()  # 确保数据立即写入文件
                             logger.info(f'Result added to CSV: {row[-1]}')  # 记录日志
         except Exception as e:
-            print(f'Issue occurred! {type(e).__name__}: {e}')
+            logger.error(f'Issue occurred! {type(e).__name__}: {e}')
         finally:
             # 将 self.rows_processed 的数据追加到 data/processed.txt 文件中，
             with open(self.processed_file_name, 'a') as processed_file:
@@ -263,43 +269,42 @@ class WQSession(requests.Session):
     @staticmethod
     def load_data(processed_file_name, factor_file_name):
         """
-        从 processed.txt 中读取已处理的数据，并从 factor_library.csv 中读取数据，排除已处理的数据。
+        从 processed.txt 中读取已处理的数据，并从 parameters.py 中的 FORMULAS 变量加载数据，排除已处理的数据。
 
         :param processed_file_name: 已处理数据的文件名（processed.txt）
-        :param factor_file_name: 因子库的文件名（factor_library.csv）
+        :param factor_file_name: 因子库的文件名（factor_library.csv），不再使用
         :return: 未处理的数据列表
         """
         # 从 processed.txt 中读取已处理的数据
-        processed = set()
+        processed = []
+        processed_codes = set()
         try:
             with open(processed_file_name, 'r') as processed_file:
-                for line in processed_file:
+                lines = processed_file.readlines()[1:]  # 忽略第一行
+                for line in lines:
                     stripped_line = line.strip()
                     if not stripped_line.startswith('#'):  # 忽略以 # 开头的行
-                        processed.add(json.loads(stripped_line))
+                        simulation = json.loads(stripped_line)
+                        if simulation not in processed:
+                            processed.append(simulation)
+            processed_codes = {item['code'] for item in processed}
         except FileNotFoundError:
             pass
 
-        # 从 factor_library.csv 中读取数据，并排除已处理的数据
+        # 从 parameters.py 中加载 FORMULAS 变量
+        from parameters import FORMULAS
+
+        # 遍历 FORMULAS 数组，处理数据
         data = []
-        with open(factor_file_name, 'r') as csvfile:
-            reader = csv.reader(csvfile)
-            next(reader)  # 跳过第一行
-            for row in reader:
-                if len(row) > 0:  # 确保行不为空
-                    code = row[0].strip()
-                    if not code.startswith('#'):  # 忽略以 # 开头的行，并排除已处理的数据
-                        try:
-                            # 尝试解析为 JSON 字符串
-                            json_data = json.loads(code)
-                            if isinstance(json_data, dict) and json_data not in processed:  # 确保解析结果是字典
-                                data.append(json_data)
-                        except json.JSONDecodeError:
-                            # 如果不是 JSON 字符串，按原方式处理
-                            # processed是个字典列表，根据键'code'的值来搜索code值是否存在
-                            if code not in processed:
-                                logger.info(f'Adding {code} to data.')
-                            data.append({'code': code})
+        for item in FORMULAS:
+            if isinstance(item, str):  # 如果是字符串
+                if item not in processed_codes:  # 如果未处理过
+                    logger.info(f'Adding {item} to data.')
+                    data.append({'code': item})
+            elif isinstance(item, dict):  # 如果是字典
+                if item not in processed:  # 如果未处理过
+                    data.append(item)
+            # 其他情况忽略
 
         return data
 
