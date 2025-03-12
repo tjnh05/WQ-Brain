@@ -283,13 +283,11 @@ class WQSession(requests.Session):
                 lines = processed_file.readlines()[1:]  # 忽略第一行
                 for line in lines:
                     stripped_line = line.strip()
-                    simulation = dict()
                     if not stripped_line.startswith('#'):  # 忽略以 # 开头的行
                         try:
                             simulation = json.loads(stripped_line)
                         except Exception as e:
-                            logger.warning(f'Ignored! Error parsing line: {line}')
-                            simulation['code'] = stripped_line
+                            simulation = {'code': stripped_line}
                         if simulation not in processed:
                             processed.append(simulation)
             processed_codes = {item['code'] for item in processed}
