@@ -108,6 +108,11 @@ class WQSession(requests.Session):
             raise
 
     def process_simulation(self, simulation):
+        alpha = simulation.get('code')
+        if not alpha:
+            logger.error(f'No alpha code found in simulation: {simulation}')
+            raise ValueError(f'No alpha code found in simulation: {simulation}')
+
         with self.lock:
             if self.login_expired:
                 logger.info(f'Login expired, re-logging in...')
@@ -118,7 +123,6 @@ class WQSession(requests.Session):
                     raise
 
         thread = current_thread().name
-        alpha = simulation['code'].strip()
         delay = simulation.get('delay', os.getenv('WQ_DELAY', 1))
         universe = simulation.get('universe', os.getenv('WQ_UNIVERSE', 'TOP3000'))
         truncation = simulation.get('truncation', os.getenv('WQ_TRUNCATION', 0.02))
