@@ -5,6 +5,7 @@ import csv
 import logging
 import os
 import threading
+import traceback
 from datetime import datetime
 
 import requests
@@ -254,6 +255,8 @@ class WQSession(requests.Session):
                             logger.info(f'Result added to CSV: {row[-1]}')  # 记录日志
         except Exception as e:
             logger.error(f'Issue occurred! {type(e).__name__}: {e}')
+            # 输出堆栈跟踪信息到日志文件
+            logging.info(traceback.format_exc())
         finally:
             # 将 self.rows_processed 的数据追加到 data/processed.txt 文件中，
             with open(self.processed_file_name, 'a') as processed_file:
