@@ -108,7 +108,7 @@ class WQSession(requests.Session):
             raise
 
     def process_simulation(self, simulation):
-        alpha = simulation.get('code')
+        alpha = simulation.get('regular')
         if not alpha:
             logger.error(f'No alpha code found in simulation: {simulation}')
             raise ValueError(f'No alpha code found in simulation: {simulation}')
@@ -246,7 +246,7 @@ class WQSession(requests.Session):
                     header = [
                         'passed', 'delay', 'region', 'neutralization', 'decay', 'truncation',
                         'sharpe', 'fitness', 'turnover', 'weight',
-                        'subsharpe', 'correlation', 'universe', 'link', 'code'
+                        'subsharpe', 'correlation', 'universe', 'link', 'regular'
                     ]
                     writer.writerow(header)
 
@@ -267,7 +267,6 @@ class WQSession(requests.Session):
                 for row in self.rows_processed:
                     # 把每行以JSON形式保存
                     processed_file.write(json.dumps(row) + '\n')
-                    # processed_file.write(f"{row['code']}\n")
 
         logger.info(f'total {len(self.rows_processed)} simulations completed!')
 
@@ -294,10 +293,10 @@ class WQSession(requests.Session):
                         try:
                             simulation = json.loads(stripped_line)
                         except Exception as e:
-                            simulation = {'code': stripped_line}
+                            simulation = {'regular': stripped_line}
                         if simulation not in processed:
                             processed.append(simulation)
-            processed_codes = {item['code'] for item in processed}
+            processed_codes = {item['regular'] for item in processed}
         except FileNotFoundError:
             pass
 
@@ -311,7 +310,7 @@ class WQSession(requests.Session):
             if isinstance(item, str):  # 如果是字符串
                 if item not in processed_codes:  # 如果未处理过
                     logger.info(f'Adding {item} to data.')
-                    data.append({'code': item})
+                    data.append({'regular': item})
             elif isinstance(item, dict):  # 如果是字典
                 if item not in processed:  # 如果未处理过
                     data.append(item)
