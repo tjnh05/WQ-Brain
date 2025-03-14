@@ -161,6 +161,8 @@ class WQSession(requests.Session):
                         "visualization": False
                     }
                 }
+                logger.info(
+                    f'{thread} -- decay: {decay}, truncation: {truncation}, neutralization: {neutralization}')
                 r = self.post(self.simulate_url, json=payload)
                 r.raise_for_status()
                 if r is not None:
