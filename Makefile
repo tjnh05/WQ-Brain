@@ -87,5 +87,11 @@ backup:
 	@docker run --rm -v $(VOLUME_NAME):/app/data -v $(BACKUP_DIR):/backup busybox cp -r /app/data /backup
 	@echo "Files copied successfully."
 
+# 新增目标filter，从文件data/api_results.csv里筛选符合条件的记录，使用正则表达式：^[6-7]
+filter:
+	@echo "Filtering records from api_results.csv..."
+	@mkdir -p $(DATADIR)
+	@awk -F, '$$1 ~ /^[6-7]/ {print}' $(DATADIR)api_results.csv > $(DATADIR)filtered_api_results.csv
+	@echo "Filtered records saved to filtered_api_results.csv."
 
 .PHONY: all factors simulate clean_backups build help
