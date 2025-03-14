@@ -224,8 +224,9 @@ class WQSession(requests.Session):
                     passed += 1
                 elif check['result'] == 'FAIL':
                     failed_count += 1
-                    reason = f"【{alpha_link}】 - Check item '{check['name']}' failed: Current value {check.get('value', 'N/A')}, Limit value {check.get('limit', 'N/A')}"
+                    reason = f"Check item '{check['name']}' failed: Current value {check.get('value', 'N/A')}, Limit value {check.get('limit', 'N/A')}"
                     logger.info(f'{thread} -- 【{alpha_link}】 - {reason}')
+            logger.info(f'{thread} -- 【{alpha_link}】 - sharpe: {r["is"]["sharpe"]}, fitness: {r["is"]["fitness"]}, turnover: {round(100 * r["is"]["turnover"], 2)}%')
             logger.info(f'{thread} -- 【{alpha_link}】 - Total PASS: {passed}, Total FAIL: {failed_count}')
 
             self.rows_processed.append(simulation)
