@@ -39,7 +39,7 @@ docker_factors:
 # 模拟运行
 simulate:
 	# 执行main.py进行模拟
-	$(PYTHON) main.py
+	WQ_LOG_TO_FILE=true $(PYTHON) main.py
 
 install:
 	$(PIP) install -r requirements.txt
