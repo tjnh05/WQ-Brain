@@ -53,6 +53,7 @@ class WQSession(requests.Session):
     def __init__(self, **kwargs):
         super().__init__()
         self.lock = threading.Lock()
+        self.verify = kwargs.get('verify', os.getenv("WQ_CERT_VERIFY", 'True')) == 'True'
         self.max_workers = kwargs.get('max_workers', 2)
         self.json_fn = kwargs.get('json_fn', os.path.join('data', 'credentials.json'))
         self.processed_file_name = kwargs.get('processed_file_name', os.path.join('data', 'processed.txt'))
@@ -136,6 +137,8 @@ class WQSession(requests.Session):
         instrument_type = simulation.get('instrumentType', os.getenv('WQ_INSTRUMENTTYPE', 'EQUITY'))
         unit_handling = simulation.get('unitHandling', os.getenv('WQ_UNITHANDLING', 'VERIFY'))
         logger.info(f"{thread} -- Simulating alpha: {alpha}")
+
+        nxt = None
         while True:
             # keep sending a post request until the simulation link is found
             r = None
@@ -159,24 +162,26 @@ class WQSession(requests.Session):
                     }
                 }
                 r = self.post(self.simulate_url, json=payload)
+                r.raise_for_status()
                 if r is not None:
                     nxt = r.headers['Location']
+                    logger.info(f'{thread} -- Obtained simulation link: {nxt}')
                 break
             except Exception as e:
                 try:
-                    if r is not None and 'credentials' in r.json()['detail']:
+                    if r is not None and 'credentials' in r.json().get('detail'):
                         self.login_expired = True
                         return
-                except Exception as e:
+                except:
                     if r is not None:
                         logger.error(f'{thread} -- {r.content}')  # usually gateway timeout
-                    else:
-                        logger.error(f'{thread} -- {e}')
                     return
-        logger.info(f'{thread} -- Obtained simulation link: {nxt}')
+                finally:
+                    logger.error(f'{thread} -- {e}')
+
         ok = True
         alpha_link = None
-        while True:
+        while nxt is not None:
             r = self.get(nxt).json()
             if 'alpha' in r:
                 alpha_link = r['alpha']
@@ -211,6 +216,11 @@ class WQSession(requests.Session):
                     weight_check = check['result']
                 if check['name'] == 'LOW_SUB_UNIVERSE_SHARPE':
                     subsharpe = check.get('value', -1)
+
+                # 如果检查未通过，输出失败原因
+                if check['result'] == 'FAIL':
+                    reason = f"【{alpha_link}】 - 检查项 '{check['name']}' 未通过: 当前值 {check.get('value', '无')}, 限制值 {check.get('limit', '无')}"
+                    logger.info(f'{thread} -- {reason}')
 
             self.rows_processed.append(simulation)
 
@@ -273,7 +283,7 @@ class WQSession(requests.Session):
         return [sim for sim in data if sim not in self.rows_processed]
 
     @staticmethod
-    def load_data(processed_file_name, factor_file_name):
+    def load_data(processed_file_name, factor_file_name=None):
         """
         从 processed.txt 中读取已处理的数据，并从 parameters.py 中的 FORMULAS 变量加载数据，排除已处理的数据。
 
@@ -299,7 +309,6 @@ class WQSession(requests.Session):
             processed_codes = {item['regular'] for item in processed}
         except FileNotFoundError:
             pass
-
 
         # 从 parameters.py 中加载 FORMULAS 变量
         from parameters import FORMULAS
