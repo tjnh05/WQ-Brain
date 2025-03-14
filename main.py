@@ -203,7 +203,7 @@ class WQSession(requests.Session):
         subsharpe = None
 
         if ok is not True:
-            logger.info(f'{thread} -- Issue when sending simulation request [{alpha}]: {ok[1]}')
+            logger.error(f'{thread} -- Issue when sending simulation request [{alpha}]: {ok[1]}')
             row = [
                 0, delay, region,
                 neutralization, decay, truncation,
