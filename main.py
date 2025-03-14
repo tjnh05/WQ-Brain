@@ -181,16 +181,18 @@ class WQSession(requests.Session):
 
         ok = True
         alpha_link = None
-        while nxt is not None:
-            r = self.get(nxt).json()
-            if 'alpha' in r:
-                alpha_link = r['alpha']
+        while nxt:
+            response = self.get(nxt).json()
+            if 'alpha' in response:
+                alpha_link = response['alpha']
                 break
 
             try:
-                logger.info(f"{thread} -- 【{alpha}】 - {int(100 * r['progress'])}%")
+                progress = int(100 * response['progress'])
+                logger.info(f"{thread} -- 【{alpha}】 - {progress}%")
             except Exception as e:
-                ok = (False, r['message'])
+                logger.error(f'{thread} -- {e}')
+                ok = (False, response.get('message', 'Unknown error'))
                 break
 
             time.sleep(10)
@@ -209,18 +211,22 @@ class WQSession(requests.Session):
             r = self.get(f'{self.status_base_url}{alpha_link}').json()
             logger.info(
                 f'{thread} -- Obtained alpha link: {self.alpha_base_url}{alpha_link}')
-            passed = 0
+
+            passed, failed_count = 0, 0
             for check in r['is']['checks']:
-                passed += check['result'] == 'PASS'
                 if check['name'] == 'CONCENTRATED_WEIGHT':
                     weight_check = check['result']
                 if check['name'] == 'LOW_SUB_UNIVERSE_SHARPE':
                     subsharpe = check.get('value', -1)
 
                 # 如果检查未通过，输出失败原因
-                if check['result'] == 'FAIL':
+                if check['result'] == 'PASS':
+                    passed += 1
+                elif check['result'] == 'FAIL':
+                    failed_count += 1
                     reason = f"【{alpha_link}】 - Check item '{check['name']}' failed: Current value {check.get('value', 'N/A')}, Limit value {check.get('limit', 'N/A')}"
-                    logger.info(f'{thread} -- {reason}')
+                    logger.info(f'{thread} -- 【{alpha_link}】 - {reason}')
+            logger.info(f'{thread} -- 【{alpha_link}】 - Total PASS: {passed}, Total FAIL: {failed_count}')
 
             self.rows_processed.append(simulation)
 
