@@ -219,7 +219,7 @@ class WQSession(requests.Session):
 
                 # 如果检查未通过，输出失败原因
                 if check['result'] == 'FAIL':
-                    reason = f"【{alpha_link}】 - 检查项 '{check['name']}' 未通过: 当前值 {check.get('value', '无')}, 限制值 {check.get('limit', '无')}"
+                    reason = f"【{alpha_link}】 - Check item '{check['name']}' failed: Current value {check.get('value', 'N/A')}, Limit value {check.get('limit', 'N/A')}"
                     logger.info(f'{thread} -- {reason}')
 
             self.rows_processed.append(simulation)
