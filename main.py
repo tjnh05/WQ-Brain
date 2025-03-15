@@ -184,20 +184,24 @@ class WQSession(requests.Session):
         ok = True
         alpha_link = None
         while nxt:
-            response = self.get(nxt).json()
-            if 'alpha' in response:
-                alpha_link = response['alpha']
+            sim_progress_resp = self.get(nxt)
+            retry_after_sec = float(sim_progress_resp.headers.get("Retry-After", 0))
+            response = sim_progress_resp.json()
+            if retry_after_sec == 0:  # simulation done!模拟完成!
+                if 'alpha' in response:
+                    alpha_link = response['alpha']
+                else:
+                    logger.error(f'{thread} -- Issue when sending simulation request [{alpha}]: {response}')
                 break
-
-            try:
-                progress = int(100 * response['progress'])
-                logger.info(f"{thread} -- 【{alpha}】 - {progress}%")
-            except Exception as e:
-                logger.error(f'{thread} -- {e}')
-                ok = (False, response.get('message', 'Unknown error'))
-                break
-
-            time.sleep(10)
+            else:
+                try:
+                    progress = int(100 * response['progress'])
+                    logger.info(f"{thread} -- 【{alpha}】 - {progress}%")
+                    time.sleep(retry_after_sec)
+                except Exception as e:
+                    logger.error(f'{thread} -- {e}')
+                    ok = (False, response.get('message', 'Unknown error'))
+                    break
 
         weight_check = None
         subsharpe = None
