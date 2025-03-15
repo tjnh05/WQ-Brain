@@ -197,7 +197,10 @@ class WQSession(requests.Session):
                 try:
                     progress = int(100 * response['progress'])
                     logger.info(f"{thread} -- 【{alpha}】 - {progress}%")
-                    time.sleep(retry_after_sec)
+                    if progress < 80:
+                        time.sleep(retry_after_sec + 5)
+                    else:
+                        time.sleep(retry_after_sec)
                 except Exception as e:
                     logger.error(f'{thread} -- {e}')
                     ok = (False, response.get('message', 'Unknown error'))
