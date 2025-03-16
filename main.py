@@ -8,6 +8,7 @@ import random
 import threading
 import traceback
 from datetime import datetime
+from math import ceil
 
 import requests
 import json
@@ -77,6 +78,9 @@ class WQSession(requests.Session):
             os.makedirs('data')
         self.csv_file = os.path.join("data", "api_results.csv")
 
+        # 登录
+        self.login()
+
     def _load_credentials(self):
         """
         从 self.json_fn 文件中读取 email 和 password。
@@ -140,15 +144,6 @@ class WQSession(requests.Session):
             logger.error(f'No alpha code found in simulation: {simulation}')
             raise ValueError(f'No alpha code found in simulation: {simulation}')
 
-        with self.lock:
-            if self.login_expired:
-                logger.info(f'Login expired, re-logging in...')
-                try:
-                    self.login()
-                except Exception as e:
-                    logger.error(f're-login into WQBrain:{e}')
-                    raise
-
         thread = current_thread().name
         delay = simulation.get('delay', os.getenv('WQ_DELAY', 1))
         universe = simulation.get('universe', os.getenv('WQ_UNIVERSE', 'TOP3000'))
@@ -164,6 +159,7 @@ class WQSession(requests.Session):
         unit_handling = simulation.get('unitHandling', os.getenv('WQ_UNITHANDLING', 'VERIFY'))
         logger.info(f"{thread} -- Simulating alpha: {alpha}")
 
+        # simulate
         nxt = None
         while True:
             # keep sending a post request until the simulation link is found
@@ -191,68 +187,80 @@ class WQSession(requests.Session):
                     f'{thread} -- decay: {decay}, truncation: {truncation}, neutralization: {neutralization}')
                 r = self.post(self.simulate_url, json=payload, proxies=self.proxies, verify=self.verify)
                 r.raise_for_status()
-                if r is not None:
-                    nxt = r.headers['Location']
-                    logger.info(f'{thread} -- Obtained simulation link: {nxt}')
+                nxt = r.headers.get('Location')
+                if nxt is None:
+                    if 'credentials' in r.json().get('detail'):
+                        logger.warning(f"session expired! try to re-login")
+                        self.login_expired = True
+                        with self.lock:
+                            if self.login_expired:
+                                logger.info(f'Login expired, re-logging in...')
+                                try:
+                                    self.login()
+                                except Exception as e:
+                                    logger.error(f're-login into WQBrain:{e}')
+                                    raise
+                        continue
+
+                    message = f"Location does not exist in response headers"
+                    logger.error(message)
+                    raise Exception(message)
                 break
             except Exception as e:
-                try:
-                    if r is not None and 'credentials' in r.json().get('detail'):
-                        self.login_expired = True
-                        return
-                except:
-                    if r is not None:
-                        logger.error(f'{thread} -- {r.content}')  # usually gateway timeout
-                    return
-                finally:
-                    logger.error(f'{thread} -- {e}')
+                logger.error(f'{thread} -- {e}')
+                return []
 
-        ok = False
+        # query status
         alpha_link = None
+        weight_check = None
+        subsharpe = None
         while nxt:
-            sim_progress_resp = self.get(nxt, proxies=self.proxies, verify=self.verify)
-            retry_after_sec = float(sim_progress_resp.headers.get("Retry-After", 0))
-            response = sim_progress_resp.json()
-            if retry_after_sec == 0:  # simulation done!模拟完成!
-                if 'alpha' in response:
+            try:
+                sim_progress_resp = self.get(nxt, proxies=self.proxies, verify=self.verify)
+                sim_progress_resp.raise_for_status()
+                retry_after_sec = float(sim_progress_resp.headers.get("Retry-After", 0))
+                response = sim_progress_resp.json()
+                progress_str = response.get('progress', '1')
+                try:
+                    progress = ceil(100 * float(progress_str))
+                    progress = max(0, min(100, progress))  # 确保 progress 在 0 到 100 之间
+                except ValueError:
+                    progress = 100  # 如果转换失败，默认设置为 100
+
+                if progress == 100 and 'alpha' in response:  # simulation done!模拟完成!
                     alpha_link = response['alpha']
-                    ok = True
-                else:
-                    ok = False
+                    break
+                elif progress == 100 and 'alpha' not in response:
                     logger.error(f'{thread} -- Issue when sending simulation request [{alpha}]: {response}')
                     raise Exception(f'{thread} -- Issue when sending simulation request [{alpha}]: {response}')
-                break
-            else:
-                try:
-                    progress = int(100 * response['progress'])
+                else:
                     logger.info(f"{thread} -- {alpha} - {progress}%")
                     if progress < 80:
                         time.sleep(retry_after_sec + random.uniform(5, 10))
                     else:
                         time.sleep(retry_after_sec)
-                except Exception as e:
-                    logger.error(f'{thread} -- {e}')
-                    ok = False
-                    break
+                    continue
+            except Exception as e:
+                logger.error(f'{thread} -- {e}')
+                row = [
+                    0, delay, region,
+                    neutralization, decay, truncation,
+                    0, 0, 0, 'FAIL', 0, -1, universe, nxt, alpha
+                ]
 
-        weight_check = None
-        subsharpe = None
+                return row
 
-        if ok is not True:
-            logger.error(f'{thread} -- Issue when sending simulation request [{alpha}]: {ok[1]}')
-            row = [
-                0, delay, region,
-                neutralization, decay, truncation,
-                0, 0, 0, 'FAIL', 0, -1, universe, nxt, alpha
-            ]
-        else:
+        # fetch result
+        try:
             response = self.get(f'{self.status_base_url}{alpha_link}', proxies=self.proxies, verify=self.verify)
+            response.raise_for_status()
             response_data = response.json()
             logger.info(
                 f'{thread} -- Obtained alpha link: {self.alpha_base_url}{alpha_link}')
 
             passed, failed_count = 0, 0
-            for check in response_data['is']['checks']:
+            checks = response_data['is']['checks']
+            for check in checks:
                 if check['name'] == 'CONCENTRATED_WEIGHT':
                     weight_check = check['result']
                 if check['name'] == 'LOW_SUB_UNIVERSE_SHARPE':
@@ -263,19 +271,26 @@ class WQSession(requests.Session):
                     passed += 1
                 elif check['result'] == 'FAIL':
                     failed_count += 1
-                    reason = f"Check item '{check['name']}' failed: Current value {check.get('value', 'N/A')}, Limit value {check.get('limit', 'N/A')}"
+                    reason = (f"Check item '{check['name']}' failed: Current value {check.get('value', 'N/A')}, "
+                              f"Limit value {check.get('limit', 'N/A')}"
+                             )
                     logger.info(f'{thread} -- {alpha_link} - {reason}')
-            logger.info(f'{thread} -- {alpha_link} - sharpe: {r["is"]["sharpe"]}, fitness: {r["is"]["fitness"]}, turnover: {round(100 * r["is"]["turnover"], 2)}%')
+
             logger.info(f'{thread} -- {alpha_link} - Total PASS: {passed}, Total FAIL: {failed_count}')
+            sharpe = response_data["is"]["sharpe"]
+            fitness = response_data["is"]["fitness"]
+            turnover = response_data["is"]["turnover"]
+            logger.info((f'{thread} -- {alpha_link} - sharpe: {sharpe}, '
+                         f'fitness: {fitness}, turnover: {round(100 * turnover, 2)}%'))
 
             self.rows_processed.append(simulation)
 
             row = [
                 passed, delay, region,
                 neutralization, decay, truncation,
-                r['is']['sharpe'],
-                r['is']['fitness'],
-                round(100 * r['is']['turnover'], 2),
+                sharpe,
+                fitness,
+                round(100 * turnover, 2),
                 weight_check,
                 subsharpe,
                 -1,
@@ -284,11 +299,20 @@ class WQSession(requests.Session):
                 alpha
             ]
 
-        return row
+            return row
+        except Exception as e:
+            logger.error(f'{thread} -- {e}')
+            row = [
+                0, delay, region,
+                neutralization, decay, truncation,
+                0, 0, 0, 'FAIL', 0, -1, universe, nxt, alpha
+            ]
+
+            return row
 
     def simulate(self, data, **kwargs):
         self.rows_processed = []
-        self.login()
+        # self.login()
 
         # 主函数处理部分
         try:
