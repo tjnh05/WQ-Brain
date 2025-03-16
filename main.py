@@ -114,6 +114,7 @@ class WQSession(requests.Session):
     def login(self):
         try:
             response = self.post(self.auth_url, proxies=self.proxies, verify=self.verify)
+            response.raise_for_status()
             response_data = response.json()
 
             if 'user' in response_data:
@@ -188,7 +189,7 @@ class WQSession(requests.Session):
                 }
                 logger.info(
                     f'{thread} -- decay: {decay}, truncation: {truncation}, neutralization: {neutralization}')
-                r = self.post(self.simulate_url, json=payload)
+                r = self.post(self.simulate_url, json=payload, proxies=self.proxies, verify=self.verify)
                 r.raise_for_status()
                 if r is not None:
                     nxt = r.headers['Location']
@@ -206,17 +207,20 @@ class WQSession(requests.Session):
                 finally:
                     logger.error(f'{thread} -- {e}')
 
-        ok = True
+        ok = False
         alpha_link = None
         while nxt:
-            sim_progress_resp = self.get(nxt)
+            sim_progress_resp = self.get(nxt, proxies=self.proxies, verify=self.verify)
             retry_after_sec = float(sim_progress_resp.headers.get("Retry-After", 0))
             response = sim_progress_resp.json()
             if retry_after_sec == 0:  # simulation done!模拟完成!
                 if 'alpha' in response:
                     alpha_link = response['alpha']
+                    ok = True
                 else:
+                    ok = False
                     logger.error(f'{thread} -- Issue when sending simulation request [{alpha}]: {response}')
+                    raise Exception(f'{thread} -- Issue when sending simulation request [{alpha}]: {response}')
                 break
             else:
                 try:
@@ -228,7 +232,7 @@ class WQSession(requests.Session):
                         time.sleep(retry_after_sec)
                 except Exception as e:
                     logger.error(f'{thread} -- {e}')
-                    ok = (False, response.get('message', 'Unknown error'))
+                    ok = False
                     break
 
         weight_check = None
@@ -242,12 +246,13 @@ class WQSession(requests.Session):
                 0, 0, 0, 'FAIL', 0, -1, universe, nxt, alpha
             ]
         else:
-            r = self.get(f'{self.status_base_url}{alpha_link}').json()
+            response = self.get(f'{self.status_base_url}{alpha_link}', proxies=self.proxies, verify=self.verify)
+            response_data = response.json()
             logger.info(
                 f'{thread} -- Obtained alpha link: {self.alpha_base_url}{alpha_link}')
 
             passed, failed_count = 0, 0
-            for check in r['is']['checks']:
+            for check in response_data['is']['checks']:
                 if check['name'] == 'CONCENTRATED_WEIGHT':
                     weight_check = check['result']
                 if check['name'] == 'LOW_SUB_UNIVERSE_SHARPE':
