@@ -4,6 +4,7 @@
 import csv
 import logging
 import os
+import random
 import threading
 import traceback
 from datetime import datetime
@@ -14,7 +15,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from threading import current_thread
 import urllib3
-
+from requests.auth import HTTPBasicAuth
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -68,45 +69,69 @@ class WQSession(requests.Session):
         # 读取 email 和 password
         self.email = os.getenv('WQ_EMAIL')
         self.password = os.getenv('WQ_PASSWORD')
+        self._load_credentials()
+        self.auth = (self.email, self.password)
 
         # 结果文件
         if not os.path.exists('data'):
             os.makedirs('data')
         self.csv_file = os.path.join("data", "api_results.csv")
 
-        # 如果环境变量中未设置 email 或 password，则从 json_fn 文件中读取
-        if not self.email or not self.password:
-            try:
-                with open(self.json_fn, 'r') as f:
-                    creds = json.loads(f.read())
-                    self.email = creds['email']
-                    self.password = creds['password']
-            except Exception as e:
-                raise ValueError(f"Failed to read email and password from {self.json_fn}: {e}")
+    def _load_credentials(self):
+        """
+        从 self.json_fn 文件中读取 email 和 password。
+        如果文件不存在或格式不正确，抛出异常。
+        """
+        if self.email and self.password:
+            return  # 如果环境变量中已经设置了 email 和 password，直接返回
 
-        # 检查 email 和 password 是否都有值
+        try:
+            with open(self.json_fn, 'r') as f:
+                creds = json.load(f)  # 使用 json.load 直接加载文件内容
+                if not isinstance(creds, dict):
+                    raise ValueError(f"Invalid JSON format in {self.json_fn}: expected a dictionary.")
+
+                self.email = creds.get('email')
+                self.password = creds.get('password')
+
+                if not self.email or not self.password:
+                    raise ValueError(f"Email or password is missing in {self.json_fn}.")
+
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Credentials file {self.json_fn} not found.")
+        except json.JSONDecodeError:
+            raise ValueError(f"Invalid JSON format in {self.json_fn}.")
+        except Exception as e:
+            raise ValueError(f"Failed to load credentials from {self.json_fn}: {e}")
+
+        # 确保 email 和 password 都有值
         if not self.email or not self.password:
             raise ValueError("Email and password must be provided via environment variables or credentials file.")
 
+        # self.auth = HTTPBasicAuth(self.email, self.password)
         self.auth = (self.email, self.password)
 
     def login(self):
         try:
-            r = self.post(self.auth_url, proxies=self.proxies, verify=False)
-            if 'user' not in r.json():
-                if 'inquiry' in r.json():
-                    input(
-                        f"Please complete biometric authentication at {r.url}/persona?inquiry={r.json()['inquiry']} before continuing...")
-                    self.post(f"{r.url}/persona", json=r.json())
-                else:
-                    message = r.json()
-                    logging.warning(f'WARNING! {message}')
-                    raise Exception(f'failed! {message}')
-            logger.info('Logged into WQBrain!')
-            self.login_expired = False
+            response = self.post(self.auth_url, proxies=self.proxies, verify=self.verify)
+            response_data = response.json()
+
+            if 'user' in response_data:
+                logger.info(f'user {response_data['user'].get('id')} has logged into WQBrain!')
+                self.login_expired = False
+                return True
+            elif 'inquiry' in response_data:
+                inquiry_url = f"{response.url}/persona?inquiry={response_data['inquiry']}"
+                input(f"Please complete biometric authentication at {inquiry_url} before continuing...")
+                self.post(f"{response.url}/persona", json=response_data, proxies=self.proxies, verify=self.verify)
+                return True
+            else:
+                logger.warning(f'Login failed: {response_data}')
+                raise Exception(f'Login failed: {response_data}')
         except Exception as e:
-            logger.error(f'login into WQBrain:{e}')
+            logger.error(f'Login error: {e}')
             raise
+
 
     def process_simulation(self, simulation):
         alpha = simulation.get('regular')
@@ -196,9 +221,9 @@ class WQSession(requests.Session):
             else:
                 try:
                     progress = int(100 * response['progress'])
-                    logger.info(f"{thread} -- 【{alpha}】 - {progress}%")
+                    logger.info(f"{thread} -- {alpha} - {progress}%")
                     if progress < 80:
-                        time.sleep(retry_after_sec + 5)
+                        time.sleep(retry_after_sec + random.uniform(5, 10))
                     else:
                         time.sleep(retry_after_sec)
                 except Exception as e:
@@ -234,9 +259,9 @@ class WQSession(requests.Session):
                 elif check['result'] == 'FAIL':
                     failed_count += 1
                     reason = f"Check item '{check['name']}' failed: Current value {check.get('value', 'N/A')}, Limit value {check.get('limit', 'N/A')}"
-                    logger.info(f'{thread} -- 【{alpha_link}】 - {reason}')
-            logger.info(f'{thread} -- 【{alpha_link}】 - sharpe: {r["is"]["sharpe"]}, fitness: {r["is"]["fitness"]}, turnover: {round(100 * r["is"]["turnover"], 2)}%')
-            logger.info(f'{thread} -- 【{alpha_link}】 - Total PASS: {passed}, Total FAIL: {failed_count}')
+                    logger.info(f'{thread} -- {alpha_link} - {reason}')
+            logger.info(f'{thread} -- {alpha_link} - sharpe: {r["is"]["sharpe"]}, fitness: {r["is"]["fitness"]}, turnover: {round(100 * r["is"]["turnover"], 2)}%')
+            logger.info(f'{thread} -- {alpha_link} - Total PASS: {passed}, Total FAIL: {failed_count}')
 
             self.rows_processed.append(simulation)
 
