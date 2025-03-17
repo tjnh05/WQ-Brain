@@ -121,7 +121,8 @@ class WQSession(requests.Session):
             response_data = response.json()
 
             if 'user' in response_data:
-                logger.info(f'user {response_data['user'].get('id')} has logged into WQBrain!')
+                user_id = response_data['user']['id']
+                logger.info(f'user {user_id} has logged into WQBrain!')
                 self.login_expired = False
                 return True
             elif 'inquiry' in response_data:
@@ -161,6 +162,15 @@ class WQSession(requests.Session):
         # simulate
         nxt = None
         while True:
+            with self.lock:
+                if self.login_expired:
+                    logger.info(f'Login expired, re-logging in...')
+                    try:
+                        self.login()
+                    except Exception as e:
+                        logger.error(f're-login into WQBrain:{e}')
+                        raise
+
             # keep sending a post request until the simulation link is found
             r = None
             try:
@@ -185,20 +195,20 @@ class WQSession(requests.Session):
                 logger.info(
                     f'{thread} -- decay: {decay}, truncation: {truncation}, neutralization: {neutralization}')
                 r = self.post(self.simulate_url, json=payload, proxies=self.proxies, verify=self.verify)
-                r.raise_for_status()
+                if r.status_code == 401:
+                    logger.warning(f"session expired! try to re-login")
+                    self.login_expired = True
+                    continue
+                else:
+                    r.raise_for_status()
+
+                # 获取查询状态的URL
                 nxt = r.headers.get('Location')
                 if nxt is None:
                     if 'credentials' in r.json().get('detail'):
                         logger.warning(f"session expired! try to re-login")
-                        self.login_expired = True
                         with self.lock:
-                            if self.login_expired:
-                                logger.info(f'Login expired, re-logging in...')
-                                try:
-                                    self.login()
-                                except Exception as e:
-                                    logger.error(f're-login into WQBrain:{e}')
-                                    raise
+                            self.login_expired = True
                         continue
 
                     message = f"Location does not exist in response headers"
@@ -214,9 +224,25 @@ class WQSession(requests.Session):
         weight_check = None
         subsharpe = None
         while nxt:
+            with self.lock:
+                if self.login_expired:
+                    logger.info(f'Login expired, re-logging in...')
+                    try:
+                        self.login()
+                    except Exception as e:
+                        logger.error(f're-login into WQBrain:{e}')
+                        raise
+
             try:
                 sim_progress_resp = self.get(nxt, proxies=self.proxies, verify=self.verify)
-                sim_progress_resp.raise_for_status()
+                if sim_progress_resp.status_code == 401:
+                    logger.warning(f"session expired! try to re-login")
+                    with self.lock:
+                        self.login_expired = True
+                    continue
+                else:
+                    sim_progress_resp.raise_for_status()
+
                 retry_after_sec = float(sim_progress_resp.headers.get("Retry-After", 0))
                 response = sim_progress_resp.json()
                 progress_str = response.get('progress', '1')
@@ -400,8 +426,8 @@ class WQSession(requests.Session):
 def main():
     processed_file_name = os.path.join('data', 'processed.txt')
     factor_file_name = os.path.join('data', 'factor_library.csv')
-    # proxies = {"http": "http://127.0.0.1:1080", "https": "http://127.0.0.1:1080"}
-    proxies = None
+    proxies = {"http": "http://127.0.0.1:1080", "https": "http://127.0.0.1:1080"}
+    # proxies = None
 
     data = WQSession.load_data(processed_file_name, factor_file_name)
     total_rows = len(data)
