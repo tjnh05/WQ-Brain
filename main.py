@@ -430,8 +430,8 @@ class WQSession(requests.Session):
 def main():
     processed_file_name = os.path.join('data', 'processed.txt')
     factor_file_name = os.path.join('data', 'factor_library.csv')
-    proxies = {"http": "http://127.0.0.1:1080", "https": "http://127.0.0.1:1080"}
-    # proxies = None
+    # proxies = {"http": "http://127.0.0.1:1080", "https": "http://127.0.0.1:1080"}
+    proxies = None
 
     data = WQSession.load_data(processed_file_name, factor_file_name)
     total_rows = len(data)
