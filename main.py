@@ -30,7 +30,7 @@ for handler in logging.root.handlers[:]:
 # 创建标准输出处理器
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
-console_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s - %(funcName)s - %(lineno)d - %(message)s')
+console_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s::%(funcName)s::%(lineno)d - %(message)s')
 console_handler.setFormatter(console_formatter)
 logger.addHandler(console_handler)
 
@@ -45,7 +45,7 @@ if os.getenv('WQ_LOG_TO_FILE', '').lower() == 'true':
     log_file = os.path.join(log_dir, f"api_{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
     file_handler = logging.FileHandler(log_file, encoding='utf-8')
     file_handler.setLevel(logging.INFO)
-    file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s - %(funcName)s - %(lineno)d - %(message)s')
+    file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s::%(funcName)s::%(lineno)d - %(message)s')
     file_handler.setFormatter(file_formatter)
     logger.addHandler(file_handler)
 
