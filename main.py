@@ -278,6 +278,10 @@ class WQSession(requests.Session):
         # fetch result
         try:
             response = self.get(f'{self.status_base_url}{alpha_link}', proxies=self.proxies, verify=self.verify)
+            if response.status_code == 401:
+                logger.warning(f"session expired! ")
+                with self.lock:
+                    self.login_expired = True
             response.raise_for_status()
             response_data = response.json()
             logger.info(
