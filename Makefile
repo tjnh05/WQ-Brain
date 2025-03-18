@@ -92,6 +92,6 @@ filter:
 	@echo "Filtering records from api_results.csv..."
 	@mkdir -p $(DATADIR)
 	@awk -F, '$$1 ~ /^[6-7]/ {print}' $(DATADIR)api_results.csv > $(DATADIR)filtered_api_results.csv
-	@echo "Filtered records saved to $(DATADIR)filtered_api_results.csv."
+	@echo "Filtered records saved to $(DATADIR)filtered_api_results.csv"
 
 .PHONY: all factors simulate clean_backups build help
