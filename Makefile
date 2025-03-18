@@ -91,7 +91,7 @@ backup:
 filter:
 	@echo "Filtering records from api_results.csv..."
 	@mkdir -p $(DATADIR)
-	@header -1 $(DATADIR)filtered_api_results.csv > $(DATADIR)filtered_api_results.csv
+	@head -1 $(DATADIR)filtered_api_results.csv > $(DATADIR)filtered_api_results.csv
 	@awk -F, '$$1 ~ /^[6-7]/ {print}' $(DATADIR)api_results.csv >> $(DATADIR)filtered_api_results.csv
 	@echo "Filtered records saved to $(DATADIR)filtered_api_results.csv"
 
