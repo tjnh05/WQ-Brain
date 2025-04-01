@@ -946,15 +946,12 @@ def main():
         # pc_fields = pc_fields + temp
         pc_fields.extend(temp)
 
-    #print(pc_fields[0])
-    #len(pc_fields)
-
     import json
     FORMULAS = json.dumps(pc_fields, indent=4)
 
     # 将 JSON 数据写入到 parameters5.py 文件中
     with open('parameters.py', 'w') as file:
-        file.write(f"pc_fields = {FORMULAS}\n")
+        file.write(f"FORMULAS = {FORMULAS}\n")
 
 
 if __name__ == "__main__":
