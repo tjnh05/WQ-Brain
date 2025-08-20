@@ -351,7 +351,12 @@ class WorldQuantBRAINClient:
                 # 处理响应结果
                 for idx, resp in enumerate(resps, start=1):
                     self.logger.info(f"idx: {idx}, resp: {resp}")
-                    if resp.status_code == 200:
+                    # 修改：检查resp是否为异常对象
+                    if isinstance(resp, Exception):
+                        self.logger.error(f"Error occurred during simulation: {resp}")
+                        continue
+                    # 修改：检查是否有status_code属性且等于200
+                    elif hasattr(resp, 'status_code') and resp.status_code == 200:
                         # 从 window_alphas 中提取第 idx 块内的 regular 数据
                         start_idx = (idx - 1) * size
                         end_idx = min(start_idx + size, len(window_alphas))
@@ -374,7 +379,9 @@ class WorldQuantBRAINClient:
                         self.logger.info(f"Processing speed: {speed_per_minute:.2f} alphas per minute, {speed_per_day:.2f} alphas per day")
 
                     else:
-                        self.logger.warning(f"Response status code: {resp.status_code}. Skipping this block.")
+                        # 修改：安全地获取状态码
+                        status_code = getattr(resp, 'status_code', 'Unknown')
+                        self.logger.warning(f"Response status code: {status_code}. Skipping this block.")
 
         except Exception as e:
             self.logger.error(f"Error during batch simulation: {e}")
@@ -518,9 +525,11 @@ class WorldQuantBRAINClient:
             self.logger.info(f"Simulation completed. Total time: {formatted_time}")
             self.logger.info(f"Processing speed: {speed_per_minute:.2f} simulations per minute")
 
-    def mark_processed_expressions(self, input_file: str, output_file: str):
+    def mark_processed_expressions(self, input_file: str, output_file: str) -> object:
         """
         标记已处理的 alpha 表达式，在 input_file 中对应的行首添加 //。
+        :rtype: object
+        :return: 
         :param input_file: 输入文件路径
         :param output_file: 输出文件路径（包含已处理的表达式）
         """
