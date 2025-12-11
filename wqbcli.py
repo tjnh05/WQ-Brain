@@ -320,7 +320,8 @@ class WorldQuantBRAINClient:
                             'unitHandling': unit_handling,  # 动态设置 unit_handling
                             'nanHandling': nan_handling,  # 动态设置 nan_handling
                             'language': 'FASTEXPR',
-                            'visualization': visualization  # 动态设置 visualization
+                            'visualization': visualization,  # 动态设置 visualization
+                            'maxTrade': 'ON' if region == 'ASI' else 'OFF'
                         },
                         'regular': expr
                     }
@@ -450,6 +451,10 @@ class WorldQuantBRAINClient:
                     },
                     'regular': expression
                 }]
+
+                # 如果 region 是 ASI，则添加 maxTrade 设置
+                if region == 'ASI':
+                    alpha[0]['settings']['maxTrade'] = 'ON'
                 
                 # 执行回测 (concurrency=1)
                 resps = asyncio.run(
