@@ -1,6 +1,6 @@
 __pycache__/
 credentials.json
-user_config.json
+brainmcp/user_config.json
 *chromedriver*
 *.csv
 *.log
@@ -9,3 +9,4 @@ parameters.py
 .env
 .iflow/
 settings.json
+user_config.json
