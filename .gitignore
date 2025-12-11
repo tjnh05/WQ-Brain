@@ -1,7 +1,11 @@
 __pycache__/
 credentials.json
+user_config.json
 *chromedriver*
 *.csv
 *.log
 draft/
 parameters.py
+.env
+.iflow/
+settings.json
