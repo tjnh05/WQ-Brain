@@ -27,7 +27,6 @@
 - **指令**: 任何一次 `create_multiSim` 调用，**必须**且**始终**包含 **8 个** 不同的 Alpha 表达式。
 - **原因**: 单次提交过少会触发 `"At least 2 alpha expressions required"` 错误，且浪费迭代机会。
 - **应对**: 如果你只想测试 1 个逻辑，必须立即生成 7 个该逻辑的变体（改变窗口期、Decay值或算子），凑齐 8 个一并提交。
-- **多模拟** 如果是USA地区，一次最多提交 8 个表达式，如果是其他地区或超时，一次最多提交 4 个表达式，以避免被平台限流
 
 ### **2. 死循环优化机制 (The Infinite Optimization Loop)**
 
@@ -68,18 +67,18 @@
 
 ### **D. 故障排查与优化查找表 (Troubleshooting Lookup Table)**
 
-| **症状** | **解决方案**                                                                                                                             |
-| --- |--------------------------------------------------------------------------------------------------------------------------------------|
-| **High Turnover (> 70%)** | 1. 引入阀门 `trade_when`. 2. Decay 提升至 3-5. 3. 使用 `ts_mean` 平滑.                                                                          |
-| **Low Fitness (< 1.0)** | **黄金组合**: Decay=2, Neut=Industry, Trunc=0.01.                                                                                        |
-| **Weight Concentration** | 1. 确保外层有 `rank()`. 2. Truncation=0.01. 3. `ts_backfill`或`winsorize` 预处理.                                                                            |
+| **症状** | **解决方案**                                                                                                                              |
+| --- |---------------------------------------------------------------------------------------------------------------------------------------|
+| **High Turnover (> 70%)** | 1. 引入阀门 `trade_when`. 2. Decay 提升至 3-5. 3. 使用 `ts_mean` 平滑.                                                                           |
+| **Low Fitness (< 1.0)** | **黄金组合**: Decay=2, Neut=Industry, Trunc=0.01.                                                                                         |
+| **Weight Concentration** | 1. 确保外层有 `rank()`. 2. Truncation=0.01 （在 IND 等流动性低的地区建议使用 0.001 ）. 3. `ts_backfill`或`winsorize` 预处理.                                  |
 | **Correlation Fail** | 1. 改变窗口 (5->66). 2. 换字段 (`close`->`vwap`). 3. 换算子 (`ts_delta`->`ts_rank`). 4. Different groupings and neutralizations. 5. 更换 UNIVERSE |
 
 ### **E. 严格增量复杂度法则 (The Law of Strict Incremental Complexity)**
 
 - **核心思想**: 禁止起手复杂化。严格遵循 **0-op -> 1-op -> 2-op** 的进化路径。
 - **执行步骤**:
-    1. **0-op (Raw Signal)**: 只允许使用 `rank(field)` 或 `zscore(field)`。**禁止任何时间序列算子**。
+    1. **0-op (Raw Signal)**: 优先使用 `rank(field)` 或 `zscore(field)`。
     2. **1-op (Directional/Smoothing)**: 基于 0-op 的结果，仅添加一层逻辑（如 `ts_decay` 降换手，或 `ts_delta` 找趋势）。
     3. **2-op+ (Logic Nesting)**: 只有在 1-op 验证有效后，才允许进行算子嵌套或复杂逻辑构建。
 
@@ -139,7 +138,7 @@
 
 ### **Phase 3: 模拟与监控 (Simulation & Monitoring)**
 
-1. **正式提交**: 调用 `create_multiSim` (包含 8 个当前阶段的表达式，如果是USA地区，一次最多提交 8 个表达式，如果是其他地区或超时，一次最多提交 4 个表达式，以避免被平台限流)。
+1. **正式提交**: 调用 `create_multiSim` (包含 8 个当前阶段的表达式)。
     - **提取 ID**: 从返回结果中获取 Simulation ID。
 2. **监控 (Loop)**:
     - 调用 `check_multisimulation_status(simulation_id="...")`。
@@ -164,7 +163,7 @@
 1. 选取 Best Alpha。
 2. **相关性 硬性检查**:
    - 相关性检查包括 PC 和 SC，即生产相关性和自相关性。
-   - 在调用 工具 check_correlation 时，检查相关性是取返回值里correlation_data.max的值，不能使用 max_correlation 字段。
+   - 在调用 工具 check_correlation 时，检查相关性是取返回值里correlation_data.max的值，不能使用 max_correlation 字段，也不能根据all_passed为true就认为通过。
    - 若 PC >= 0.7 或 SC >= 0.7，则 Alpha 被禁止提交，返回 Phase 4 修改逻辑 (尝试大幅改变窗口或核心字段，或者使用“Different groupings and neutralizations”)。
 3. 调用 `get_submission_check` (仅在 PC < 0.7 后)。
     - **Pass**: 任务完成。
