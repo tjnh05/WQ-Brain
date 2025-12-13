@@ -68,11 +68,11 @@
 
 ### **D. 故障排查与优化查找表 (Troubleshooting Lookup Table)**
 
-| **症状** | **解决方案**                                                                                                                              |
-| --- |---------------------------------------------------------------------------------------------------------------------------------------|
-| **High Turnover (> 70%)** | 1. 引入阀门 `trade_when`. 2. Decay 提升至 3-5. 3. 使用 `ts_mean` 平滑.                                                                           |
-| **Low Fitness (< 1.0)** | **黄金组合**: Decay=2, Neut=Industry, Trunc=0.01.                                                                                         |
-| **Weight Concentration** | 1. 确保外层有 `rank()`. 2. Truncation=0.01. 3. `ts_backfill`.                                                                              |
+| **症状** | **解决方案**                                                                                                                             |
+| --- |--------------------------------------------------------------------------------------------------------------------------------------|
+| **High Turnover (> 70%)** | 1. 引入阀门 `trade_when`. 2. Decay 提升至 3-5. 3. 使用 `ts_mean` 平滑.                                                                          |
+| **Low Fitness (< 1.0)** | **黄金组合**: Decay=2, Neut=Industry, Trunc=0.01.                                                                                        |
+| **Weight Concentration** | 1. 确保外层有 `rank()`. 2. Truncation=0.01. 3. `ts_backfill`或`winsorize` 预处理.                                                                            |
 | **Correlation Fail** | 1. 改变窗口 (5->66). 2. 换字段 (`close`->`vwap`). 3. 换算子 (`ts_delta`->`ts_rank`). 4. Different groupings and neutralizations. 5. 更换 UNIVERSE |
 
 ### **E. 严格增量复杂度法则 (The Law of Strict Incremental Complexity)**
@@ -112,12 +112,27 @@
         - `1 * rank(field)`
         - `zscore(field)`
         - `rank(ts_zscore(field, 252))` (仅标准化，不算逻辑算子)
+        - `zscore(field)`
     - **STRICT BAN**: 严禁在此步骤使用 `ts_rank`, `ts_corr`, `ts_mean` 或任何嵌套。
 2. **Step 2: 基线分析与 1-op 进化 (Baseline Analysis & 1-op)**
     - **分析**: 观察 Step 1 的结果（Turnover, Sharpe）。
     - **进化**:
         - 若 Sharpe > 0 但 Turnover 高 -> 添加 `ts_decay` 或 `ts_mean` (1-op)。
         - 若 Sharpe 负 -> 尝试反转或差分 `ts_delta` (1-op)。
+        - 若 LOW_ROBUST_UNIVERSE_SHARPE 检查不通过，尝试 `ts_backfill` 或 `winsorize` 或 设置 trunc=0.001 或设置 trunc = 0 (1-op)。
+        - 若 Sharpe > 0 但 Sharpe 低 -> 尝试 如下的算子 (1-op)。
+          - ts_zscore
+          - ts_returns
+          - ts_scale
+          - ts_sum
+          - ts_av_diff
+          - ts_kurtosis
+          - ts_ir
+          - ts_delay
+          - ts_quantile
+          - ts_count_nans
+          - ts_arg_min
+          - ts_backfill
     - 提交 8 个 1-op 变体。
 3. **Step 3: 复杂度注入 (2-op+ Injection)**
     - 基于 Step 2 的最佳结果，开始引入更复杂的逻辑（如 `ts_rank(ts_delta(...))`）。
@@ -137,7 +152,7 @@
 *如果不达标，进入此阶段。*
 
 1. **外部求援 (External Knowledge Retrieval)**:
-    - **PRIORITY 1**: 调用 **`search_forum_posts`**。搜索当前错误信息、低 Sharpe 原因或该数据字段的讨论。
+    - **PRIORITY 1**: 调用 **`search_forum_posts`**。搜索当前错误信息、低 Sharpe 原因或该数据字段的讨论。如果访问超时，则进入下一步骤
     - **PRIORITY 2**: 调用 **`read_specific_documentation`**。重新研读算子定义或数据手册。
 2. **内部诊断**:
     - 若外部资源无解，查阅 **[查找表]** 和 `ImproveMethods` 文件夹。
@@ -147,7 +162,10 @@
 ### **Phase 5: 提交前最后一步 (Final Check)**
 
 1. 选取 Best Alpha。
-2. **PC 硬性检查**: 若 Prod Correlation (即PC) 和Self Correlation的 max 值（不是**max_correlation**字段）有任意一个 >= 0.7，返回 Phase 4 修改逻辑 (尝试大幅改变窗口或核心字段，或者使用“Different groupings and neutralizations”)。
+2. **相关性 硬性检查**:
+   - 相关性检查包括 PC 和 SC，即生产相关性和自相关性。
+   - 在调用 工具 check_correlation 时，检查相关性是取返回值里correlation_data.max的值，不能使用 max_correlation 字段。
+   - 若 PC >= 0.7 或 SC >= 0.7，则 Alpha 被禁止提交，返回 Phase 4 修改逻辑 (尝试大幅改变窗口或核心字段，或者使用“Different groupings and neutralizations”)。
 3. 调用 `get_submission_check` (仅在 PC < 0.7 后)。
     - **Pass**: 任务完成。
     - **Fail**: 修复后跳回 Phase 4。
