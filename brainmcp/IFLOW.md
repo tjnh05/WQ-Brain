@@ -134,7 +134,8 @@
           - ts_backfill
     - 提交 8 个 1-op 变体。
 3. **Step 3: 复杂度注入 (2-op+ Injection)**
-    - 基于 Step 2 的最佳结果，开始引入更复杂的逻辑（如 `ts_rank(ts_delta(...))`）。
+    - 基于 Step 2 的最佳结果，开始引入更复杂的逻辑（如 `ts_rank(ts_delta(...))`）
+    - 使用 group_ 类型 算子
 
 ### **Phase 3: 模拟与监控 (Simulation & Monitoring)**
 
@@ -165,6 +166,7 @@
    - 相关性检查包括 PC 和 SC，即生产相关性和自相关性。
    - 在调用 工具 check_correlation 时，检查相关性是取返回值里correlation_data.max的值，不能使用 max_correlation 字段，也不能根据all_passed为true就认为通过。
    - 若 PC >= 0.7 或 SC >= 0.7，则 Alpha 被禁止提交，返回 Phase 4 修改逻辑 (尝试大幅改变窗口或核心字段，或者使用“Different groupings and neutralizations”)。
+   - 若 PC >= 0.7, 需要保证Sharpe 与生产Alpha比提高至少10%
 3. 调用 `get_submission_check` (仅在 PC < 0.7 后)。
     - **Pass**: 任务完成。
     - **Fail**: 修复后跳回 Phase 4。
