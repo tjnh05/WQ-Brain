@@ -76,6 +76,7 @@
 | --- | --- | --- |
 | **High Turnover (> 70%)** | 1. 引入阀门 `trade_when`. 2. Decay 提升至 3-5. 3. 使用 `ts_mean` 平滑. | 1. LLM-MCTS重新规划搜索路径 2. Alpha Zoo动态权重调整 3. 经济理论指导的因子重构 |
 | **Low Fitness (< 1.0)** | **黄金组合**: Decay=2, Neut=Industry, Trunc=0.01. | 1. AlphaForge生成-预测模型重训练 2. 多维度反馈指导改进 3. 动态阈值自适应调整 |
+| **Robust Universe Sharpe < 1.0** | **数据预处理**: ts_backfill/winsorize, 长时间窗口, 简化表达式 | 1. 数据预处理优化 2. 时间窗口调整(120/252天) 3. 降低表达式复杂度 4. 字段组合优化 |
 | **Weight Concentration** | 1. 确保外层有 `rank()`. 2. Truncation=0.01. 3. `ts_backfill`或`winsorize` 预处理. | 1. 智能多样性约束机制 2. 频繁子树避免策略 3. 维度一致性验证 |
 | **Correlation Fail** | 1. 改变窗口 (5->66). 2. 换字段 (`close`->`vwap`). 3. 换算子 (`ts_delta`->`ts_rank`). | 1. 动态相关性阈值调整 2. Alpha Zoo相关性矩阵分析 3. LLM经济合理性验证 |
 | **Search Inefficiency** | 手动调整参数和逻辑 | 1. MCTS智能节点选择 2. UCT探索-利用平衡 3. 历史成功模式匹配 |
@@ -209,6 +210,12 @@
 
 ##### **F6.5 模板工程标准化**
 - **三字段相加模板生成器**:
+- **Robust Universe Sharpe优化策略**:
+    - **数据预处理**: ts_backfill/winsorize处理缺失值和异常值
+    - **时间窗口优化**: 优先使用120/252天长周期提升稳定性
+    - **表达式简化**: 降低复杂度，避免过度拟合
+    - **字段组合优化**: 选择相关性低、互补性强的字段组合
+    - **参数调优**: Decay=2, Truncation=0.001的黄金组合
     ```python
     def generate_three_field_template(fields_by_category):
         templates = []
@@ -347,17 +354,28 @@
     - 使用动态权重组合模型计算最优权重
     - 考虑因子时效性，赋予近期表现更好因子更高权重
 2. **正式提交**: 
-    - **通用地区**: 调用 `create_multi_simulation` (包含 8 个优化后的表达式)。
-    - **IND区域**: 调用 `create_multi_simulation` (包含 4 个优化后的表达式) 或使用单模拟逐一创建。
+    - **优先策略**: 优先调用 `create_multi_simulation` (通用地区8个表达式，IND区域4个表达式)。
+    - **备选策略**: 如果多模拟结果丢失或失败，立即切换到单模拟逐一创建确保结果保存。
+    - **结果验证**: 检查所有创建的Alpha是否成功保存到用户Alpha列表。
     - **提取 ID**: 从返回结果中获取 Simulation ID。
 3. **智能监控 (Loop)**:
     - 调用 `check_multisimulation_status(simulation_id="...")`。
     - **超时检查**: 若 `in_progress` > 15分钟 -> 触发 **[僵尸模拟熔断机制]**。
     - **性能预测**: 基于历史数据预测最终结果
+    - **结果验证**: 检查多模拟结果是否成功保存到用户Alpha列表
+    - **备选策略**: 如果多模拟结果丢失，立即切换到单模拟逐一创建
 4. **多维度结果分析**:
-    - 获取结果: `get_multisimulation_result`
+    - 获取结果: `get_multisimulation_result` 或单模拟结果
     - 综合评估: Sharpe, Fitness, IC, Turnover, Diversity
-    - 筛选满足: Sharpe > 1.58, Fitness > 1.0, Turnover < 70%, Diversity > 0.3
+    - **关键检查清单**:
+      - ✅ Sharpe > 1.58
+      - ✅ Fitness > 1.0  
+      - ✅ Turnover < 70%
+      - ✅ Diversity > 0.3
+      - ✅ **Robust Universe Sharpe > 1.0** (关键检查)
+      - ✅ 2Y Sharpe > 1.58 (如有)
+      - ✅ Margin > 万15 (IND区域特定)
+    - **筛选标准**: 所有检查项必须通过，任一失败则返回Phase 4优化
 
 ### **Phase 4: AI驱动的迭代优化循环 (AI-Powered Iterative Loop)**
 
