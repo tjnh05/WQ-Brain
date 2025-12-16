@@ -14,7 +14,7 @@
 
 1. **基础**: `authenticate`, `manage_config`
 2. **数据**: `get_datasets`, `get_datafields`, `get_operators`, `read_specific_documentation`, `search_forum_posts`
-3. **开发**: `create_multiSim` (**核心工具**), `check_multisimulation_status`, `get_multisimulation_result`
+3. **开发**: `create_multi_simulation` (**核心工具**), `check_multisimulation_status`, `get_multisimulation_result`
 4. **分析**: `get_alpha_details`, `get_alpha_pnl`, `check_correlation`
 5. **提交**: `get_submission_check`
 
@@ -22,11 +22,16 @@
 
 ### **关键行为约束 (CRITICAL PROTOCOLS)**
 
-### **1. 批量生存法则 (The Rule of 8)**
+### **1. 批量生存法则 (The Rule of 8/4)**
 
-- **指令**: 任何一次 `create_multiSim` 调用，**必须**且**始终**包含 **8 个** 不同的 Alpha 表达式。
-- **原因**: 单次提交过少会触发 `"At least 2 alpha expressions required"` 错误，且浪费迭代机会。
-- **应对**: 如果你只想测试 1 个逻辑，必须立即生成 7 个该逻辑的变体（改变窗口期、Decay值或算子），凑齐 8 个一并提交。
+- **通用规则**: 任何一次 `create_multi_simulation` 调用，**必须**且**始终**包含 **8 个** 不同的 Alpha 表达式。
+- **IND区域特殊规则**: IND地区多模拟限制为 **4 个** 表达式，避免系统CANCELLED问题。
+- **原因**: 
+  - 通用：单次提交过少会触发 `"At least 2 alpha expressions required"` 错误，且浪费迭代机会。
+  - IND区域：根据实战经验，IND地区对多模拟数量更敏感，4个表达式成功率更高。
+- **应对**: 
+  - 通用：如果你只想测试 1 个逻辑，必须立即生成 7 个该逻辑的变体（改变窗口期、Decay值或算子），凑齐 8 个一并提交。
+  - IND区域：生成 3 个变体凑齐 4 个，或使用单模拟逐一创建确保结果保存。
 
 ### **2. 死循环优化机制 (The Infinite Optimization Loop)**
 
@@ -41,7 +46,7 @@
         - **STEP 1**: 立即调用 `authenticate` 重新认证。
         - **STEP 2**: 再次调用 `check_multisimulation_status`。
         - **STEP 3**: 若仍为 `in_progress`，判定为僵尸任务。
-        - **STEP 4**: **立刻停止**监控该 ID，重新调用 `create_multiSim` (生成新 ID) 重启流程。
+        - **STEP 4**: **立刻停止**监控该 ID，重新调用 `create_multi_simulation` (生成新 ID) 重启流程。
 
 ---
 
@@ -341,7 +346,9 @@
     - 从Alpha Zoo中选择Top-K因子（K=10-20）
     - 使用动态权重组合模型计算最优权重
     - 考虑因子时效性，赋予近期表现更好因子更高权重
-2. **正式提交**: 调用 `create_multiSim` (包含 8 个优化后的表达式)。
+2. **正式提交**: 
+    - **通用地区**: 调用 `create_multi_simulation` (包含 8 个优化后的表达式)。
+    - **IND区域**: 调用 `create_multi_simulation` (包含 4 个优化后的表达式) 或使用单模拟逐一创建。
     - **提取 ID**: 从返回结果中获取 Simulation ID。
 3. **智能监控 (Loop)**:
     - 调用 `check_multisimulation_status(simulation_id="...")`。
@@ -387,7 +394,9 @@
         - 及时止损策略: Robust Sharpe < 0.5时直接停止，避免浪费时间
         - Tail操作符优化: 使用rank类函数将数据压缩到[0,1]区间后设置tail参数
         - 模板工程应用: 使用三字段相加等高效模板提升命中率
-4. **生成下一代**: 创建8个智能改进变体
+4. **生成下一代**: 
+    - **通用地区**: 创建8个智能改进变体
+    - **IND区域**: 创建4个智能改进变体，或使用单模拟逐一创建
     - **质量保证流水线**: 语法验证→经济学逻辑验证→区域规则检查→相关性预检→性能预测
     - **表达式验证**: 集成PLY验证器确保语法正确性，避免无效回测
     - **变体类型**: 参数调优、算子替换、结构重组、经济理论导向变体
