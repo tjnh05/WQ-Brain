@@ -75,6 +75,7 @@
 | **Correlation Fail** | 1. 改变窗口 (5->66). 2. 换字段 (`close`->`vwap`). 3. 换算子 (`ts_delta`->`ts_rank`). | 1. 动态相关性阈值调整 2. Alpha Zoo相关性矩阵分析 3. LLM经济合理性验证 |
 | **Search Inefficiency** | 手动调整参数和逻辑 | 1. MCTS智能节点选择 2. UCT探索-利用平衡 3. 历史成功模式匹配 |
 | **Overfitting Risk** | 经验性简化因子 | 1. LLM过拟合风险评估 2. 相对排名评估机制 3. 经济逻辑合理性检查 |
+| **Forum Search Failure** | 重试或跳过 | 1. 自动切换到web_search 2. 多源搜索策略 3. 智能关键词优化 4. 搜索结果质量验证 |
 
 ### **E. 严格增量复杂度法则 (The Law of Strict Incremental Complexity)**
 
@@ -110,6 +111,16 @@
 - **动态阈值调整**: 根据市场环境自适应调整标准
 - **可解释性保证**: 维护因子的可理解性和可解释性
 
+#### **F5. 互联网搜索备用策略 (Internet Search Backup Strategy)**
+- **论坛失败检测**: 自动识别论坛访问失败或搜索无结果
+- **多层次搜索源**: 
+    - **学术资源**: arXiv, SSRN, CNKI知网, 百度学术, 微软学术
+    - **技术社区**: Stack Overflow, GitHub, Reddit r/quant
+    - **专业博客**: QuantInsti, Quantpedia, QuantStart
+    - **新闻媒体**: Bloomberg, Financial Times, Reuters
+- **智能关键词生成**: 基于当前问题自动生成最优搜索词组合
+- **搜索结果质量评估**: LLM评估搜索结果的相关性和可靠性
+
 ---
 
 ### **全自动执行工作流 (EXECUTION WORKFLOW) - AI增强版**
@@ -120,7 +131,16 @@
 
 1. 调用 `get_pyramid_alphas` 寻找未被点亮的区域，且 Delay 里 D1 优先于 D0。
 2. **[CONTEXTUAL INTELLIGENCE]**:
-    - **Action**: 必须调用 **`read_specific_documentation`** 和 **`search_forum_posts`**。
+    - **主要方法**: 调用 **`read_specific_documentation`** 和 **`search_forum_posts`**。
+    - **备用搜索策略**: 当论坛搜索失败时，使用以下替代方案：
+        - **web_search**: 使用通用网络搜索获取Alpha因子相关信息
+        - **搜索关键词组合**: 
+            - "WorldQuant Brain alpha factors [region]"
+            - "quantitative finance alpha mining [region]"
+            - "formulaic alpha strategies [region]"
+            - "WorldQuant BRAIN forum alternatives"
+            - "alpha factor research papers [region]"
+        - **搜索重点**: 市场特性、常见Alpha类型、近期热点、技术讨论
     - **目标**: 获取目标地区（Region）的市场特性、常见 Alpha 类型及近期讨论的热点。
     - *Check*: 不了解该地区特性前，禁止开始编写代码。
 3. **[CRITICAL]**: 查阅 **`HowToUseAllDatasets`** 文件夹中相关文档。
@@ -201,6 +221,11 @@
     - **历史模式匹配**: 在Alpha Zoo中寻找相似成功案例
 2. **外部知识整合**:
     - **PRIORITY 1**: 调用 **`search_forum_posts`**。搜索当前错误信息、低 Sharpe 原因或该数据字段的讨论。
+    - **论坛搜索失败处理**: 如果论坛访问失败或搜索无结果，立即启用备用搜索：
+        - **web_search**: 互联网搜索相关问题
+        - **技术社区搜索**: "Stack Overflow quantitative finance", "GitHub alpha factor mining"
+        - **学术论文搜索**: "arXiv alpha factor mining", "SSRN quantitative strategies", "CNKI 量化因子", "百度学术 Alpha因子"
+        - **专业博客搜索**: "QuantInsti blog", "Quantpedia alpha factors"
     - **PRIORITY 2**: 调用 **`read_specific_documentation`**。重新研读算子定义或数据手册。
     - **论文知识库**: 利用下载的AlphaFactor挖掘论文中的先进方法
 3. **智能改进策略**:
