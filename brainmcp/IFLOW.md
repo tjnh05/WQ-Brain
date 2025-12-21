@@ -13,7 +13,7 @@
 *您只能模拟调用以下工具（基于平台实际能力）：*
 
 1. **基础**: `authenticate`, `manage_config`
-2. **数据**: `get_datasets`, `get_datafields`, `get_operators`, `read_specific_documentation`, `search_forum_posts`
+2. **数据**: `get_datasets`, `get_datafields`, `get_operators`, `read_specific_documentation`, `web_search`
 3. **开发**: `create_multi_simulation` (**核心工具**), `check_multisimulation_status`, `get_multisimulation_result`
 4. **分析**: `get_alpha_details`, `get_alpha_pnl`, `check_correlation`
 5. **提交**: `get_submission_check`
@@ -48,8 +48,9 @@
 
 - **现象**: 调用 `check_multisimulation_status` 时，状态长期显示 `in_progress`。
 - **判断与处理逻辑**:
-    1. **常规监控 (T < 15 mins)**: 若认证有效，继续保持监控。
-    2. **疑似卡死 (T >= 15 mins)**:
+    - **超时阈值**: 默认15分钟。如果使用SLOW_AND_FAST中性化，阈值延长至25分钟。
+    1. **常规监控 (T < 阈值)**: 若认证有效，继续保持监控。
+    2. **疑似卡死 (T >= 阈值)**:
         - **STEP 1**: 立即调用 `authenticate` 重新认证。
         - **STEP 2**: 再次调用 `check_multisimulation_status`。
         - **STEP 3**: 若仍为 `in_progress`，判定为僵尸任务。
@@ -263,9 +264,8 @@
 
 1. 调用 `get_pyramid_alphas` 寻找未被点亮的区域，且 Delay 里 D1 优先于 D0。
 2. **[CONTEXTUAL INTELLIGENCE]**:
-    - **主要方法**: 调用 **`read_specific_documentation`** 和 **`search_forum_posts`**。
-    - **备用搜索策略**: 当论坛搜索失败时，使用以下替代方案：
-        - **web_search**: 使用通用网络搜索获取Alpha因子相关信息
+    - **主要方法**: 调用 **`read_specific_documentation`** 和 **`web_search`**。
+    - **备用搜索策略**: 当web_search失败或结果不足时，使用以下替代方案：
         - **智能关键词生成**: 基于问题上下文和区域自动生成最优搜索关键词组合
         - **多源搜索策略**: 
             - 学术资源: arXiv, SSRN, CNKI知网, 百度学术, 微软学术
@@ -299,7 +299,7 @@
 6. **区域特定策略制定**:
     - IND区域: 按12座塔难度分级制定策略，Model/Analyst/Option优先，Market中性化最佳
     - USA/EUR区域: 根据具体市场特性调整策略
-    - 性能阈值设定: IND区域margin最好万15以上，所有区域Robust Sharpe < 0.5时直接停止调试
+    - 性能阈值设定: IND区域margin最好万15以上，换手率Turnover < 0.4，所有区域Robust Sharpe < 0.5时直接停止调试
 6. 分析 Datafields，结合文档中的思路进行**跨策略构思**。
 
 ### **Phase 2: AI驱动的智能Alpha生成 (AI-Powered Alpha Generation)**
@@ -463,7 +463,10 @@
     - 检查维度一致性和可解释性
     - 避免过拟合和统计假象
 4. 调用 `get_submission_check` (仅在 PC < 0.7 后)。
-    - **Pass**: 任务完成。
+    - **Pass**: Alpha完全满足提交条件，但**不要自动提交**。执行以下操作：
+        1. **设置Alpha属性**: 调用 `set_alpha_properties` 设置Alpha的name属性为Alpha ID（例如：`alpha_id: "A1dx2WeR"`）
+        2. **添加到Consult列表**: 将Alpha ID添加到**consult**列表中进行记录和管理
+        3. **继续Phase 6**: 进入智能终局报告与知识积累阶段
     - **Fail**: 修复后跳回 Phase 4。
 
 ### **Phase 6: 智能终局报告与知识积累 (Intelligent Final Report & Knowledge Accumulation)**
@@ -485,6 +488,7 @@
     - 详细的迭代历程和改进轨迹
 2. **Alpha Zoo更新**:
     - 将成功因子添加到永久Alpha Zoo
+    - **更新Consult列表**: 将成功Alpha添加到**consult**列表，记录所有通过完整检查但未提交的Alpha，供人工审查和后续决策
     - 更新因子性能历史和改进策略
     - 维护因子间相关性矩阵
 3. **知识库积累**:
