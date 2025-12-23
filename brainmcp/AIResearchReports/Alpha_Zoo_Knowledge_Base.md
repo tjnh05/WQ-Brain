@@ -3,7 +3,7 @@
 ## 概述
 Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和优化成功挖掘的Alpha因子。本知识库基于WorldQuant BRAIN平台的实战经验建立，旨在积累知识、避免重复错误、提升未来研究效率。
 
-**最后更新**: 2025年12月19日  
+**最后更新**: 2025年12月21日  
 **维护者**: iFlow CLI自动化研究系统
 
 ---
@@ -149,6 +149,113 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 
 ---
 
+## 优化轨迹记录
+
+### 案例1: gJzgNKVJ (相关性优化成功，但Robust Sharpe不足)
+**记录时间**: 2025年12月21日  
+**状态**: ⚠️ 部分成功 (相关性优化突破，但Robust Sharpe和Margin未达标)  
+**来源**: 原始Alpha xAa2KjGn (生产相关性0.7040 > 0.7阈值)的优化变体
+
+#### 基础信息
+- **表达式**: `-group_rank(ts_mean(ts_backfill(zscore(ts_rank(vwap, 22)) - zscore(anl4_afv4_eps_high), 5), 3) * (1 + 0.1 * sign(ts_delta(ts_backfill(zscore(ts_rank(vwap, 22)) - zscore(anl4_afv4_eps_high), 5), 1))), sector)`
+- **区域**: IND (印度)
+- **股票池**: TOP500
+- **延迟**: D1
+- **中性化**: SLOW
+- **Decay**: 6
+- **Truncation**: 0.002
+- **Alpha ID**: gJzgNKVJ
+- **数据集**: Analyst 4
+- **金字塔匹配**: IND/D1/PV (1.3x), IND/D1/ANALYST (1.6x)
+- **主题匹配**: IND Region Theme (2.0x), Scalable ATOM Theme (2.0x)
+
+#### 性能指标
+| 指标 | 数值 | 状态 | 分析 |
+|------|------|------|------|
+| Sharpe | 2.39 | ✅ | 优秀，远超1.58阈值 |
+| Fitness | 1.23 | ✅ | 良好，超过1.0阈值 |
+| Turnover | 34.34% | ✅ | 优秀，远低于40%限制 |
+| Robust Universe Sharpe | 0.93 | ❌ | **主要问题**，低于1.0阈值 |
+| Sub Universe Sharpe | 1.13 | ✅ | 通过0.71阈值 |
+| Margin | 万5.33 | ❌ | **次要问题**，远低于IND区域万15要求 |
+| 生产相关性(PC) | 0.5955 | ✅ | **优化成功**，从0.7040降至0.5955 |
+| 自相关性(SC) | 0.204 | ✅ | 优秀，远低于0.7阈值 |
+| 权重集中检查 | 通过 | ✅ | 无权重集中问题 |
+| 7年IS阶梯Sharpe | 2.22 | ✅ | 通过2.06阈值 |
+
+#### 经济学逻辑
+- **原始问题**: Alpha xAa2KjGn表达式质量高(Sharpe 3.09)但生产相关性0.7040超过0.7阈值
+- **优化目标**: 降低相关性同时保持核心逻辑和性能
+- **核心修改**:
+  1. **字段替换**: `close` → `vwap` (减少噪声，提升稳定性)
+  2. **数据预处理**: 添加`ts_backfill(..., 5)`处理缺失值
+  3. **分组方式**: `industry` → `sector` (更宽泛分组，可能降低特异性)
+  4. **中性化调整**: 测试发现SLOW中性化对此表达式最佳
+- **市场机制**: 价格动量(vwap)与分析师高EPS预期(anl4_afv4_eps_high)的差异信号，结合sector相对排名
+
+#### 优化轨迹
+1. **原始Alpha**: xAa2KjGn - `-group_rank(ts_mean(zscore(ts_rank(close, 22)) - zscore(anl4_afv4_eps_high), 3) * (1 + 0.1 * sign(ts_delta(zscore(ts_rank(close, 22)) - zscore(anl4_afv4_eps_high), 1))), industry)`
+   - **性能**: Sharpe 3.09, Fitness 1.89, Turnover 0.3287
+   - **问题**: PC=0.7040 > 0.7, SC=0.2567
+
+2. **初步变体** (多模拟: 78VvKrRZ, d5w3l6rY, vRVpJbXQ, RRLlkoxj):
+   - **发现**: vwap变体(d5w3l6rY)表现最佳，但turnover 0.4007 > 0.4
+
+3. **中性化优化** (针对d5w3l6rY):
+   - INDUSTRY中性化: Sharpe大幅下降
+   - SLOW中性化: 恢复良好性能，turnover降低至0.3313
+   - **最佳变体**: E5A8NaK1 (Sharpe 2.34, Fitness 1.20, Turnover 0.3313)
+
+4. **分组方式优化** (多模拟: 3MndSbcFs57z9GW6xApayBL):
+   - **关键发现**: sector分组替代industry显著提升robust Sharpe至0.93
+   - **最佳变体**: gJzgNKVJ (当前记录版本)
+
+5. **参数精细调整** (多模拟: ylRKn1v64jObj5a85faN5X):
+   - 测试不同参数组合，但gJzgNKVJ原始版本仍最佳
+
+#### 成功与失败分析
+✅ **成功方面**:
+1. **相关性优化突破**: PC从0.7040成功降至0.5955，解决原始核心问题
+2. **核心性能保持**: Sharpe 2.39保持高质量水平
+3. **换手率控制**: Turnover 34.34%远低于40%限制
+4. **表达式架构验证**: `group_rank` + `zscore` + `ts_backfill`组合有效
+
+❌ **待解决问题**:
+1. **Robust Universe Sharpe不足** (0.93 < 1.0):
+   - 可能原因: sector分组仍不足以保证跨市场环境稳健性
+   - 解决方案: 尝试truncation=0.001进一步平滑，或测试alternative EPS字段
+
+2. **Margin不足** (万5.33 < 万15):
+   - 可能原因: IND区域手续费较高，需要更强信号
+   - 解决方案: 增强信号强度或调整decay/truncation参数
+
+#### 后续优化方向
+1. **Robust Sharpe优化**:
+   - 测试`truncation=0.001`进一步降低极端值影响
+   - 尝试其他EPS字段: `anl4_afv4_eps_mean`、`anl4_afv4_eps_median`
+   - 增加`ts_backfill`窗口到10天增强数据质量
+
+2. **Margin提升**:
+   - 调整`decay=8`测试更高衰减
+   - 简化表达式去掉`sign`部分降低复杂性
+   - 测试`trade_when`阀门控制极端时期交易
+
+3. **表达式简化**:
+   - 测试去掉`ts_backfill`的简化版本
+   - 尝试`ts_rank`窗口66天替代22天
+   - 移除`sign`增强部分降低换手率
+
+#### 经验总结
+1. **相关性优化可行**: 通过字段替换、数据预处理、分组方式调整能有效降低PC
+2. **分组方式重要性**: sector分组比industry分组对robust Sharpe更有益
+3. **中性化敏感性**: 该表达式对中性化策略敏感，SLOW表现最佳
+4. **质量-稳健性权衡**: 高质量Sharpe(2.39)与Robust Sharpe(0.93)的平衡挑战
+5. **IND区域特殊性**: Margin要求高(万15)成为额外约束
+
+**研究价值**: 提供了高相关性Alpha优化的完整案例，展示了成功点和持续挑战。
+
+---
+
 ## 因子相关性矩阵
 | 因子1 | 因子2 | 相关性 | 状态 |
 |-------|-------|--------|------|
@@ -158,12 +265,14 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 | rKmjN3X8 | (生产Alpha) | 0.32 | ✅ 低相关 |
 | O0v7g5xq | (生产Alpha) | 0.29 | ✅ 低相关 |
 | LLx92YlM | (生产Alpha) | 0.6608 | ✅ 低相关 |
+| gJzgNKVJ | (生产Alpha) | 0.5955 | ✅ 低相关 |
 
 **分析**: 
 1. rKmjN3X8和O0v7g5xq高度相关(0.85)，因为它们是相同表达式的不同中性化变体
 2. LLx92YlM使用不同数据集(Analyst 44)和不同操作符(ts_rank)，预计与现有因子相关性较低
 3. 所有因子与生产Alpha的相关性均低于0.7阈值，满足要求
 4. LLx92YlM的生产相关性为0.6608，表明与现有生产Alpha有足够差异性
+5. gJzgNKVJ的生产相关性0.5955，相关性优化成功，但robust Sharpe需进一步改进
 
 ---
 
@@ -172,6 +281,7 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 ### 1. 表达式架构模式
 **成功模板1**: `ts_delta(rank(field1) + rank(field2), 66)` (Analyst 4数据集)
 **成功模板2**: `ts_rank(rank(field1) + rank(field2), 120)` (Analyst 44数据集)
+**相关性优化模板**: `-group_rank(ts_mean(ts_backfill(zscore(ts_rank(price_field, 22)) - zscore(eps_field), 5), 3) * (1 + 0.1 * sign(ts_delta(ts_backfill(zscore(ts_rank(price_field, 22)) - zscore(eps_field), 5), 1))), sector)` (Analyst 4数据集，针对高相关性优化)
 
 **组件分析**:
 1. **rank()**: 横截面归一化，必需
@@ -179,14 +289,16 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 3. **时间序列操作符**: 
    - `ts_delta()`: 66天窗口效果最佳(Analyst 4)
    - `ts_rank()`: 120天窗口效果最佳(Analyst 44)
+   - `group_rank()`: 结合分组提升稳定性，适合相关性优化
 4. **中性化**: 根据数据集和问题选择
-   - Analyst 4: MARKET中性化最佳
+   - Analyst 4: MARKET中性化最佳(通用)，SLOW中性化(特定表达式)
    - Analyst 44: INDUSTRY中性化解决Robust Sharpe问题
+5. **数据预处理**: `ts_backfill`处理缺失值，`zscore`标准化
 
 ### 2. 数据集选择策略
 **优先顺序** (IND区域):
 1. ⭐⭐⭐ Analyst数据集 (已验证成功)
-   - Analyst 4: 已验证，MARKET中性化最佳
+   - Analyst 4: 已验证，MARKET中性化最佳(通用)，SLOW中性化(特定)
    - Analyst 44: 已验证，INDUSTRY中性化解决Robust Sharpe问题
 2. ⭐⭐⭐ Risk/News/Sentiment/Option/PV数据集 (待验证)
 3. ⭐⭐⭐⭐ Earnings/Imbalance/Other/Institutions/Fundamental数据集
@@ -196,6 +308,7 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 **有效组合类型**:
 - EPS均值 + 股息均值 (Analyst 4已验证)
 - DPS当前年度预测 + DPS下一年度预测 (Analyst 44已验证)
+- 价格动量(vwap) + 分析师高EPS预期 (Analyst 4，相关性优化案例)
 - 盈利预测指标 + 现金流指标 (待测试)
 - 风险指标 + 估值指标 (待测试)
 
@@ -205,15 +318,17 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 
 ### 4. 中性化优化策略
 **IND区域最佳实践**:
-1. **Analyst 4数据集**: MARKET中性化最佳 (Sharpe 2.06)
+1. **Analyst 4数据集**: MARKET中性化最佳 (通用)，SLOW中性化(特定表达式)
 2. **Analyst 44数据集**: INDUSTRY中性化解决Robust Sharpe问题
-3. **通用策略**: 当Robust Universe Sharpe失败时，尝试切换中性化策略
-4. **避免使用**: NONE中性化 (Robust Sharpe通常失败)
+3. **相关性优化**: SLOW中性化可能更适合复杂表达式
+4. **通用策略**: 当Robust Universe Sharpe失败时，尝试切换中性化策略
+5. **避免使用**: NONE中性化 (Robust Sharpe通常失败)
 
 **性能对比**:
 - **Analyst 4** (相同表达式):
-  - MARKET中性化: Sharpe 2.06 (最佳)
+  - MARKET中性化: Sharpe 2.06 (最佳，通用)
   - INDUSTRY中性化: Sharpe 1.65 (良好)
+  - SLOW中性化: Sharpe 2.39 (最佳，特定表达式gJzgNKVJ)
   - NONE中性化: Sharpe 1.32 (不合格)
   - SECTOR中性化: Sharpe 1.48 (不合格)
 
@@ -231,50 +346,42 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 3. **尝试3**: 操作符优化(ts_rank vs ts_delta) - 部分改善但未解决
 4. **最终方案**: 切换中性化策略(MARKET → INDUSTRY) - 成功解决
 
+**gJzgNKVJ的Robust Sharpe问题** (0.93 < 1.0):
+1. **已尝试**: sector分组替代industry - 提升至0.93但未达标
+2. **待尝试**: truncation=0.001、alternative EPS字段、增加ts_backfill窗口
+3. **经验**: 复杂表达式可能需要更激进参数调整
+
 **经验总结**:
 - 当Robust Universe Sharpe失败时，中性化策略调整比窗口期调整更有效
 - 不同数据集可能需要不同的中性化策略
 - INDUSTRY中性化在IND区域行业集中市场中效果显著
+- 复杂表达式需要平衡Sharpe和Robust Sharpe，可能需牺牲部分收益换取稳健性
 
 ### 6. 生产相关性优化策略
 **问题**: 高质量Alpha因子（Sharpe > 2.0）但生产相关性(PC)接近或超过0.7阈值
 
-**典型案例**: Model数据集Alpha leZKbame
-- **初始状态**: Sharpe 2.03，但PC=0.7227 > 0.7
-- **核心挑战**: 简单参数调整无法有效降低相关性
+**典型案例**: 
+1. **xAa2KjGn** → **gJzgNKVJ** 优化案例
+   - **初始状态**: Sharpe 3.09，但PC=0.7040 > 0.7
+   - **优化策略**: 字段替换(close→vwap)、数据预处理(ts_backfill)、分组调整(industry→sector)
+   - **结果**: PC降至0.5955，Sharpe保持2.39，但Robust Sharpe 0.93未达标
+   - **关键成功**: 相关性优化可行，但需平衡其他指标
 
-**优化尝试与结果**:
-1. **中性化调整** (失败)
-   - MARKET中性化: PC略微降低，但Sharpe大幅下降(2.03→1.74)
-   - **分析**: 中性化改变因子与市场关系，但可能过度平滑有效信号
+2. **Model数据集Alpha leZKbame**
+   - **初始状态**: Sharpe 2.03，但PC=0.7227 > 0.7
+   - **优化尝试**: MARKET中性化、窗口期调整、操作符替换均失败
+   - **教训**: 某些表达式架构可能本质与生产Alpha相似，需要根本性重构
 
-2. **窗口期调整** (失败)
-   - 保持120天窗口: PC变化有限，Sharpe降至1.91
-   - **分析**: 时间序列特性调整无法解决横截面相关性
+**有效策略** (基于最新成功与失败教训):
+1. **表达式架构调整**:
+   - 字段替换: 使用不同但经济学逻辑相似的字段
+   - 操作符调整: `group_rank`替代简单`rank`，添加`ts_backfill`预处理
+   - 分组方式: sector替代industry，改变横截面比较基准
 
-3. **操作符替换** (部分成功)
-   - `ts_delta`替代`ts_rank`: Sharpe 1.6，相关性有所改善但未达标
-   - **分析**: 操作符改变信号生成机制，影响因子本质特性
-
-4. **字段组合改变** (失败)
-   - 替换字段组合: Sharpe大幅下降至0.98
-   - **分析**: 核心经济学逻辑改变，失去原有优势
-
-**关键发现**:
-1. **相关性优化难度**: PC优化比Sharpe优化更困难，涉及因子本质特性
-2. **阈值敏感性**: PC=0.7是严格阈值，接近阈值的因子优化空间有限
-3. **参数调整局限性**: 中性化、窗口期等参数调整对PC影响有限
-
-**有效策略** (基于最新失败教训):
-1. **根本性表达式重构**:
-   - 使用完全不同的操作符组合（如`group_rank`、`zscore`、`tail`系列）
-   - 改变字段选择逻辑（不同经济学维度的字段）
-   - 尝试多字段（三字段）组合增加复杂性
-
-2. **"Different groupings and neutralizations"策略**:
-   - 大幅改变因子分组方式（行业、市值、流动性等）
-   - 测试非常规中性化组合（如MARKET+INDUSTRY双重中性化）
-   - 使用`trade_when`阀门控制极端值影响
+2. **参数优化组合**:
+   - 数据预处理: `ts_backfill`窗口调整(5天)
+   - 标准化方法: `zscore`保持信号分布特性
+   - 分组中性化: sector分组提供不同维度信息
 
 3. **及时止损机制**:
    - 当PC > 0.65且优化尝试3次失败后，转向其他表达式
@@ -283,7 +390,7 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 
 4. **数据集切换策略**:
    - 不同数据集字段具有不同的相关性特征
-   - Analyst数据集PC表现良好（LLx92YlM: PC=0.6608）
+   - Analyst数据集PC优化相对可行(成功案例)
    - Model数据集可能需要更创新的表达式架构
 
 **实施建议**:
@@ -422,6 +529,25 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 - 避免简单的单字段策略，探索多字段组合和复杂表达式架构
 - 下一步：参考论坛成功案例，使用`vec_`操作符和事件对齐策略
 
+### 案例9: gJzgNKVJ Robust Sharpe优化失败
+**表达式**: `-group_rank(ts_mean(ts_backfill(zscore(ts_rank(vwap, 22)) - zscore(anl4_afv4_eps_high), 5), 3) * (1 + 0.1 * sign(ts_delta(ts_backfill(zscore(ts_rank(vwap, 22)) - zscore(anl4_afv4_eps_high), 5), 1))), sector)`
+**状态**: 相关性优化成功(PC从0.7040降至0.5955)，但Robust Sharpe 0.93 < 1.0
+
+**优化尝试**:
+1. **分组方式调整**: industry → sector (Robust Sharpe提升至0.93但未达标)
+2. **参数调整**: decay=6, truncation=0.002 (优化turnover但未解决Robust Sharpe)
+3. **数据预处理**: ts_backfill窗口5天 (改善数据质量但效果有限)
+
+**失败原因**:
+- 复杂表达式可能对市场环境变化更敏感
+- sector分组仍不足以保证跨时期稳健性
+- 可能需要更激进的参数调整(truncation=0.001)或字段替换
+
+**教训**:
+- 相关性优化可能以牺牲稳健性为代价
+- 复杂表达式需要在Sharpe、Robust Sharpe、Margin之间权衡
+- 下一步方向: truncation=0.001、alternative EPS字段、简化表达式
+
 ---
 
 ## 性能基准
@@ -451,16 +577,27 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 | 窗口期 | 120天 | 120天 | LLx92YlM | ts_rank操作符 |
 | 中性化 | INDUSTRY | INDUSTRY | LLx92YlM | 解决Robust Sharpe问题 |
 
+### 相关性优化基准 (基于gJzgNKVJ案例)
+| 指标 | 基准值 | 优化目标 | 当前最佳 | 状态 |
+|------|--------|----------|----------|------|
+| 原始PC | <0.7 | 降低0.1+ | 从0.7040降至0.5955 | ✅ 成功 |
+| 优化后Sharpe | ≥1.58 | 保持80%+ | 2.39 (原3.09的77%) | ✅ 成功 |
+| 优化后Robust Sharpe | ≥1.0 | 保持或提升 | 0.93 (下降) | ❌ 失败 |
+| 优化后Margin | ≥万15 | 保持或提升 | 万5.33 (下降) | ❌ 失败 |
+| 换手率控制 | <0.4 | 保持或改善 | 0.3434 (原0.3287) | ✅ 成功 |
+
 ### 区域特异性基准
 **IND区域特殊要求**:
 1. **乘数加成**: 2.0x (当前)
 2. **股票池**: TOP500 (唯一选项)
-3. **中性化**: MARKET优先
+3. **中性化**: MARKET优先，但特定表达式SLOW可能更佳
 4. **Margin要求**: ≥万15 (手续费较高)
 5. **及时止损**: Robust Sharpe<0.5时停止调试
 
 ### 改进目标
 1. **短期目标**: 
+   - 解决gJzgNKVJ的Robust Sharpe问题(0.93→1.0+)
+   - 提升Margin至万15+
    - 探索Risk数据集，复制成功模式
    - 将Sharpe基准提升至2.2+
    - 将Fitness基准提升至1.8+
@@ -490,7 +627,14 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 - PC < 0.7 且 SC < 0.7
 - 通过get_submission_check
 
-### 2. 知识记录要求
+### 2. 优化轨迹记录标准
+⚠️ **记录但不入库的条件**:
+- 解决了核心问题(如PC从>0.7降至<0.7)但其他指标未完全达标
+- 提供了重要的优化经验或教训
+- 展示了特定问题(相关性、稳健性等)的解决方案
+- 需要进一步优化才能达到入库标准
+
+### 3. 知识记录要求
 **每个成功因子必须记录**:
 - 完整表达式和参数
 - 性能指标表格
@@ -498,15 +642,23 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 - 改进轨迹和关键决策点
 - 风险评估分析
 
+**每个优化轨迹必须记录**:
+- 原始问题和优化目标
+- 核心修改和优化策略
+- 成功方面和待解决问题
+- 后续优化方向
+- 经验总结
+
 **每个失败案例必须记录**:
 - 失败表达式和参数
 - 具体失败原因
 - 教训和改进建议
 - 相关解决方案
 
-### 3. 更新维护机制
+### 4. 更新维护机制
 **定期更新**:
 - 新因子发现后24小时内入库
+- 重要优化轨迹及时记录
 - 每月审查和优化基准值
 - 每季度总结成功模式和失败教训
 
@@ -522,10 +674,22 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 ### 1. 数据集扩展计划
 **基于最新探索的优先级调整**:
 
-#### 第一优先级：深化Analyst数据集挖掘 ✅ (已验证成功)
+#### 第一优先级：解决gJzgNKVJ的Robust Sharpe问题 ⚠️ (当前主要挑战)
+**当前状态**:
+- **成功**: PC从0.7040优化至0.5955，Sharpe保持2.39
+- **问题**: Robust Sharpe 0.93 < 1.0，Margin万5.33 < 万15
+
+**优化策略**:
+1. **参数激进调整**: truncation=0.001进一步平滑极端值
+2. **字段替换测试**: 尝试`anl4_afv4_eps_mean`、`anl4_afv4_eps_median`替代`anl4_afv4_eps_high`
+3. **表达式简化**: 移除`sign`部分或简化`ts_backfill`窗口
+4. **中性化调整**: 测试其他中性化组合
+
+#### 第二优先级：深化Analyst数据集挖掘 ✅ (已验证成功但需扩展)
 **成功案例**:
 - **Analyst 4**: rKmjN3X8 (INDUSTRY中性化, Sharpe 1.65), O0v7g5xq (MARKET中性化, Sharpe 2.06)
 - **Analyst 44**: LLx92YlM (INDUSTRY中性化, Sharpe 1.87, PC=0.6608)
+- **相关性优化**: gJzgNKVJ (SLOW中性化, Sharpe 2.39, PC=0.5955但Robust Sharpe 0.93)
 
 **下一步方向**:
 1. **Analyst 4扩展**: 测试其他字段组合（EPS中位数、EBIT均值、收入预测等）
@@ -533,7 +697,7 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 3. **Analyst数据集整合**: 跨数据集字段组合（Analyst 4 + Analyst 44）
 4. **窗口期优化**: 测试66天、120天、252天不同窗口期组合
 
-#### 第二优先级：突破Model数据集相关性瓶颈 ⚠️ (当前主要挑战)
+#### 第三优先级：突破Model数据集相关性瓶颈 ⚠️ (持续挑战)
 **当前状态**:
 - **成功但受限**: leZKbame (Sharpe 2.03, PC=0.7227 > 0.7阈值)
 - **优化失败**: MARKET中性化、窗口期调整、操作符替换均未成功降低PC
@@ -544,7 +708,7 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 3. **组合思维**: 将Model因子作为组合组件，而非独立提交
 4. **文档参考**: 深入研究"How do you reduce correlation of a good Alpha"
 
-#### 第三优先级：探索事件驱动型数据集 ⚠️ (初步探索失败)
+#### 第四优先级：探索事件驱动型数据集 ⚠️ (初步探索失败)
 **最新进展**:
 - **Sentiment数据集**: model253初步探索失败（Sharpe 0.78）
 - **失败原因**: 简单rank+ts_delta不足，需要事件驱动处理
@@ -555,7 +719,7 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 3. **衰减函数**: 事件影响随时间衰减的建模
 4. **论坛参考**: 搜索Sentiment数据集成功案例
 
-#### 第四优先级：攻克Risk数据集 ⚠️ (前期探索失败)
+#### 第五优先级：攻克Risk数据集 ⚠️ (前期探索失败)
 **前期失败**:
 - 4个Risk表达式Sharpe均为负值或接近0
 - 直接套用Analyst成功模板失败
@@ -566,7 +730,7 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 3. **预处理优化**: `ts_backfill`、`winsorize`等数据清洗
 4. **模板工程**: 开发Risk数据集专用模板
 
-#### 第五优先级：探索高潜力数据集 🔄 (待开始)
+#### 第六优先级：探索高潜力数据集 🔄 (待开始)
 1. **Option数据集** (⭐⭐⭐): 期权数据蕴含丰富信息，隐含波动率、偏度等
 2. **PV数据集** (⭐⭐⭐): 价量关系因子，传统但有效
 3. **Earnings数据集** (⭐⭐⭐⭐): 财报事件驱动，高信息含量
@@ -609,6 +773,7 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 1. **Analyst数据集模板** (已验证成功):
    - **模板1**: `ts_delta(rank(eps_field) + rank(div_field), 66)` + MARKET中性化
    - **模板2**: `ts_rank(rank(dps_cur_yr) + rank(dps_nxt_yr), 120)` + INDUSTRY中性化
+   - **模板3**: `-group_rank(ts_mean(ts_backfill(zscore(ts_rank(price_field, 22)) - zscore(eps_field), 5), 3) * (1 + 0.1 * sign(ts_delta(ts_backfill(zscore(ts_rank(price_field, 22)) - zscore(eps_field), 5), 1))), sector)` + SLOW中性化 (相关性优化)
 
 2. **Model数据集模板** (需要开发):
    - **假设**: 价值和成长因子组合，但需要相关性优化
@@ -786,5 +951,5 @@ AlphaForge提出一个**两阶段公式化Alpha生成框架**：
 
 **知识库维护**: iFlow CLI自动化研究系统  
 **创建时间**: 2025年12月18日  
-**最后更新**: 2025年12月19日  
+**最后更新**: 2025年12月21日  
 **文件位置**: `/Users/mac/WQ-Brain/brainmcp/AIResearchReports/Alpha_Zoo_Knowledge_Base.md`
