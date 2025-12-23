@@ -264,7 +264,7 @@
 1. 调用 `get_pyramid_alphas` 寻找未被点亮的区域，且 Delay 里 D1 优先于 D0。
 2. **[CONTEXTUAL INTELLIGENCE]**:
     - **主要方法**: 调用 **`read_specific_documentation`** 和 **`search_forum_posts`**。
-    - **备用搜索策略**: 当论坛搜索失败时，使用以下替代方案：
+    - **备用搜索策略**: 当论坛搜索失败或超时(限定 **2** 分钟以内)时，使用以下替代方案：
         - **web_search**: 使用通用网络搜索获取Alpha因子相关信息
         - **智能关键词生成**: 基于问题上下文和区域自动生成最优搜索关键词组合
         - **多源搜索策略**: 
@@ -398,7 +398,7 @@
       - ✅ **Robust Universe Sharpe > 1.0** (关键检查)
       - ✅ 2Y Sharpe > 1.58 (如有)
       - ✅ Margin > 万15 (IND区域特定)
-    - **筛选标准**: 所有检查项必须通过，任一失败则返回Phase 4优化
+    - **筛选标准**: 所有检查项必须通过，任一失败则返回**Phase 4**优化
 
 ### **Phase 4: AI驱动的迭代优化循环 (AI-Powered Iterative Loop)**
 
