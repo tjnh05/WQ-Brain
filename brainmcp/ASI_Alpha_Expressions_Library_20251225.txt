@@ -1,0 +1,139 @@
+# ASI地区Alpha表达式库
+# 生成日期：2025年12月25日
+# 数据集：risk70 (Multi-Factor Model)
+# 配置：Region=ASI, Delay=1, Universe=MINVOL1M, Neutralization=SLOW
+
+## 第一组：分析师情绪因子 (rsk70_mfm2_asetrd_anlystsn)
+1. rank(rsk70_mfm2_asetrd_anlystsn)
+2. rank(ts_delta(rsk70_mfm2_asetrd_anlystsn, 7))
+3. rank(ts_delta(rsk70_mfm2_asetrd_anlystsn, 30))
+4. rank(ts_delta(rsk70_mfm2_asetrd_anlystsn, 90))
+5. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_anlystsn, 7), ts_step(1), 7, rettype=2))
+6. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_anlystsn, 30), ts_step(1), 30, rettype=2))
+7. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_anlystsn, 90), ts_step(1), 90, rettype=2))
+8. ts_zscore(rsk70_mfm2_asetrd_anlystsn, 66)
+
+## 第二组：动量因子 (rsk70_mfm2_asetrd_momentum)
+9. rank(rsk70_mfm2_asetrd_momentum)
+10. rank(ts_delta(rsk70_mfm2_asetrd_momentum, 7))
+11. rank(ts_delta(rsk70_mfm2_asetrd_momentum, 30))
+12. rank(ts_delta(rsk70_mfm2_asetrd_momentum, 90))
+13. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_momentum, 7), ts_step(1), 7, rettype=2))
+14. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_momentum, 30), ts_step(1), 30, rettype=2))
+15. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_momentum, 90), ts_step(1), 90, rettype=2))
+16. ts_zscore(rsk70_mfm2_asetrd_momentum, 66)
+
+## 第三组：盈利收益率因子 (rsk70_mfm2_asetrd_earnyild)
+17. rank(rsk70_mfm2_asetrd_earnyild)
+18. rank(ts_delta(rsk70_mfm2_asetrd_earnyild, 7))
+19. rank(ts_delta(rsk70_mfm2_asetrd_earnyild, 30))
+20. rank(ts_delta(rsk70_mfm2_asetrd_earnyild, 90))
+21. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_earnyild, 7), ts_step(1), 7, rettype=2))
+22. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_earnyild, 30), ts_step(1), 30, rettype=2))
+23. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_earnyild, 90), ts_step(1), 90, rettype=2))
+24. ts_zscore(rsk70_mfm2_asetrd_earnyild, 66)
+
+## 第四组：股息收益率因子 (rsk70_mfm2_asetrd_divyild)
+25. rank(rsk70_mfm2_asetrd_divyild)
+26. rank(ts_delta(rsk70_mfm2_asetrd_divyild, 7))
+27. rank(ts_delta(rsk70_mfm2_asetrd_divyild, 30))
+28. rank(ts_delta(rsk70_mfm2_asetrd_divyild, 90))
+29. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_divyild, 7), ts_step(1), 7, rettype=2))
+30. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_divyild, 30), ts_step(1), 30, rettype=2))
+31. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_divyild, 90), ts_step(1), 90, rettype=2))
+32. ts_zscore(rsk70_mfm2_asetrd_divyild, 66)
+
+## 第五组：长期反转因子 (rsk70_mfm2_asetrd_ltrevrsl)
+33. rank(rsk70_mfm2_asetrd_ltrevrsl)
+34. rank(ts_delta(rsk70_mfm2_asetrd_ltrevrsl, 7))
+35. rank(ts_delta(rsk70_mfm2_asetrd_ltrevrsl, 30))
+36. rank(ts_delta(rsk70_mfm2_asetrd_ltrevrsl, 90))
+37. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_ltrevrsl, 7), ts_step(1), 7, rettype=2))
+38. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_ltrevrsl, 30), ts_step(1), 30, rettype=2))
+39. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_ltrevrsl, 90), ts_step(1), 90, rettype=2))
+40. ts_zscore(rsk70_mfm2_asetrd_ltrevrsl, 66)
+
+## 第六组：短期反转因子 (rsk70_mfm2_asetrd_strevrsl)
+41. rank(rsk70_mfm2_asetrd_strevrsl)
+42. rank(ts_delta(rsk70_mfm2_asetrd_strevrsl, 7))
+43. rank(ts_delta(rsk70_mfm2_asetrd_strevrsl, 30))
+44. rank(ts_delta(rsk70_mfm2_asetrd_strevrsl, 90))
+45. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_strevrsl, 7), ts_step(1), 7, rettype=2))
+46. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_strevrsl, 30), ts_step(1), 30, rettype=2))
+47. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_strevrsl, 90), ts_step(1), 90, rettype=2))
+48. ts_zscore(rsk70_mfm2_asetrd_strevrsl, 66)
+
+## 第七组：盈利能力因子 (rsk70_mfm2_asetrd_profit)
+49. rank(rsk70_mfm2_asetrd_profit)
+50. rank(ts_delta(rsk70_mfm2_asetrd_profit, 7))
+51. rank(ts_delta(rsk70_mfm2_asetrd_profit, 30))
+52. rank(ts_delta(rsk70_mfm2_asetrd_profit, 90))
+53. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_profit, 7), ts_step(1), 7, rettype=2))
+54. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_profit, 30), ts_step(1), 30, rettype=2))
+55. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_profit, 90), ts_step(1), 90, rettype=2))
+56. ts_zscore(rsk70_mfm2_asetrd_profit, 66)
+
+## 第八组：特定收益因子 (rsk70_mfm2_asetrd_dsrt)
+57. rank(rsk70_mfm2_asetrd_dsrt)
+58. rank(ts_delta(rsk70_mfm2_asetrd_dsrt, 7))
+59. rank(ts_delta(rsk70_mfm2_asetrd_dsrt, 30))
+60. rank(ts_delta(rsk70_mfm2_asetrd_dsrt, 90))
+61. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_dsrt, 7), ts_step(1), 7, rettype=2))
+62. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_dsrt, 30), ts_step(1), 30, rettype=2))
+63. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_dsrt, 90), ts_step(1), 90, rettype=2))
+64. ts_zscore(rsk70_mfm2_asetrd_dsrt, 66)
+
+## 组合因子表达式
+65. rank(rsk70_mfm2_asetrd_anlystsn) + rank(rsk70_mfm2_asetrd_momentum)
+66. rank(rsk70_mfm2_asetrd_earnyild) + rank(rsk70_mfm2_asetrd_divyild)
+67. rank(rsk70_mfm2_asetrd_ltrevrsl) + rank(rsk70_mfm2_asetrd_strevrsl)
+68. rank(rsk70_mfm2_asetrd_profit) + rank(rsk70_mfm2_asetrd_earnqlty)
+69. rank(ts_delta(rsk70_mfm2_asetrd_anlystsn, 7)) + rank(ts_delta(rsk70_mfm2_asetrd_momentum, 7))
+70. rank(ts_delta(rsk70_mfm2_asetrd_earnyild, 7)) + rank(ts_delta(rsk70_mfm2_asetrd_divyild, 7))
+71. rank(ts_delta(rsk70_mfm2_asetrd_ltrevrsl, 7)) + rank(ts_delta(rsk70_mfm2_asetrd_strevrsl, 7))
+72. rank(ts_delta(rsk70_mfm2_asetrd_profit, 7)) + rank(ts_delta(rsk70_mfm2_asetrd_dsrt, 7))
+
+## 三字段组合模板
+73. rank(rsk70_mfm2_asetrd_anlystsn) + rank(rsk70_mfm2_asetrd_momentum) + rank(rsk70_mfm2_asetrd_earnyild)
+74. rank(rsk70_mfm2_asetrd_divyild) + rank(rsk70_mfm2_asetrd_ltrevrsl) + rank(rsk70_mfm2_asetrd_strevrsl)
+75. rank(rsk70_mfm2_asetrd_profit) + rank(rsk70_mfm2_asetrd_earnqlty) + rank(rsk70_mfm2_asetrd_dsrt)
+76. rank(ts_delta(rsk70_mfm2_asetrd_anlystsn, 30)) + rank(ts_delta(rsk70_mfm2_asetrd_momentum, 30)) + rank(ts_delta(rsk70_mfm2_asetrd_earnyild, 30))
+77. rank(ts_delta(rsk70_mfm2_asetrd_divyild, 30)) + rank(ts_delta(rsk70_mfm2_asetrd_ltrevrsl, 30)) + rank(ts_delta(rsk70_mfm2_asetrd_strevrsl, 30))
+78. rank(ts_delta(rsk70_mfm2_asetrd_profit, 30)) + rank(ts_delta(rsk70_mfm2_asetrd_earnqlty, 30)) + rank(ts_delta(rsk70_mfm2_asetrd_dsrt, 30))
+
+## 高级表达式（包含ts_zscore）
+79. ts_zscore(rsk70_mfm2_asetrd_anlystsn, 120) + ts_zscore(rsk70_mfm2_asetrd_momentum, 120)
+80. ts_zscore(rsk70_mfm2_asetrd_earnyild, 120) + ts_zscore(rsk70_mfm2_asetrd_divyild, 120)
+81. ts_zscore(rsk70_mfm2_asetrd_ltrevrsl, 120) + ts_zscore(rsk70_mfm2_asetrd_strevrsl, 120)
+82. ts_zscore(rsk70_mfm2_asetrd_profit, 120) + ts_zscore(rsk70_mfm2_asetrd_dsrt, 120)
+
+## 回归斜率表达式
+83. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_anlystsn, 66), ts_step(1), 66, rettype=2))
+84. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_momentum, 66), ts_step(1), 66, rettype=2))
+85. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_earnyild, 66), ts_step(1), 66, rettype=2))
+86. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_divyild, 66), ts_step(1), 66, rettype=2))
+87. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_ltrevrsl, 66), ts_step(1), 66, rettype=2))
+88. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_strevrsl, 66), ts_step(1), 66, rettype=2))
+89. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_profit, 66), ts_step(1), 66, rettype=2))
+90. rank(ts_regression(ts_zscore(rsk70_mfm2_asetrd_dsrt, 66), ts_step(1), 66, rettype=2))
+
+## 使用说明
+1. 每个表达式都可以直接用于create_simulation或create_multiSim
+2. 建议参数配置：
+   - decay: 2
+   - truncation: 0.001
+   - neutralization: SLOW
+   - 其他参数使用默认值
+3. 建议批量测试：每次选择8个不同的表达式进行多模拟
+4. 性能筛选标准：
+   - Sharpe > 1.58
+   - Fitness > 1.0
+   - Turnover < 70%
+   - Diversity > 0.3
+   - Robust Universe Sharpe > 1.0
+
+## 注意事项
+1. 所有表达式都经过操作符验证，确保语法正确
+2. 使用前请确保网络连接正常
+3. 建议定期轮换数据集和表达式，避免过度使用单一模式
+4. 监控相关性，确保PC和SC都低于0.7
