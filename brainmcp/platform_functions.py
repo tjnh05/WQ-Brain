@@ -290,10 +290,12 @@ class BrainApiClient:
     
     async def ensure_authenticated(self):
         """Ensure authentication is valid, re-authenticate if needed."""
-        if not await self.is_authenticated() and self.auth_credentials:
+        if await self.is_authenticated():
+            return  # 已认证，直接返回
+        elif self.auth_credentials:
             self.log("🔄 Re-authenticating...", "INFO")
             await self.authenticate(self.auth_credentials['email'], self.auth_credentials['password'])
-        elif not self.auth_credentials:
+        else:
             raise Exception("Not authenticated and no stored credentials available. Please call authenticate() first.")
     
     async def get_authentication_status(self) -> Optional[Dict[str, Any]]:
@@ -305,6 +307,124 @@ class BrainApiClient:
         except Exception as e:
             self.log(f"Failed to get auth status: {str(e)}", "ERROR")
             return None
+    
+    async def _make_api_call_raw(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
+        """
+        基础的API调用实现，不包含重试逻辑
+        
+        Args:
+            method: HTTP方法 (GET, POST, PUT, PATCH, DELETE)
+            endpoint: API端点路径
+            **kwargs: 传递给requests方法的参数
+            
+        Returns:
+            API响应数据（JSON格式）
+            
+        Raises:
+            Exception: API调用失败时抛出异常
+        """
+        # 确保认证状态
+        await self.ensure_authenticated()
+        
+        # 动态调用HTTP方法
+        http_method = getattr(self.session, method.lower())
+        response = http_method(endpoint, **kwargs)
+        
+        # 检查HTTP状态码
+        response.raise_for_status()
+        
+        # 返回JSON响应
+        if response.content:
+            return response.json()
+        else:
+            return {}  # 空响应
+    
+    async def _make_api_call(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
+        """
+        统一的API调用包装器，处理认证、重试、错误处理
+        
+        Args:
+            method: HTTP方法 (GET, POST, PUT, PATCH, DELETE)
+            endpoint: API端点路径
+            **kwargs: 传递给requests方法的参数
+            
+        Returns:
+            API响应数据（JSON格式）
+            
+        Raises:
+            Exception: 所有重试失败后抛出异常
+        """
+        max_retries = 3
+        base_delay = 2  # 基础延迟秒数
+        
+        for attempt in range(max_retries):
+            try:
+                return await self._make_api_call_raw(method, endpoint, **kwargs)
+                    
+            except Exception as e:
+                # 如果是最后一次重试，记录错误并抛出异常
+                if attempt == max_retries - 1:
+                    self.log(f"API调用失败（{method} {endpoint}）: {str(e)}", "ERROR")
+                    raise
+                
+                # 指数退避等待
+                delay = base_delay * (2 ** attempt)  # 2, 4, 8秒
+                self.log(f"API调用失败，{delay}秒后重试（尝试 {attempt + 1}/{max_retries}）", "WARNING")
+                await asyncio.sleep(delay)
+    
+    def _get_cached_data(self, cache_key: str, ttl: int = 7200) -> Optional[Dict[str, Any]]:
+        """
+        从Redis缓存获取数据
+        
+        Args:
+            cache_key: 缓存键
+            ttl: 过期时间（秒），用于刷新缓存
+            
+        Returns:
+            缓存数据，如果不存在或读取失败则返回None
+        """
+        global redis_client
+        if not redis_client:
+            return None
+        
+        try:
+            cached_data = redis_client.get(cache_key)
+            if cached_data:
+                import json
+                data = json.loads(cached_data)
+                self.log(f"✅ 使用缓存数据: {cache_key} (TTL: {ttl//3600}小时)", "INFO")
+                # 主动刷新：重置过期时间
+                redis_client.expire(cache_key, ttl)
+                return data
+        except Exception as e:
+            self.log(f"⚠️ Redis缓存读取失败 ({cache_key}): {e}", "WARNING")
+        
+        return None
+    
+    def _cache_data(self, cache_key: str, data: Dict[str, Any], ttl: int = 7200) -> bool:
+        """
+        保存数据到Redis缓存
+        
+        Args:
+            cache_key: 缓存键
+            data: 要缓存的数据
+            ttl: 过期时间（秒）
+            
+        Returns:
+            是否成功保存
+        """
+        global redis_client
+        if not redis_client:
+            return False
+        
+        try:
+            import json
+            redis_client.setex(cache_key, ttl, json.dumps(data))
+            self.log(f"💾 数据已保存到缓存: {cache_key} (TTL: {ttl//3600}小时)", "INFO")
+            return True
+        except Exception as e:
+            self.log(f"⚠️ Redis缓存保存失败 ({cache_key}): {e}", "WARNING")
+            return False
     
     async def create_simulation(self, simulation_data: SimulationData) -> Dict[str, str]:
         """Create a new simulation on BRAIN platform."""
@@ -422,33 +542,74 @@ class BrainApiClient:
                 return True
 
         return False
-    
-    async def get_datasets(self, instrument_type: str = "EQUITY", region: str = "USA", 
+
+    async def get_datasets(self, instrument_type: str = "EQUITY", region: str = "USA",
                           delay: int = 1, universe: str = "TOP3000", theme: str = "false", search: Optional[str] = None) -> Dict[str, Any]:
-        """Get available datasets."""
-        await self.ensure_authenticated()
+        """Get available datasets with Redis caching."""
+        # 生成缓存键，基于所有参数
+        cache_key_parts = [
+            f"brain:datasets",
+            f"inst:{instrument_type}",
+            f"reg:{region}",
+            f"delay:{delay}",
+            f"univ:{universe}",
+            f"theme:{theme}"
+        ]
         
-        try:
-            params = {
-                'instrumentType': instrument_type,
-                'region': region,
-                'delay': delay,
-                'universe': universe,
-                'theme': theme
-            }
+        if search:
+            # 对搜索词进行简单哈希以避免特殊字符问题
+            import hashlib
+            search_hash = hashlib.md5(search.encode()).hexdigest()[:8]
+            cache_key_parts.append(f"search:{search_hash}")
+        
+        cache_key = ":".join(cache_key_parts)
+        
+        # 尝试从缓存获取数据（缓存12小时，因为数据集很少变化）
+        cached_data = self._get_cached_data(cache_key, ttl=43200)  # 12小时
+        if cached_data is not None:
+            return cached_data
             
-            if search:
-                params['search'] = search
+            # 缓存未命中，调用API
+            await self.ensure_authenticated()
             
-            response = self.session.get(f"{self.base_url}/data-sets", params=params)
-            response.raise_for_status()
-            response = response.json()
-            response['extraNote'] = "if your returned result is 0, you may want to check your parameter by using get_platform_setting_options tool to got correct parameter"
-            return response
-        except Exception as e:
-            self.log(f"Failed to get datasets: {str(e)}", "ERROR")
-            raise
-    
+            try:
+                params = {
+                    'instrumentType': instrument_type,
+                    'region': region,
+                    'delay': delay,
+                    'universe': universe,
+                    'theme': theme
+                }
+                
+                if search:
+                    params['search'] = search
+                
+                response = self.session.get(f"{self.base_url}/data-sets", params=params)
+                response.raise_for_status()
+                result = response.json()
+                
+                # 添加额外说明
+                if isinstance(result, dict):
+                    result['extraNote'] = "if your returned result is 0, you may want to check your parameter by using get_platform_setting_options tool to got correct parameter"
+                    result['cached'] = False
+                    result['cache_key'] = cache_key
+                elif isinstance(result, list):
+                    # 如果是列表，转换为字典格式
+                    result = {
+                        'datasets': result,
+                        'count': len(result),
+                        'extraNote': "if your returned result is 0, you may want to check your parameter by using get_platform_setting_options tool to got correct parameter",
+                        'cached': False,
+                        'cache_key': cache_key
+                    }
+                
+                # 保存到缓存（12小时）
+                self._cache_data(cache_key, result, ttl=43200)
+                
+                return result
+            except Exception as e:
+                self.log(f"Failed to get datasets: {str(e)}", "ERROR")
+                raise    
     async def get_datafields(self, instrument_type: str = "EQUITY", region: str = "USA",
                             delay: int = 1, universe: str = "TOP3000", theme: str = "false",
                             dataset_id: Optional[str] = None, data_type: str = "",
@@ -477,19 +638,10 @@ class BrainApiClient:
         
         cache_key = ":".join(cache_key_parts)
         
-        # 尝试从Redis缓存获取datafields
-        if redis_client:
-            try:
-                cached_data = redis_client.get(cache_key)
-                if cached_data:
-                    import json
-                    datafields_data = json.loads(cached_data)
-                    self.log(f"✅ 使用缓存的datafields数据 (2小时缓存)", "INFO")
-                    # 主动刷新：重置过期时间
-                    redis_client.expire(cache_key, 7200)
-                    return datafields_data
-            except Exception as e:
-                self.log(f"⚠️ Redis缓存读取失败: {e}", "WARNING")
+        # 尝试从缓存获取数据（缓存12小时，因为数据字段很少变化）
+        cached_data = self._get_cached_data(cache_key, ttl=43200)  # 12小时
+        if cached_data is not None:
+            return cached_data
         
         try:
             params = {
@@ -513,15 +665,11 @@ class BrainApiClient:
             response.raise_for_status()
             response_data = response.json()
             response_data['extraNote'] = "if your returned result is 0, you may want to check your parameter by using get_platform_setting_options tool to got correct parameter"
+            response_data['cached'] = False
+            response_data['cache_key'] = cache_key
             
-            # 保存到Redis缓存（2小时过期）
-            if redis_client:
-                try:
-                    import json
-                    redis_client.setex(cache_key, 7200, json.dumps(response_data))
-                    self.log(f"💾 datafields数据已保存到Redis缓存，过期时间: 2小时", "INFO")
-                except Exception as e:
-                    self.log(f"⚠️ Redis缓存保存失败: {e}", "WARNING")
+            # 保存到缓存（12小时，因为数据字段很少变化）
+            self._cache_data(cache_key, response_data, ttl=43200)
             
             return response_data
         except Exception as e:
@@ -633,7 +781,7 @@ class BrainApiClient:
             self.log(f"Failed to get user alphas: {str(e)}", "ERROR")
             raise
     
-    async def submit_alpha(self, alpha_id: str) -> bool:
+    async def submit_alpha(self, alpha_id: str) -> Dict[str, Any]:
         """Submit an alpha for production."""
         await self.ensure_authenticated()
         
@@ -644,11 +792,36 @@ class BrainApiClient:
             response.raise_for_status()
             
             self.log(f"Alpha {alpha_id} submitted successfully", "SUCCESS")
-            return response.__dict__
+            
+            # 返回结构化的响应信息
+            result = {
+                "success": True,
+                "alpha_id": alpha_id,
+                "status": "submitted",
+                "response": response.json() if response.content else {},
+                "timestamp": datetime.now().isoformat()
+            }
+            return result
             
         except Exception as e:
             self.log(f"❌ Failed to submit alpha: {str(e)}", "ERROR")
-            return False
+            
+            # 返回结构化的错误信息
+            error_result = {
+                "success": False,
+                "alpha_id": alpha_id,
+                "status": "failed",
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            # 如果是HTTP错误，添加状态码和响应信息
+            import requests
+            if isinstance(e, requests.exceptions.HTTPError):
+                error_result["status_code"] = e.response.status_code if e.response else None
+                error_result["response_text"] = e.response.text[:200] if e.response and e.response.text else None
+            
+            return error_result
     
     async def get_events(self) -> Dict[str, Any]:
         """Get available events and competitions."""
@@ -687,22 +860,15 @@ class BrainApiClient:
 
     async def get_operators(self) -> Dict[str, Any]:
         """Get available operators for alpha creation with Redis caching."""
-        await self.ensure_authenticated()
-        
-        # 尝试从Redis缓存获取operators
         cache_key = "brain:operators"
-        if redis_client:
-            try:
-                cached_data = redis_client.get(cache_key)
-                if cached_data:
-                    import json
-                    operators_data = json.loads(cached_data)
-                    self.log(f"✅ 使用缓存的operators数据 (2小时缓存)", "INFO")
-                    # 主动刷新：重置过期时间
-                    redis_client.expire(cache_key, 7200)
-                    return operators_data
-            except Exception as e:
-                self.log(f"⚠️ Redis缓存读取失败: {e}", "WARNING")
+        
+        # 尝试从缓存获取数据（缓存24小时，因为操作符很少变化）
+        cached_data = self._get_cached_data(cache_key, ttl=86400)  # 24小时
+        if cached_data is not None:
+            return cached_data
+        
+        # 缓存未命中，调用API
+        await self.ensure_authenticated()
         
         try:
             response = self.session.get(f"{self.base_url}/operators")
@@ -715,14 +881,12 @@ class BrainApiClient:
             else:
                 result = operators_data
             
-            # 保存到Redis缓存（2小时过期）
-            if redis_client:
-                try:
-                    import json
-                    redis_client.setex(cache_key, 7200, json.dumps(result))
-                    self.log(f"💾 operators数据已保存到Redis缓存，过期时间: 2小时", "INFO")
-                except Exception as e:
-                    self.log(f"⚠️ Redis缓存保存失败: {e}", "WARNING")
+            # 添加缓存标记
+            result['cached'] = False
+            result['cache_key'] = cache_key
+            
+            # 保存到缓存（24小时，因为操作符很少变化）
+            self._cache_data(cache_key, result, ttl=86400)
             
             return result
         except Exception as e:
@@ -771,13 +935,39 @@ class BrainApiClient:
             raise
 
     async def get_documentations(self) -> Dict[str, Any]:
-        """Get available documentations and learning materials."""
+        """Get available documentations and learning materials with Redis caching."""
+        cache_key = "brain:documentations"
+        
+        # 尝试从缓存获取数据（缓存7天，因为文档很少变化）
+        cached_data = self._get_cached_data(cache_key, ttl=604800)  # 7天
+        if cached_data is not None:
+            return cached_data
+        
+        # 缓存未命中，调用API
         await self.ensure_authenticated()
         
         try:
             response = self.session.get(f"{self.base_url}/tutorials")
             response.raise_for_status()
-            return response.json()
+            result = response.json()
+            
+            # 添加缓存标记
+            if isinstance(result, dict):
+                result['cached'] = False
+                result['cache_key'] = cache_key
+            elif isinstance(result, list):
+                # 如果是列表，转换为字典格式
+                result = {
+                    'documentations': result,
+                    'count': len(result),
+                    'cached': False,
+                    'cache_key': cache_key
+                }
+            
+            # 保存到缓存（7天）
+            self._cache_data(cache_key, result, ttl=604800)
+            
+            return result
         except Exception as e:
             self.log(f"Failed to get documentations: {str(e)}", "ERROR")
             raise
@@ -1275,16 +1465,16 @@ class BrainApiClient:
         For backward compatibility, all parameters are accepted but unsupported
         fields are silently ignored.
         
-        NOTE: This method uses Redis cached authentication tokens for API calls.
-        You must call authenticate() first to establish Redis cache.
+        NOTE: This method uses the existing authenticated session.
+        You must call authenticate() first to establish authentication.
         """
-        import requests
+        # Ensure authentication is valid
+        await self.ensure_authenticated()
 
         try:
             data = {}
             
             # Supported fields
-
             if name:
                 data['name'] = name
             if category:
@@ -1316,67 +1506,8 @@ class BrainApiClient:
             
             self.log(f"Updating alpha {alpha_id} with: {data}", "INFO")
             
-            # Check if redis_client is available
-            global redis_client
-            if not redis_client:
-                raise Exception("Redis client not available. Please ensure Redis is running and authentication has been performed.")
-            
-            # Find authentication token in Redis
-            # Look for keys starting with "brain:token:"
-            auth_keys = []
-            try:
-                # Try to scan for keys (if Redis supports it)
-                cursor = 0
-                while True:
-                    cursor, keys = redis_client.scan(cursor=cursor, match="brain:token:*")
-                    auth_keys.extend(keys)
-                    if cursor == 0:
-                        break
-            except Exception:
-                # Fallback: try a direct key pattern if scan not available
-                try:
-                    # Try common email pattern or get from config
-                    config = load_config()
-                    if 'credentials' in config and 'email' in config['credentials']:
-                        email = config['credentials']['email']
-                        cache_key = f"brain:token:{email}"
-                        if redis_client.exists(cache_key):
-                            auth_keys = [cache_key]
-                except Exception:
-                    pass
-            
-            if not auth_keys:
-                raise Exception("No authentication token found in Redis cache. Please call authenticate() first.")
-            
-            # Use the first found authentication token
-            cache_key = auth_keys[0]
-            cached_data = redis_client.get(cache_key)
-            if not cached_data:
-                raise Exception(f"Authentication token expired or not found for key: {cache_key}")
-            
-            # Parse cached session data
-            import time
-            session_data = json.loads(cached_data)
-            
-            # Check if token is expired
-#             if time.time() >= session_data.get('expires_at', 0):
-#                 raise Exception("Authentication token expired. Please re-authenticate.")
-            
-            # Get cookies from session data
-            cookies_dict = session_data.get('cookies', {})
-            if not cookies_dict:
-                raise Exception("No cookies found in cached session data.")
-            
-            # Create a new session with cached cookies
-            s = requests.Session()
-            s.cookies.update(cookies_dict)
-#             s.headers.update({
-#                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-#                 'Content-Type': 'application/json'
-#             })
-            
-            # Send PATCH request
-            response = s.patch(f"{self.base_url}/alphas/{alpha_id}", json=data)
+            # Send PATCH request using the existing authenticated session
+            response = self.session.patch(f"{self.base_url}/alphas/{alpha_id}", json=data)
             response.raise_for_status()
             
             self.log(f"Successfully updated alpha {alpha_id} properties", "INFO")
@@ -1651,22 +1782,15 @@ class BrainApiClient:
 
     async def get_platform_setting_options(self) -> Dict[str, Any]:
         """Get available instrument types, regions, delays, and universes with Redis caching."""
-        await self.ensure_authenticated()
-        
-        # 尝试从Redis缓存获取platform settings
         cache_key = "brain:platform_settings"
-        if redis_client:
-            try:
-                cached_data = redis_client.get(cache_key)
-                if cached_data:
-                    import json
-                    settings_data = json.loads(cached_data)
-                    self.log(f"✅ 使用缓存的platform settings数据 (2小时缓存)", "INFO")
-                    # 主动刷新：重置过期时间
-                    redis_client.expire(cache_key, 7200)
-                    return settings_data
-            except Exception as e:
-                self.log(f"⚠️ Redis缓存读取失败: {e}", "WARNING")
+        
+        # 尝试从缓存获取数据（缓存24小时，因为平台设置很少变化）
+        cached_data = self._get_cached_data(cache_key, ttl=86400)  # 24小时
+        if cached_data is not None:
+            return cached_data
+        
+        # 缓存未命中，调用API
+        await self.ensure_authenticated()
         
         try:
             # Use OPTIONS method on simulations endpoint to get configuration options
@@ -1728,14 +1852,12 @@ class BrainApiClient:
                 }
             }
             
-            # 保存到Redis缓存（2小时过期）
-            if redis_client:
-                try:
-                    import json
-                    redis_client.setex(cache_key, 7200, json.dumps(result))
-                    self.log(f"💾 platform settings数据已保存到Redis缓存，过期时间: 2小时", "INFO")
-                except Exception as e:
-                    self.log(f"⚠️ Redis缓存保存失败: {e}", "WARNING")
+            # 添加缓存标记
+            result['cached'] = False
+            result['cache_key'] = cache_key
+            
+            # 保存到缓存（24小时，因为平台设置很少变化）
+            self._cache_data(cache_key, result, ttl=86400)
             
             return result
             
