@@ -1930,7 +1930,7 @@ async def authenticate(email: Optional[str] = "", password: Optional[str] = "") 
                 password = config['credentials'].get('password', '')
         
         if not email or not password:
-            return {"error": "Email and password required. Either provide them as arguments, configure them in user_config.json, or create a .brain_credentials file in your home directory with format: ["email", "password"]"}
+            return {"error": "Email and password required. Either provide them as arguments, configure them in user_config.json, or create a .brain_credentials file in your home directory with format: ['email', 'password']"}
         
         # 尝试从Redis缓存获取token和session
         if redis_client:
