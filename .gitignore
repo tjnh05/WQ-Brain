@@ -10,3 +10,24 @@ parameters.py
 .iflow/
 settings.json
 user_config.json
+
+# 自动化工作流文件
+iflow_workflow_*.py
+run_iflow_workflow.sh
+iflow_direct_autonomous.sh
+iflow_simple_autonomous.py
+autonomous_prompt_*.txt
+
+# 备份文件
+*.backup
+*.bak*
+*20260107
+
+# 数据文件
+database.sqlite
+*.json.backup
+
+# 论文和图片
+alpha_mining_papers/
+downloaded_papers/
+message_images/
