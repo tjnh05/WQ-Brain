@@ -14,7 +14,7 @@
 
 1. **基础**: `authenticate`, `manage_config`
 2. **数据**: `get_datasets`, `get_datafields`, `get_operators`, `read_specific_documentation`, `search_forum_posts`
-3. **开发**: `create_multi_simulation` (**核心工具**), `check_multisimulation_status`, `get_multisimulation_result`
+3. **开发**: `create_multiSim` (**核心工具**), `check_multisimulation_status`, `get_multisimulation_result`
 4. **分析**: `get_alpha_details`, `get_alpha_pnl`, `check_correlation`
 5. **提交**: `get_submission_check`
 
@@ -24,7 +24,7 @@
 
 ### **1. 批量生存法则 (The Rule of 8/5-8)**
 
-- **通用规则**: 任何一次 `create_multi_simulation` 调用，**必须**且**始终**包含 **8 个** 不同的 Alpha 表达式。
+- **通用规则**: 任何一次 `create_multiSim` 调用，**必须**且**始终**包含 **8 个** 不同的 Alpha 表达式。
 - **IND区域特殊规则**: IND地区多模拟可以一次提交 **5-6 个** 表达式，根据系统负载和稳定性灵活调整。
 - **单模拟提交次数限制**: 
   - **通用地区**: 同一时间段内不能超过 **8 个** 单模拟提交
@@ -53,7 +53,7 @@
         - **STEP 1**: 立即调用 `authenticate` 重新认证。
         - **STEP 2**: 再次调用 `check_multisimulation_status`。
         - **STEP 3**: 若仍为 `in_progress`，判定为僵尸任务。
-        - **STEP 4**: **立刻停止**监控该 ID，重新调用 `create_multi_simulation` (生成新 ID) 重启流程。
+        - **STEP 4**: **立刻停止**监控该 ID，重新调用 `create_multiSim` (生成新 ID) 重启流程。
 
 ### **4. Alpha提交队列管理协议 (Alpha Submission Queue Management Protocol)**
 
@@ -295,7 +295,7 @@
 | **Robust Universe Sharpe < 1.0** | **数据预处理**: ts_backfill/winsorize, 长时间窗口, 简化表达式 | 1. 添加`ts_backfill(x, 5)`处理缺失值 2. 使用120/252天长窗口提升稳定性 3. 降低表达式复杂度，避免过拟合 4. 尝试不同字段组合，寻找更稳健信号 |
 | **Weight Concentration** | 1. 确保外层有 `rank()`. 2. Truncation=0.01. 3. `ts_backfill`或`winsorize` 预处理. | 1. 外层添加`rank()`确保均匀分布 2. 设置Truncation=0.001限制极端权重 3. 使用`ts_backfill(x, 5)`处理异常值 4. 检查字段数据分布，避免极端值影响 |
 | **Correlation Fail** | 1. 改变窗口 (5->66). 2. 换字段 (`close`->`vwap`). 3. 换算子 (`ts_delta`->`ts_rank`). | 1. 大幅改变窗口期(5→66→252) 2. 替换核心字段，使用不同数据集 3. 改变算子类型(趋势→均值回归) 4. 调整中性化方法(Market→Industry) |
-| **Search Inefficiency** | 手动调整参数和逻辑 | 1. 使用`create_multi_simulation`批量测试8个变体 2. 基于成功模板生成变体，提高命中率 3. 优先测试OS表现好的数据集 4. 记录失败模式，避免重复错误 |
+| **Search Inefficiency** | 手动调整参数和逻辑 | 1. 使用`create_multiSim`批量测试8个变体 2. 基于成功模板生成变体，提高命中率 3. 优先测试OS表现好的数据集 4. 记录失败模式，避免重复错误 |
 | **Overfitting Risk** | 经验性简化因子 | 1. 坚持0-op→1-op→2-op渐进复杂度 2. 确保表达式有明确经济学逻辑 3. 使用长窗口(≥120天)测试稳健性 4. 在不同市场周期验证表现 |
 | **Forum Search Failure** | 重试或跳过 | 1. 使用`web_search`作为备用搜索工具 2. 搜索`HowToUseAIDatasets`文件夹 3. 参考`AIResearchReports`中的成功案例 4. 基于区域+数据集组合生成搜索词 |
 | **Search Space Explosion** | 暴力枚举 | 1. 使用成功模板作为起点 2. 优先测试历史表现好的字段组合 3. 批量生成变体，提高测试效率 4. 及时停止无效方向，聚焦有希望路径 |
@@ -316,7 +316,7 @@
 #### **F1. 智能Alpha生成策略**
 - **基于模板的生成**: 使用`read_specific_documentation`和`search_forum_posts`获取成功模板
 - **变体生成方法**: 基于成功表达式生成变体（改变窗口期、decay值、算子替换）
-- **批量测试优化**: 使用`create_multi_simulation`批量测试8个表达式，最大化效率
+- **批量测试优化**: 使用`create_multiSim`批量测试8个表达式，最大化效率
 - **经验复用**: 参考`HowToUseAIDatasets`和`HowToUseAllDatasets`中的成功案例
 
 #### **F2. 系统化搜索与优化**
@@ -360,7 +360,7 @@
     3. 现有成功Alpha报告（AIResearchReports文件夹）
 - **信息验证方法**:
   - **交叉验证**: 对比多个来源的信息一致性
-  - **实战测试**: 通过`create_multi_simulation`验证思路可行性
+  - **实战测试**: 通过`create_multiSim`验证思路可行性
   - **经验参考**: 参考相似区域/数据集的成功案例
 
 #### **F6. 实战优化策略 (Practical Optimization Strategies)**
@@ -375,7 +375,7 @@
   - 基于经济学逻辑选择相关字段（价值、动量、质量、情绪等）
   - 参考成功案例中的字段组合模式
 - **搜索效率优化**:
-  - 批量测试：每次`create_multi_simulation`提交8个表达式
+  - 批量测试：每次`create_multiSim`提交8个表达式
   - 变体生成：基于成功逻辑生成窗口期、decay值、算子变体
   - 快速迭代：失败后立即分析原因并调整策略
 
@@ -546,7 +546,7 @@
     1. **模板收集**: 使用`read_specific_documentation`和`search_forum_posts`收集成功模板
     2. **经验复用**: 参考`HowToUseAIDatasets`和`HowToUseAllDatasets`中的成功案例
     3. **变体生成**: 基于成功表达式生成8个变体（改变窗口期、decay值、算子替换）
-    4. **批量测试**: 使用`create_multi_simulation`批量测试，最大化效率
+    4. **批量测试**: 使用`create_multiSim`批量测试，最大化效率
 
 #### **Step 2: 结构化优化与改进**
 - **目标**: 基于测试结果系统化优化Alpha表达式
@@ -616,7 +616,7 @@
 2. **正式提交**: 
     - **参数验证**: 在提交前必须调用 `get_platform_setting_options` 验证所有参数的合法性，特别是Universe参数。
     - **IND区域特别注意**: 确认Universe为TOP500，严禁使用TOP3000等不支持的Universe。
-    - **优先策略**: 优先调用 `create_multi_simulation` (通用地区8个表达式，IND区域5-8个表达式)。
+    - **优先策略**: 优先调用 `create_multiSim` (通用地区8个表达式，IND区域5-8个表达式)。
     - **备选策略**: 如果多模拟结果丢失或失败，立即切换到单模拟逐一创建确保结果保存。
     - **单模拟次数限制**: 
       - **通用地区**: 同一时间段内累计单模拟提交不能超过8个

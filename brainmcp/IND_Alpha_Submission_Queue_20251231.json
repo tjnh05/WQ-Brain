@@ -1,0 +1,323 @@
+{
+  "metadata": {
+    "created_date": "2025-12-31",
+    "last_updated": "2026-01-09 (KPe53rmE和A16LxZ1d优化处理完成)",
+    "author": "BW53146",
+    "region": "IND",
+    "dataset_type": "MODEL",
+    "daily_submission_limit": "弹性（比赛期间：Power Pool优先，高风险即时提交）",
+    "strategy": "根据IFLOW.md新策略：相关性时效性优先，比赛期间（2026年1月5日-18日）Power Pool Alpha优先提交，高风险Alpha（PC≥0.65或常见字段组合）建议即时提交不入队"
+  },
+  "submission_calendar": {
+    "2025-12-31": "ZYZxVkwd (submitted)",
+    "2026-01-01": "QPel2R9w (submitted)",
+    "2026-01-02": "kqRX6b0P (submitted)",
+    "2026-01-03": "blpP8l0N (submitted)",
+    "2026-01-04": "e7A267Mp (submitted)",
+    "2026-01-07": "P0e5NwoE (submitted)",
+    "2026-01-08": "zqa2Xq5R (submitted)",
+    "2026-01-09": "d5qE8e8E (submitted)",
+    "2026-01-10": "vR0YQZMQ (submitted)",
+    "2026-01-11": "88AVQ6am (submit failed, PC=0.8258 > 0.7, Power Pool豁免可能未应用)",
+    "2026-01-12": "O0eRZm57 (high_correlation, PPAC>0.7且PC>0.7, Power Pool双重相关性失败)",
+    "2026-01-13": "vR0e1VxQ (submitted)",
+    "2026-01-14": "0moNqrjr (planned, Power Pool, 高风险建议即时提交)",
+    "2026-01-15": "KPe53rmE (high_correlation, PPAC>0.7且PC>0.7, 需要优化)",
+    "2026-01-16": "A16LxZ1d (performance_warning, IS曲线两端直线, 需要优化)",
+    "2026-01-17": "YPZNxk5w (submitted)",
+    "2026-01-18": "wp6oKV9v (planned, 常规高风险, 建议即时提交)",
+    "2026-01-19": "O0eo7QoJ (fail)",
+    "2026-01-20": "1YvJwRvJ (submitted)",
+    "2026-01-21": "GrVW5VX3 (submitted)",
+    "2026-01-22": "E53mOoOP (submitted)",
+    "2026-01-23": "vR0GzkVr (submitted)",
+    "2026-01-24": "akJajNR5 (planned, 常规高风险, 建议即时提交)",
+    "2026-01-25": "vR0AR9YG (pc > 0.7)",
+    "2026-01-26": "j2LazY59 (planned, 常规高风险, 建议即时提交)",
+    "2026-01-27": "KPezrm8z (submitted)",
+    "2026-01-28": "原88AVQ6am日期已调整",
+    "2026-01-29": "j2LaER7Z (submitted)",
+    "2026-01-30": "9qo89Xle (submitted)",
+    "2026-01-31": "3qd17LW0 (submitted)",
+    "2026-02-01": "原O0eRZm57日期已调整",
+    "2026-02-02": "原0moNqrjr日期已调整",
+    "2026-02-03": "原KPe53rmE日期已调整",
+    "2026-02-04": "原A16LxZ1d日期已调整"
+  },
+  "pending_alphas": [
+    {
+      "alpha_id": "wp6oKV9v",
+      "expression": "ts_av_diff(tail(rank(mdl110_value), lower=0, upper=0.05, newval=0), 66) + ts_av_diff(rank(sector_value_momentum_rank_float), 252)",
+      "scheduled_date": "2026-01-18",
+      "date_added": "2026-01-06",
+      "priority_score": 8.8,
+      "correlation_risk": "高风险",
+      "risk_reason": "使用常见字段组合(mdl110_value + sector_value_momentum_rank_float)，PC可能接近0.7阈值",
+      "recommendation": "建议即时提交，不入队等待（根据IFLOW.md新策略：PC≥0.65或常见字段组合→即时提交）",
+      "power_pool_alpha": false
+    },
+    {
+      "alpha_id": "akJajNR5",
+      "expression": "ts_av_diff(tail(rank(mdl110_value), lower=0, upper=0.05, newval=0), 120) + ts_av_diff(rank(sector_value_momentum_rank_float), 504)",
+      "scheduled_date": "2026-01-24",
+      "date_added": "2026-01-06",
+      "priority_score": 7.92,
+      "correlation_risk": "高风险",
+      "risk_reason": "使用常见字段组合(mdl110_value + sector_value_momentum_rank_float)，PC可能接近0.7阈值",
+      "recommendation": "建议即时提交，不入队等待（根据IFLOW.md新策略：PC≥0.65或常见字段组合→即时提交）",
+      "power_pool_alpha": false
+    },
+    {
+      "alpha_id": "j2LazY59",
+      "expression": "ts_av_diff(tail(rank(mdl110_value), lower=0, upper=0.2, newval=0), 66) + ts_av_diff(rank(sector_value_momentum_rank_float), 120)",
+      "scheduled_date": "2026-01-26",
+      "date_added": "2026-01-06",
+      "priority_score": 5.67,
+      "correlation_risk": "高风险",
+      "risk_reason": "使用常见字段组合(mdl110_value + sector_value_momentum_rank_float)，PC可能接近0.7阈值",
+      "recommendation": "建议即时提交，不入队等待（根据IFLOW.md新策略：PC≥0.65或常见字段组合→即时提交）",
+      "power_pool_alpha": false
+    },
+
+    {
+      "alpha_id": "0moNqrjr",
+      "expression": "ts_av_diff(rank(industry_value_momentum_rank_float), 252)",
+      "scheduled_date": "2026-01-14",
+      "date_added": "2026-01-08",
+      "priority_score": 9.8,
+      "correlation_risk": "低风险",
+      "risk_reason": "Power Pool Alpha，使用独特字段industry_value_momentum_rank_float，相关性风险较低",
+      "recommendation": "Power Pool Alpha（比赛期间优先），建议即时提交，不占Pure Power Pool每日配额（Sharpe 3.20 > 1.58，属于[Power Pool + Regular]）",
+      "power_pool_alpha": true,
+      "notes": "符合Power Pool Alpha要求：Sharpe 3.20 > 1.0，操作符数量2 ≤ 4，相关性检查通过（PC < 0.7），Robust Universe Sharpe 1.74 > 1.0，使用INDUSTRY中性化，使用industry_value_momentum_rank_float字段"
+    },
+
+    {
+      "alpha_id": "A16LxZ1d",
+      "expression": "ts_av_diff(rank(global_value_momentum_rank_float), 504)",
+      "scheduled_date": "2026-01-16",
+      "date_added": "2026-01-08",
+      "priority_score": 9.6,
+      "correlation_risk": "低风险",
+      "risk_reason": "Power Pool Alpha，使用独特字段global_value_momentum_rank_float，相关性风险较低",
+      "recommendation": "Power Pool Alpha（需要优化后提交），IS收益曲线两端是一条直线，表现不佳，建议先优化",
+      "power_pool_alpha": true,
+      "notes": "符合Power Pool Alpha基本要求但存在性能问题：Sharpe 3.20 > 1.0，操作符数量2 ≤ 4，相关性检查通过（PC < 0.7），Robust Universe Sharpe 1.46 > 1.0，使用INDUSTRY中性化。但IS收益曲线两端是一条直线，表现不佳，需要优化。",
+      "performance_warning": {
+        "issue": "IS收益曲线两端是一条直线，表现不佳",
+        "root_cause": "窗口期过长（504天）导致信号过于平滑，缺乏短期动态",
+        "optimization_suggestions": [
+          "缩短窗口期：504天 → 120天或66天",
+          "改变算子：ts_av_diff → ts_delta",
+          "替换字段：global_value_momentum_rank_float → industry_value_momentum_rank_float",
+          "双字段组合：添加短期信号增强动态性"
+        ],
+        "priority": "高 - 需要优化后才能提交"
+      }
+    },
+    {
+      "alpha_id": "O0eo7QoJ",
+      "reason": "fail",
+      "date": "2026-01-19"
+    },
+    {
+      "alpha_id": "vR0d2dbw",
+      "reason": "robust_sharpe < 1.0 (0.81)",
+      "date": "2026-01-04",
+      "optimization_suggestions": [
+        "添加数据预处理：ts_backfill(original_field, 5)处理缺失值",
+        "使用长窗口期提升稳定性：120天或252天",
+        "简化表达式复杂度，避免过拟合",
+        "尝试不同中性化方法：Market或Industry",
+        "检查字段数据覆盖率，避免低流动性股票"
+      ]
+    },
+    {
+      "alpha_id": "zqaA6LYV",
+      "reason": "Sharpe 1.3 < 1.58 阈值",
+      "date": "2026-01-07",
+      "expression": "ts_delta(rank(anl46_indicator), 66)",
+      "sharpe": 1.3,
+      "fitness": 1.3,
+      "robust_sharpe": 1.0,
+      "optimization_suggestions": [
+        "添加第二个字段增强信号：ts_delta(rank(anl46_indicator), 66) + ts_delta(rank(anl4_afv4_eps_mean), 120)",
+        "尝试Decay=2和Industry中性化",
+        "改变算子：ts_delta → ts_av_diff，窗口期120天",
+        "调整truncation=0.001降低权重集中度",
+        "添加数据预处理：ts_backfill(x, 5)处理缺失值"
+      ]
+    },
+    {
+      "alpha_id": "kqRNzn88",
+      "reason": "优化为 vR0YQZMQ - 原Alpha存在权重集中和零覆盖问题（CONCENTRATED_WEIGHT警告，零覆盖长度66天>5天阈值）",
+      "date": "2026-01-07",
+      "expression": "ts_delta(rank(mdl110_value), 66) + ts_delta(rank(sector_value_momentum_rank_float), 504)",
+      "sharpe": 2.08,
+      "fitness": 1.94,
+      "robust_sharpe": 1.28,
+      "optimized_to": "vR0YQZMQ"
+    },
+    {
+      "alpha_id": "88AVQ6am",
+      "reason": "submit_result: false, PC=0.8258 > 0.7 (Power Pool豁免可能未应用), Power Pool内部自相关性0.6289 > 0.5但Sharpe高28.7%",
+      "date": "2026-01-08",
+      "expression": "ts_av_diff(rank(sector_value_momentum_rank_float), 504)",
+      "sharpe": 3.32,
+      "fitness": 3.29,
+      "robust_sharpe": 1.71,
+      "turnover": 0.1271,
+      "neutralization": "INDUSTRY",
+      "power_pool_alpha": true,
+      "notes": "Power Pool Alpha，但提交失败，可能因PC过高或Power Pool相关性检查未通过",
+      "optimization_suggestions": [
+        "缩短窗口期：504天 → 120天",
+        "替换字段：sector_value_momentum_rank_float → industry_value_momentum_rank_float",
+        "添加数据预处理：zscore() 或 ts_backfill(x, 5)",
+        "调整中性化方法：尝试MARKET中性化",
+        "改变算子：ts_av_diff → ts_delta"
+      ]
+    }
+  ],
+  "high_correlation_alphas": [
+    {
+      "alpha_id": "O0ebxvM1",
+      "reason": "pc > 0.7",
+      "date": "2026-01-11"
+    },
+    {
+      "alpha_id": "lexQjkR2",
+      "reason": "pc > 0.7",
+      "date": "2026-01-12"
+    },
+    {
+      "alpha_id": "58RaGa9o",
+      "reason": "pc > 0.7",
+      "date": "2026-01-14"
+    },
+    {
+      "alpha_id": "d5qE37ME",
+      "reason": "sc > 0.7",
+      "date": "2026-01-15"
+    },
+    {
+      "alpha_id": "9qoak6RV",
+      "reason": "sc > 0.7",
+      "date": "2026-01-16"
+    },
+    {
+      "alpha_id": "np03geKw",
+      "reason": "pc > 0.7",
+      "date": "2026-01-18"
+    },
+    {
+      "alpha_id": "vR0dOnkQ",
+      "reason": "pc > 0.7",
+      "date": "2026-01-06"
+    },
+    {
+      "alpha_id": "vR0AR9YG",
+      "reason": "pc > 0.7 (original: 0.7891, optimized variants: 0.792-0.8272)",
+      "date": "2026-01-07",
+      "optimization_attempts": [
+        {
+          "variant_id": "2rEGRk56",
+          "expression": "ts_av_diff(tail(rank(mdl110_value), lower=0, upper=0.1, newval=0), 66) + ts_av_diff(tail(rank(sector_value_momentum_rank_float), lower=0, upper=0.1, newval=0), 252)",
+          "sharpe": 3.01,
+          "robust_sharpe": 1.99,
+          "correlation": 0.792
+        },
+        {
+          "variant_id": "VknMEoNw",
+          "expression": "ts_av_diff(zscore(tail(rank(mdl110_value), lower=0, upper=0.15, newval=0)), 120) + ts_av_diff(zscore(rank(sector_value_momentum_rank_float)), 504)",
+          "sharpe": 2.84,
+          "robust_sharpe": 1.74,
+          "correlation": 0.8272
+        }
+      ],
+      "recommendation": "需要完全改变字段组合或使用不同数据集，当前字段组合与现有Alpha高度相关",
+      "optimization_suggestions": [
+        "完全改变字段组合：使用Analyst (anl4_afv4_eps_mean) + Risk (risk_field) 数据集",
+        "尝试Fundamental或Earnings数据集字段",
+        "大幅调整窗口期：66天 → 252天，或使用不同窗口期组合",
+        "改变算子类型：趋势→均值回归 (ts_rank, group_rank)",
+        "调整中性化方法：Market或Industry"
+      ]
+    },
+    {
+      "alpha_id": "O0e6bQPq",
+      "reason": "与 E53mOoOP 相关性为 1 (完全相关)",
+      "date": "2026-01-07",
+      "expression": "ts_delta(rank(anl4_afv4_eps_mean), 66) + ts_delta(rank(anl4_afv4_median_eps), 66) + ts_delta(rank(anl4_afv4_div_mean), 66)",
+      "sharpe": 2.21,
+      "robust_sharpe": 1.1,
+      "correlated_with": "E53mOoOP"
+    },
+    {
+      "alpha_id": "j2L1YOJo",
+      "reason": "pc > 0.7 且 sc > 0.7 (PC=0.7891, SC=0.792)",
+      "date": "2026-01-08",
+      "expression": "ts_av_diff(zscore(ts_backfill(mdl110_value, 5)), 66) + ts_av_diff(zscore(ts_backfill(mdl110_score, 5)), 252)",
+      "sharpe": 2.08,
+      "fitness": 1.94,
+      "robust_sharpe": 1.28,
+      "optimized_to": "vR0GzkVr",
+      "notes": "优化为 vR0GzkVr，使用不同字段组合（mdl110_value + mdl110_analyst_sentiment）降低相关性"
+    },
+    {
+      "alpha_id": "d5qdWv62",
+      "reason": "pc > 0.7 且 sc > 0.7 (PC=0.792, SC=0.795)",
+      "date": "2026-01-08",
+      "expression": "ts_av_diff(zscore(ts_backfill(mdl110_value, 5)), 120) + ts_av_diff(zscore(ts_backfill(mdl110_score, 5)), 252)",
+      "sharpe": 2.1,
+      "fitness": 1.96,
+      "robust_sharpe": 1.3,
+      "optimized_to": "vR0GzkVr",
+      "notes": "优化为 vR0GzkVr，使用不同字段组合（mdl110_value + mdl110_analyst_sentiment）降低相关性"
+    },
+    {
+      "alpha_id": "XgqzzVLl",
+      "reason": "PPAC > 0.7, PC > 0.7",
+      "date": "2026-01-09"
+    },
+    {
+      "alpha_id": "O0eRZm57",
+      "reason": "PPAC > 0.7, PC > 0.7 (Power Pool Alpha双重相关性失败)",
+      "date": "2026-01-09",
+      "expression": "ts_av_diff(rank(sector_value_momentum_rank_float), 252)",
+      "sharpe": 3.12,
+      "robust_sharpe": 1.62,
+      "power_pool_alpha": true,
+      "notes": "Power Pool Alpha但相关性检查失败：1) PPAC > 0.7 (Power Pool内部自相关性过高)，2) PC > 0.7 (生产相关性过高)。即使Power Pool豁免PC检查，PPAC必须 < 0.5。需要完全改变字段或使用不同数据集。",
+      "property_test_history": {
+        "test_date": "2026-01-09",
+        "test_status": "规则验证通过但相关性失败",
+        "property_settings_validated": true,
+        "correlation_failure": true
+      },
+      "optimization_suggestions": [
+        "替换字段：sector_value_momentum_rank_float → industry_value_momentum_rank_float",
+        "或使用：country_value_momentum_rank_float",
+        "添加数据预处理：ts_backfill(x, 5) + zscore()",
+        "调整窗口期：252天 → 120天",
+        "尝试不同数据集字段：Analyst (anl4_afv4_eps_mean) 或 Fundamental"
+      ]
+    },
+    {
+      "alpha_id": "KPe53rmE",
+      "reason": "PPAC > 0.7, PC > 0.7 (Power Pool Alpha双重相关性失败)",
+      "date": "2026-01-09",
+      "expression": "ts_av_diff(rank(global_value_momentum_rank_float), 252)",
+      "sharpe": 3.20,
+      "robust_sharpe": 1.46,
+      "power_pool_alpha": true,
+      "notes": "Power Pool Alpha但相关性检查失败：1) PPAC > 0.7 (Power Pool内部自相关性过高)，2) PC > 0.7 (生产相关性过高)。使用global_value_momentum_rank_float字段可能与其他Alpha高度相关。需要完全改变字段组合。",
+      "optimization_suggestions": [
+        "替换字段：global_value_momentum_rank_float → industry_value_momentum_rank_float",
+        "或使用：country_value_momentum_rank_float",
+        "添加数据预处理：ts_backfill(x, 5) + zscore()",
+        "调整窗口期：252天 → 120天"
+      ]
+    }
+  ]
+}

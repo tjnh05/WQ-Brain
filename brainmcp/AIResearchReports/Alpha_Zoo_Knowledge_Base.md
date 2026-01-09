@@ -3,7 +3,7 @@
 ## 概述
 Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和优化成功挖掘的Alpha因子。本知识库基于WorldQuant BRAIN平台的实战经验建立，旨在积累知识、避免重复错误、提升未来研究效率。
 
-**最后更新**: 2025年12月21日  
+**最后更新**: 2026年1月1日  
 **维护者**: iFlow CLI自动化研究系统
 
 ---
@@ -146,6 +146,79 @@ Alpha Zoo是一个动态调整的高质量因子库，用于记录、管理和�
 - **相关性风险**: 低 (PC=0.6608 < 0.7, SC=0.4149 < 0.7)
 - **市场环境适应性**: 优秀 (2Y Sharpe=2.34)
 - **区域特异性**: 适合IND区域行业集中特性，INDUSTRY中性化效果最佳
+
+---
+
+### 因子4: YPZNxk5w (Model数据集，zscore标准化降低相关性)
+**入库时间**: 2026年1月1日  
+**状态**: ✅ 完全合格 (通过所有质量检查)  
+**备注**: **Model数据集成功案例，应用降低相关性方法(zscore标准化)解决高相关性问题**
+
+#### 基础信息
+- **表达式**: `ts_rank(zscore(mdl110_value), 66) + ts_rank(zscore(sector_value_momentum_rank_float), 22)`
+- **区域**: IND (印度)
+- **股票池**: TOP500
+- **延迟**: D1
+- **中性化**: INDUSTRY
+- **Decay**: 2
+- **Truncation**: 0.01
+- **Alpha ID**: YPZNxk5w
+- **数据集**: Model (model110 - Big data and machine learning based model)
+- **金字塔匹配**: IND/D1/MODEL，1.5倍乘数
+- **主题匹配**: Scalable ATOM Theme (2.0x), IND Region Theme (2.0x) - 警告状态
+
+#### 性能指标
+| 指标 | 数值 | 状态 |
+|------|------|------|
+| Sharpe | 2.86 | ✅ |
+| Fitness | 1.91 | ✅ |
+| Turnover | 33.25% | ✅ |
+| Robust Universe Sharpe | 1.73 | ✅ |
+| 3年阶梯Sharpe | 2.53 | ✅ |
+| Margin | 0.000892 (万8.92) | ⚠️ 略低于IND区域万15建议 |
+| 生产相关性(PC) | 0.6676 | ✅ |
+| 自相关性(SC) | 0.6213 | ✅ |
+| 权重集中检查 | 通过 | ✅ |
+| Sub Universe Sharpe | 1.68 | ✅ |
+
+#### 经济学逻辑
+- **类型**: 价值+动量双因子策略
+- **核心原理**: 
+  - `mdl110_value`: 基于大数据和机器学习的综合价值评分
+  - `sector_value_momentum_rank_float`: 行业层面的价值动量排名
+- **组合逻辑**: 价值因子提供基本面支撑(66天窗口)，动量因子提供技术面确认(22天窗口)
+- **降低相关性方法**: 应用zscore标准化成功将PC从0.7065降至0.6676，SC从0.7065降至0.6213
+- **市场机制**: 适合IND市场的高增长、高波动特性，行业中性化聚焦个股选择能力
+
+#### 改进轨迹
+1. **初始版本**: `rank(mdl110_value) + rank(sector_value_momentum_rank_float)` (Alpha ID `RRXN6bxo`, Sharpe 1.33, Fitness 0.99)
+   - **问题**: 低Sharpe，低Fitness，缺乏时间序列维度
+
+2. **结构优化**: `ts_rank(tail(rank(mdl110_value), lower=0, upper=0.1, newval=0), 252) + ts_rank(tail(rank(sector_value_momentum_rank_float), lower=0, upper=0.1, newval=0), 120)` (Alpha ID `vR052Pva`, Sharpe 2.54, Fitness 2.03)
+   - **进展**: 性能大幅提升，所有基础检查通过
+   - **问题**: 相关性过高 (PC 0.7065, SC 0.7065 > 0.7阈值)
+
+3. **相关性优化**: `ts_rank(zscore(mdl110_value), 66) + ts_rank(zscore(sector_value_momentum_rank_float), 22)` (Alpha ID `YPZNxk5w`, Sharpe 2.86, Fitness 1.91)
+   - **突破**: 应用降低相关性方法(zscore标准化 + 窗口期调整)，相关性成功降至阈值以下，Sharpe提升至当前最高
+
+#### 风险评估
+- **过拟合风险**: 低 (Robust Sharpe=1.73通过，3年阶梯Sharpe=2.53通过)
+- **流动性风险**: 低 (TOP500股票池，Turnover 33.25%安全)
+- **相关性风险**: 低 (PC=0.6676, SC=0.6213 < 0.7阈值)
+- **市场环境适应性**: 优秀 (Robust Sharpe 1.73 > 1.0)
+- **区域特异性**: 适合IND区域，INDUSTRY中性化效果最佳，匹配IND/D1/MODEL金字塔(1.5x)
+
+#### 关键经验
+1. **降低相关性有效性**: zscore标准化对降低相关性有显著效果
+2. **窗口期差异化**: 不同因子使用不同窗口期可提升多样性(66天价值因子 + 22天动量因子)
+3. **逐步优化路径**: 严格遵循0-op → 1-op → 2-op递进模式
+4. **文档参考价值**: `/HowToUseAIDatasets/降低相关性的方法.md`提供了实用模板和策略
+
+#### 后续优化方向
+1. **Margin提升**: 当前Margin万8.92略低于IND区域万15建议
+   - **策略**: 尝试不同中性化组合(Market vs Industry)，优化Decay和Truncation参数
+2. **多因子扩展**: 探索三因子组合，加入`mdl110_growth`或`mdl110_quality`
+3. **模板系统化**: 将成功模板`ts_rank(zscore(field1), w1) + ts_rank(zscore(field2), w2)`应用到其他数据集
 
 ---
 
@@ -937,6 +1010,116 @@ AlphaForge提出一个**两阶段公式化Alpha生成框架**：
 - `anl4_afv4_eps_median`: 使用3次，成功1次 (33%)
 - `anl4_afv4_ebit_mean`: 使用4次，成功2次 (50%)
 
+### ASI区域Alpha研究发现 (2025年12月25日)
+
+#### 研究背景
+基于用户指令"继续挖掘ASI地区Alpha"，在分析现有成功Alpha ZYL8RQzd的基础上，进行系统性优化研究，旨在发现新的可提交Alpha因子。
+
+#### 成功Alpha: ZYL8RQzd ✅ (已提交)
+**基础信息**:
+- **表达式**: `ts_rank(return_assets, 66) + ts_rank(fnd23_mtps, 66) * 1.8 + ts_rank(fnd23_1spdd, 66) * 2.5 + ts_rank(fnd28_value_09402, 66) * 0.3`
+- **区域**: ASI
+- **股票池**: MINVOL1M
+- **延迟**: D1
+- **中性化**: INDUSTRY
+- **Alpha ID**: ZYL8RQzd
+- **数据集**: Fundamental23 + Fundamental28跨数据集组合
+- **金字塔匹配**: ASI/D1/FUNDAMENTAL，1.1倍乘数
+
+**性能指标**:
+| 指标 | 数值 | 状态 |
+|------|------|------|
+| Sharpe | 2.25 | ✅ |
+| Fitness | 1.16 | ✅ |
+| 日本Sharpe | 1.31 | ✅ |
+| IS_LADDER_SHARPE | 1.84 | ✅ |
+| Turnover | 16.8% | ✅ |
+| 生产相关性(PC) | <0.7 | ✅ |
+| 自相关性(SC) | <0.7 | ✅ |
+
+**经济学逻辑**:
+- **核心结构**: 四因子加权组合
+- **关键发现**: Fundamental28字段`fnd28_value_09402`的高覆盖率(91.32%)对提升日本Sharpe至关重要
+- **权重优化**: `fnd23_1spdd`权重2.5和`fnd28_value_09402`权重0.3实现Sharpe与日本Sharpe平衡
+- **窗口期**: 统一的66天窗口期提供稳定性
+
+#### 最佳候选Alpha: RRLGdXlg ⚠️ (接近成功)
+**基础信息**:
+- **表达式**: `ts_rank(return_assets, 66) * 2.0 + ts_rank(fnd23_mtps, 66) * 2.1 + ts_rank(fnd23_1spdd, 66) * 3.0 + ts_rank(fnd28_value_09402, 66) * 0.8`
+- **区域**: ASI
+- **股票池**: MINVOL1M
+- **延迟**: D1
+- **中性化**: COUNTRY
+- **Alpha ID**: RRLGdXlg
+- **关键特性**: COUNTRY中性化解决了相关性问题，但IS_LADDER_SHARPE不足
+
+**性能指标**:
+| 指标 | 数值 | 状态 |
+|------|------|------|
+| Sharpe | 2.12 | ✅ |
+| Fitness | 1.41 | ✅ |
+| 日本Sharpe | 1.09 | ✅ |
+| IS_LADDER_SHARPE | 1.27 | ❌ (差距0.31) |
+| Turnover | 10.9% | ✅ |
+| 生产相关性(PC) | <0.7 | ✅ |
+| 自相关性(SC) | <0.7 | ✅ |
+
+**瓶颈分析**:
+- **根本限制**: COUNTRY中性化下难以同时满足日本Sharpe≥1.0和IS_LADDER_SHARPE≥1.58
+- **相关性突破**: COUNTRY中性化成功解决了与其他Alpha的相关性问题(PC<0.7)
+- **稳定性挑战**: IS_LADDER_SHARPE反映长期表现不足，需要更稳健的信号
+
+#### 关键经验教训
+1. **相关性-中性化权衡**:
+   - **INDUSTRY中性化**: 日本Sharpe高(1.0-1.24)，IS_LADDER_SHARPE高(2.14-2.24)，但相关性极高(>0.93)
+   - **COUNTRY中性化**: 相关性低(通过检查)，日本Sharpe临界(1.0-1.1)，IS_LADDER_SHARPE不足(1.27-1.47)
+   - **SECTOR中性化**: 介于两者之间，相关性仍高(0.93-0.94)
+   - **MARKET中性化**: 未显著优于其他中性化
+
+2. **跨数据集组合有效性**:
+   - Fundamental23 + Fundamental28组合产生协同效应
+   - Fundamental28字段的高覆盖率对日本Sharpe提升至关重要
+   - MATRIX类型字段兼容性：`ts_rank`支持所有MATRIX字段
+
+3. **平台检查要求平衡**:
+   - **同时满足**: Sharpe≥1.58, 日本Sharpe≥1.0, Fitness≥1.0, IS_LADDER_SHARPE≥1.58, PC<0.7, SC<0.7
+   - **最苛刻检查**: IS_LADDER_SHARPE (三年滚动窗口Sharpe)
+   - **区域特殊性**: ASI区域日本Sharpe要求必须≥1.0
+
+4. **表达式结构优化**:
+   - **窗口期测试**: 混合窗口期(22,66,120)未能显著改善IS_LADDER_SHARPE
+   - **权重优化**: 增加`fnd28_value_09402`权重有助于日本Sharpe但可能降低IS_LADDER_SHARPE
+   - **字段替换**: 使用`fnd17_fcfq`替代`return_assets`导致日本Sharpe大幅下降
+
+5. **搜索空间限制**:
+   - Fundamental23数据集MATRIX字段有限
+   - 难以创建与成功Alpha结构显著不同的新表达式
+   - 相关性困境：相似结构导致高相关性
+
+#### 后续研究建议
+1. **突破IS_LADDER_SHARPE瓶颈**:
+   - 探索其他Fundamental数据集(Fundamental17, Fundamental28其他字段)
+   - 测试`ts_mean`或`ts_decay_linear`平滑以提升长期稳定性
+   - 尝试`Decay=2`或`truncation=0.01`参数组合
+
+2. **数据集扩展策略**:
+   - 探索Analyst数据集VECTOR字段特殊处理(`vec_`操作符)
+   - 测试Risk、News、Sentiment数据集在ASI区域表现
+   - 考虑跨区域迁移：IND成功模式在ASI的适用性
+
+3. **相关性优化创新**:
+   - 使用`group_rank`替代`rank`改变分组维度
+   - 探索`tail`系列操作符处理极端值
+   - 测试比率型表达式：`field1/field2`替代简单加权和
+
+4. **质量保证优化**:
+   - 建立ASI区域特定检查清单
+   - 开发日本Sharpe预测模型
+   - 实现相关性预检机制，避免无效测试
+
+**研究状态**: 全面测试完成，发现根本瓶颈，需要创新突破
+**下一步**: 探索新的数据集组合和表达式架构，突破相关性-稳健性权衡
+
 ### 时间窗口效果统计
 | 窗口(天) | 测试次数 | Sharpe均值 | Robust Sharpe均值 |
 |----------|----------|-------------|-------------------|
@@ -951,5 +1134,5 @@ AlphaForge提出一个**两阶段公式化Alpha生成框架**：
 
 **知识库维护**: iFlow CLI自动化研究系统  
 **创建时间**: 2025年12月18日  
-**最后更新**: 2025年12月21日  
+**最后更新**: 2026年1月1日  
 **文件位置**: `/Users/mac/WQ-Brain/brainmcp/AIResearchReports/Alpha_Zoo_Knowledge_Base.md`
