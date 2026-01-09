@@ -25,10 +25,10 @@
 ### **1. 批量生存法则 (The Rule of 8/5-8)**
 
 - **通用规则**: 任何一次 `create_multi_simulation` 调用，**必须**且**始终**包含 **8 个** 不同的 Alpha 表达式。
-- **IND区域特殊规则**: IND地区多模拟可以一次提交 **5-8 个** 表达式，根据系统负载和稳定性灵活调整。
+- **IND区域特殊规则**: IND地区多模拟可以一次提交 **5-6 个** 表达式，根据系统负载和稳定性灵活调整。
 - **单模拟提交次数限制**: 
   - **通用地区**: 同一时间段内不能超过 **8 个** 单模拟提交
-  - **IND地区**: 同一时间段内不能超过 **8 个** 单模拟提交
+  - **IND地区**: 同一时间段内不能超过 **5-6 个** 单模拟提交
   - **目的**: 保障在平台上本用户同时模拟的总数不超过平台限制，避免触发系统保护机制
 - **原因**: 
   - 通用：单次提交过少会触发 `"At least 2 alpha expressions required"` 错误，且浪费迭代机会。
@@ -55,6 +55,215 @@
         - **STEP 3**: 若仍为 `in_progress`，判定为僵尸任务。
         - **STEP 4**: **立刻停止**监控该 ID，重新调用 `create_multi_simulation` (生成新 ID) 重启流程。
 
+### **4. Alpha提交队列管理协议 (Alpha Submission Queue Management Protocol)**
+
+- **背景与目的**: 当`submit_alpha`工具遇到序列化错误无法自动提交时，或用户希望手动控制提交节奏时，使用队列系统管理Alpha提交。**重要发现**: Alpha的相关性具有时效性，延迟提交可能导致生产相关性(PC)随时间升高超过0.7阈值，使原本合格的Alpha变得不合格。因此需要弹性提交策略。
+- **核心原则**:
+    1. **弹性提交策略**: 根据Alpha类型和相关性风险采用不同策略：
+       - **Power Pool Alpha（比赛期间）**: 优先提交，不受严格每日限制
+       - **高相关性风险Alpha**: PC≥0.65或使用常见字段组合 → 建议即时提交
+       - **稳定Alpha**: PC<0.6且使用独特字段组合 → 可入队等待
+    2. **队列优先原则**: 优先提交队列中等待时间最长的符合条件的Alpha，但允许高相关性风险Alpha"插队"提交。
+    3. **相关性控制**: 管理待提交Alpha之间的相关性，避免内部相关性过高。**特别注意**: 定期检查pending队列中Alpha的相关性变化，及时处理PC升高的Alpha。
+    4. **性能阈值保障**: 只将完全通过性能检查的Alpha加入队列。
+    5. **相关性时效性监控**: 记录Alpha加入队列时的PC值，定期复查相关性变化，PC≥0.65时建议即时提交。
+- **队列文件规范**:
+    - **文件名**: `IND_Alpha_Submission_Queue_YYYYMMDD.json`（区域+日期）
+    - **存储位置**: 项目根目录
+    - **简化原则**: 只保留核心信息，提高文件处理速度
+    - **数据结构**:
+        ```json
+        {
+          "metadata": {
+            "created_date": "2025-12-31",
+            "last_updated": "2026-01-04",
+            "author": "BW53146",
+            "region": "IND",
+            "dataset_type": "MODEL",
+            "daily_submission_limit": 1
+          },
+          "submission_calendar": {
+            "2025-12-31": "ZYZxVkwd (submitted)",
+            "2026-01-01": "QPel2R9w (submitted)",
+            "2026-01-02": "kqRX6b0P (submitted)",
+            "2026-01-03": "blpP8l0N (submitted)",
+            "2026-01-04": "e7A267Mp (submitted)",
+            "2026-01-09": "d5qE8e8E (submitted)",
+            "2026-01-13": "vR0e1VxQ (submitted)",
+            "2026-01-17": "YPZNxk5w (submitted)",
+            "2026-01-20": "1YvJwRvJ",
+            "2026-01-21": "vR0d2dbw",
+            "2026-01-22": "vR0dOnkQ",
+            "2026-01-23": "58Rlr0Zk"
+          },
+          "pending_alphas": [
+            {
+              "alpha_id": "1YvJwRvJ",
+              "expression": "ts_av_diff(zscore(ts_backfill(mdl110_value, 5)), 66) + ts_av_diff(zscore(ts_backfill(mdl110_score, 5)), 252)",
+              "scheduled_date": "2026-01-20",
+              "date_added": "2026-01-02",
+              "priority_score": 8.2
+            },
+            {
+              "alpha_id": "58Rlr0Zk",
+              "expression": "ts_av_diff(zscore(mdl110_value), 120) + ts_av_diff(zscore(mdl110_score), 66) + ts_av_diff(zscore(sector_value_momentum_rank_float), 252)",
+              "scheduled_date": "2026-01-23",
+              "date_added": "2026-01-04",
+              "priority_score": 9.2
+            }
+          ],
+          "submitted_alphas": [
+            "ZYZxVkwd",
+            "QPel2R9w",
+            "kqRX6b0P",
+            "blpP8l0N",
+            "e7A267Mp",
+            "d5qE8e8E",
+            "vR0e1VxQ",
+            "YPZNxk5w"
+          ],
+          "failed_alphas": [
+            {
+              "alpha_id": "blpo2eaK",
+              "reason": "fail",
+              "date": "2026-01-10"
+            }
+          ],
+          "high_correlation_alphas": [
+            {
+              "alpha_id": "O0ebxvM1",
+              "reason": "pc > 0.7",
+              "date": "2026-01-11"
+            }
+          ]
+        }
+        ```
+- **加入队列标准**:
+    1. **性能检查通过**: Sharpe ≥ 1.58, Fitness ≥ 1.0, Turnover < 40%, Robust Universe Sharpe > 1.0
+    2. **相关性检查通过**: PC < 0.7 且 SC < 0.7（若PC ≥ 0.7则需要Sharpe提高至少10%）
+    3. **提交检查通过**: `get_submission_check`返回"Pass"
+    4. **相关性控制**: 与队列中现有Alpha的相关性 < 0.7
+    5. **相关性时效性评估**: 根据以下因素决定是否适合入队：
+       - **高风险（建议即时提交）**: PC ≥ 0.65，或使用常见字段组合（如mdl110_value + sector）
+       - **中风险（可短暂入队）**: 0.6 ≤ PC < 0.65，或使用较常见字段组合
+       - **低风险（可入队等待）**: PC < 0.6，且使用独特字段组合或Fundamental/Earnings数据集
+- **队列管理流程**:
+    1. **发现符合条件的Alpha**: 在Phase 5提交前检查通过后，如果自动提交失败或用户要求手动管理。
+    2. **检查相关性**: 确保PC < 0.7且SC < 0.7。
+    3. **相关性风险评估**: 评估Alpha的相关性时效性风险：
+       - **高风险**: PC ≥ 0.65，或使用常见字段组合 → **建议即时提交**，不入队等待
+       - **中风险**: 0.6 ≤ PC < 0.65 → 可入队但分配较近的提交日期（3天内）
+       - **低风险**: PC < 0.6且使用独特字段组合 → 正常入队
+    4. **计算优先级**: 基于Sharpe、Fitness、Turnover计算简单优先级分数（Sharpe权重最高），高相关性风险Alpha优先级自动提高。
+    5. **添加到队列**: 将Alpha核心信息添加到`pending_alphas`数组（只保留ID、表达式、计划日期、添加日期），**记录加入时的PC值**用于后续监控。
+    6. **分配提交日期**: 在`submission_calendar`中分配最早的可用日期，高相关性风险Alpha优先安排。
+- **提交执行流程**:
+    1. **每日检查**: 每天开始时检查`submission_calendar`中当天的安排。
+    2. **获取Alpha**: 从`pending_alphas`中获取当天计划的Alpha。
+    3. **最终验证**: 再次调用`get_submission_check`确保状态未变。
+    4. **执行提交**: 用户手动提交或尝试自动提交。
+    5. **更新状态**: 
+        - 将Alpha ID添加到`submitted_alphas`数组
+        - 从`pending_alphas`中移除
+        - 在`submission_calendar`中标记为"(submitted)"
+- **异常处理**:
+    - **提交失败**: 如果提交失败，标记为"failed"，记录原因，重新安排到未来日期。
+    - **高相关性**: 如果PC ≥ 0.7或SC ≥ 0.7，移动到`high_correlation_alphas`数组。
+    - **性能下降**: 如果Alpha性能显著下降（Sharpe下降>20%），从队列中移除。
+    - **相关性升高**: 定期检查pending队列中Alpha的相关性变化：
+       - PC从<0.65升高到≥0.65：提高优先级，建议近期提交
+       - PC从<0.7升高到≥0.7：移动到`high_correlation_alphas`，记录原因"相关性时效性升高"
+       - 记录相关性变化轨迹，分析哪些字段组合更容易出现相关性升高
+- **维护要求**:
+    1. **定期更新**: 每天更新队列文件，反映最新状态。
+    2. **相关性监控**: 每天检查pending队列中Alpha的相关性变化：
+       - 复查PC值，记录变化情况
+       - PC≥0.65的Alpha提高优先级或建议即时提交
+       - PC≥0.7的Alpha移动到`high_correlation_alphas`
+    3. **备份历史**: 每周备份队列文件，保存为`IND_Alpha_Submission_Queue_YYYYMMDD_backup.json`。
+    4. **清理旧数据**: 每月清理已提交超过30天的Alpha记录。
+    5. **相关性时效性分析**: 记录和分析哪些字段组合、数据集类型更容易出现相关性升高，优化未来入队决策。
+
+---
+
+### **5. Power Pool IND Theme临时协议 (Power Pool IND Theme Temporary Protocol)**
+
+- **时间范围**: 2026年1月5日-18日（2周比赛期间）
+- **目标区域**: IND区域（印度市场）
+- **协议状态**: 临时激活，比赛结束后自动失效
+
+#### **5.1 Power Pool Alpha资格标准**
+- **性能要求**:
+  - Sharpe ≥ 1.0（比Regular Alpha的1.58标准低）
+  - Turnover: 1%-70%（包含两端）
+  - 通过Sub-universe检查
+- **复杂度限制**:
+  - 唯一操作符数量（包括重复操作符）≤ 8
+  - 唯一数据字段数量（不包括分组字段）≤ 3
+  - 分组字段：country, industry, subindustry, currency, market, sector, exchange
+- **相关性要求**:
+  - Power Pool内部自相关性 < 0.5
+  - 如果自相关性 > 0.5，需要Sharpe比最相关Alpha高10%
+  - **重要**: 一旦标记为Power Pool Alpha，即使取消标记也会保留在自相关性池中
+  - **平台专门检查**: 平台会进行POWER_POOL_CORRELATION检查（在`get_submission_check`结果的checks部分显示为"POWER_POOL_CORRELATION"）
+  - **检查阈值**: 根据平台行为，Power Pool内部相关性阈值通常为0.5
+  - **豁免规则**: Power Pool Alpha豁免生产相关性(PC)和与Power Pool外部Alpha的自相关性检查，但必须通过POWER_POOL_CORRELATION检查
+- **中性化要求**:
+  - IND区域：Risk Handled Neutralization是强制的
+  - 适用于所有研究区域（USA/EUR/ASI/GLB/CHN Delay 1和0）
+
+#### **5.2 豁免的提交检查**
+以下检查对Power Pool Alpha不适用：
+- 生产相关性（Prod Correlation）
+- 与Power Pool外部Alpha的自相关性
+- Fitness阈值检查
+- IS Ladder检查
+
+#### **5.3 提交限制与配额**
+- **每日限制**: 每天最多提交1个Pure Power Pool Alpha（EST时区）
+- **每月限制**: 每月最多提交10个Pure Power Pool Alpha（单个排行榜）
+- **混合Alpha**:
+  - [Power Pool + ATOM] 或 [Power Pool + Regular] Alpha不受上述限制
+  - 示例：每天可提交1个Pure Power Pool + 1个[Power Pool + ATOM]
+- **新用户**: 首次提交Power Pool Alpha后3个月内，适用标准BRAIN顾问提交限制（每天最多4个）
+- **比赛期间弹性策略**（2026年1月5日-18日）:
+  - **相关性时效性优先**: Power Pool Alpha应优先提交，避免因延迟导致PC升高
+  - **[Power Pool + Regular]最大化**: 充分利用不占配额的优势，Sharpe>1.58的混合Alpha可即时提交
+  - **队列管理调整**: 比赛期间可暂停"每天1个成功Alpha"的队列限制，优先保障Power Pool提交
+  - **相关性监控**: 定期检查pending队列中Power Pool Alpha的POWER_POOL_CORRELATION变化
+
+#### **5.4 描述要求**
+- **强制要求**: 必须提供至少100字符的Idea和Rationale描述
+- **描述模板与格式规范**:
+  ```
+  Idea: [描述Alpha的核心逻辑，至少50字符]
+  Rationale for data used: [解释使用的数据字段]
+  Rationale for operators used: [解释使用的操作符]
+  ```
+  - **格式要求**: 每个key必须从行首开始，使用换行分隔
+  - **分隔要求**: 每个部分之间用空行分隔（两个换行符）
+  - **字符要求**: 总描述长度必须≥100字符（三个部分合计）
+  - **禁止**: 禁止使用'+'或其他连接符将三个部分连成一行
+- **位置**: 在Simulation结果的PROPERTIES部分
+
+#### **5.5 Power Pool Alpha生成策略**
+- **简化原则**: 优先生成简单、高质量的Alpha
+- **操作符优化**: 使用≤8个操作符，避免过度复杂
+- **字段选择**: 使用≤3个数据字段，确保逻辑清晰
+- **流动性关注**: 探索低换手率Alpha和流动性好的小宇宙
+- **多样性**: 确保Power Pool内Alpha的多样性（跨数据集、逻辑、操作符、宇宙）
+
+#### **5.6 工作流集成**
+- **Phase 2调整**: 生成Power Pool候选Alpha时应用复杂度限制
+- **Phase 3调整**: 评估时使用Sharpe ≥ 1.0标准
+- **Phase 5调整**: 跳过豁免的检查项，添加描述生成步骤
+- **提交管理**: 跟踪每日/每月Power Pool提交配额
+
+#### **5.7 比赛资格要求**
+- **最低数量**: 每个排行榜需要至少10个标记的Power Pool Alpha
+- **时间要求**: 这10个Alpha可以在比赛月份之前提交
+- **无最低提交要求**: 比赛月份内没有最低提交数量要求
+
 ---
 
 ### **思维模型与决策矩阵 (MENTAL MODELS & DECISION MATRIX)**
@@ -77,22 +286,22 @@
 - **严格限制**: 时间窗口参数仅限使用：**5, 22, 66, 120, 252, 504**。
 - **禁止**: 严禁使用 7, 10, 14, 30 等无交易日逻辑的随机数字。
 
-### **D. AI增强故障排查与优化查找表 (AI-Enhanced Troubleshooting Lookup Table)**
+### **D. 故障排查与优化查找表 (Troubleshooting & Optimization Lookup Table)**
 
-| **症状** | **传统解决方案** | **AI增强解决方案** |
+| **症状** | **传统解决方案** | **实际可用解决方案** |
 | --- | --- | --- |
-| **High Turnover (> 70%)** | 1. 引入阀门 `trade_when`. 2. Decay 提升至 3-5. 3. 使用 `ts_mean` 平滑. | 1. LLM-MCTS重新规划搜索路径 2. Alpha Zoo动态权重调整 3. 经济理论指导的因子重构 |
-| **Low Fitness (< 1.0)** | **黄金组合**: Decay=2, Neut=Industry, Trunc=0.01. | 1. AlphaForge生成-预测模型重训练 2. 多维度反馈指导改进 3. 动态阈值自适应调整 |
-| **Robust Universe Sharpe < 1.0** | **数据预处理**: ts_backfill/winsorize, 长时间窗口, 简化表达式 | 1. 数据预处理优化 2. 时间窗口调整(120/252天) 3. 降低表达式复杂度 4. 字段组合优化 |
-| **Weight Concentration** | 1. 确保外层有 `rank()`. 2. Truncation=0.01. 3. `ts_backfill`或`winsorize` 预处理. | 1. 智能多样性约束机制 2. 频繁子树避免策略 3. 维度一致性验证 |
-| **Correlation Fail** | 1. 改变窗口 (5->66). 2. 换字段 (`close`->`vwap`). 3. 换算子 (`ts_delta`->`ts_rank`). | 1. 动态相关性阈值调整 2. Alpha Zoo相关性矩阵分析 3. LLM经济合理性验证 |
-| **Search Inefficiency** | 手动调整参数和逻辑 | 1. MCTS智能节点选择 2. UCT探索-利用平衡 3. 历史成功模式匹配 |
-| **Overfitting Risk** | 经验性简化因子 | 1. LLM过拟合风险评估 2. 相对排名评估机制 3. 经济逻辑合理性检查 |
-| **Forum Search Failure** | 重试或跳过 | 1. 自动切换到web_search 2. 多源搜索策略 3. 智能关键词优化 4. 搜索结果质量验证 |
-| **Search Space Explosion** | 暴力枚举 | 1. AI字段分类压缩搜索空间 2. 相关性筛选代表性字段 3. 经济学维度分组 4. 模板化生成策略 |
-| **Invalid Expressions** | 手动调试 | 1. 集成表达式验证器 2. 语法检查提前拦截 3. 操作符参数验证 4. 回测资源保护 |
-| **Low Hit Rate** | 增加回测次数 | 1. 数据集OS表现优先选择 2. AI辅助模板推荐 3. 经济逻辑验证 4. 区域特定策略调整 |
-| **Parameter Setting Issues** | 经验性设置 | 1. Tail操作符与rank组合 2. 数据压缩到[0,1]区间 3. 基于相关性设置参数 4. 经济学理论指导 |
+| **High Turnover (> 70%)** | 1. 引入阀门 `trade_when`. 2. Decay 提升至 3-5. 3. 使用 `ts_mean` 平滑. | 1. 使用`ts_decay(x, 3-5)`降低换手 2. 添加`trade_when(abs(ts_delta(x,1))>0.01)`限制交易 3. 改用长窗口(120/252天)平滑信号 |
+| **Low Fitness (< 1.0)** | **黄金组合**: Decay=2, Neut=Industry, Trunc=0.01. | 1. 尝试Decay=2 + Industry中性化 2. 调整Truncation=0.001-0.01 3. 简化表达式复杂度，移除嵌套 4. 检查数据覆盖率和异常值处理 |
+| **Robust Universe Sharpe < 1.0** | **数据预处理**: ts_backfill/winsorize, 长时间窗口, 简化表达式 | 1. 添加`ts_backfill(x, 5)`处理缺失值 2. 使用120/252天长窗口提升稳定性 3. 降低表达式复杂度，避免过拟合 4. 尝试不同字段组合，寻找更稳健信号 |
+| **Weight Concentration** | 1. 确保外层有 `rank()`. 2. Truncation=0.01. 3. `ts_backfill`或`winsorize` 预处理. | 1. 外层添加`rank()`确保均匀分布 2. 设置Truncation=0.001限制极端权重 3. 使用`ts_backfill(x, 5)`处理异常值 4. 检查字段数据分布，避免极端值影响 |
+| **Correlation Fail** | 1. 改变窗口 (5->66). 2. 换字段 (`close`->`vwap`). 3. 换算子 (`ts_delta`->`ts_rank`). | 1. 大幅改变窗口期(5→66→252) 2. 替换核心字段，使用不同数据集 3. 改变算子类型(趋势→均值回归) 4. 调整中性化方法(Market→Industry) |
+| **Search Inefficiency** | 手动调整参数和逻辑 | 1. 使用`create_multi_simulation`批量测试8个变体 2. 基于成功模板生成变体，提高命中率 3. 优先测试OS表现好的数据集 4. 记录失败模式，避免重复错误 |
+| **Overfitting Risk** | 经验性简化因子 | 1. 坚持0-op→1-op→2-op渐进复杂度 2. 确保表达式有明确经济学逻辑 3. 使用长窗口(≥120天)测试稳健性 4. 在不同市场周期验证表现 |
+| **Forum Search Failure** | 重试或跳过 | 1. 使用`web_search`作为备用搜索工具 2. 搜索`HowToUseAIDatasets`文件夹 3. 参考`AIResearchReports`中的成功案例 4. 基于区域+数据集组合生成搜索词 |
+| **Search Space Explosion** | 暴力枚举 | 1. 使用成功模板作为起点 2. 优先测试历史表现好的字段组合 3. 批量生成变体，提高测试效率 4. 及时停止无效方向，聚焦有希望路径 |
+| **Invalid Expressions** | 手动调试 | 1. 检查括号匹配和操作符语法 2. 验证字段名称和操作符可用性 3. 确保数据类型匹配(Matrix/Vector) 4. 参考`get_operators`列表确认操作符 |
+| **Low Hit Rate** | 增加回测次数 | 1. 优先选择Model/Analyst/Risk等高效数据集 2. 使用成功模板生成变体 3. 批量测试8个表达式，最大化效率 4. 及时分析失败原因，调整策略 |
+| **Parameter Setting Issues** | 经验性设置 | 1. Tail操作符与`rank()`函数组合使用 2. 窗口期使用5,22,66,120,252,504 3. decay值使用整数0,1,2,3,5 4. 基于表达式逻辑选择合适参数 |
 
 ### **E. 严格增量复杂度法则 (The Law of Strict Incremental Complexity)**
 
@@ -102,156 +311,144 @@
     2. **1-op (Directional/Smoothing)**: 基于 0-op 的结果，仅添加一层逻辑（如 `ts_decay` 降换手，或 `ts_delta` 找趋势）。
     3. **2-op+ (Logic Nesting)**: 只有在 1-op 验证有效后，才允许进行算子嵌套或复杂逻辑构建。
 
-### **F. AI增强核心特性 (AI-Enhanced Core Features)**
+### **F. 实际可用核心策略 (Practical Core Strategies)**
 
-#### **F1. AlphaForge生成-预测架构**
-- **生成器网络**: 使用深度学习生成高质量候选因子
-- **预测器网络**: 作为代理模型学习因子适应度分布
-- **多样性保证**: 通过多样性损失避免局部最优
-- **梯度优化**: 在稀疏空间中高效导航
+#### **F1. 智能Alpha生成策略**
+- **基于模板的生成**: 使用`read_specific_documentation`和`search_forum_posts`获取成功模板
+- **变体生成方法**: 基于成功表达式生成变体（改变窗口期、decay值、算子替换）
+- **批量测试优化**: 使用`create_multi_simulation`批量测试8个表达式，最大化效率
+- **经验复用**: 参考`HowToUseAIDatasets`和`HowToUseAllDatasets`中的成功案例
 
-#### **F2. LLM-MCTS智能搜索**
-- **树搜索建模**: 将Alpha挖掘建模为树搜索推理问题
-- **UCT节点选择**: 平衡探索与利用的智能选择策略
-- **维度导向改进**: 基于多维度反馈的针对性改进
-- **频繁子树避免**: 鼓励创新，避免公式同质化
+#### **F2. 系统化搜索与优化**
+- **结构化搜索**: 使用`get_datasets`和`get_datafields`系统化探索数据
+- **相关性分析**: 使用`check_correlation`工具进行相关性检查
+- **性能评估**: 使用`get_alpha_details`和`get_alpha_pnl`进行多维度评估
+- **迭代改进**: 基于失败原因选择改进方向（窗口调整、字段替换、算子优化）
 
-#### **F3. 动态Alpha Zoo系统**
-- **动态权重组合**: 基于时效性调整因子权重
-- **相对排名评估**: 自适应评估标准替代固定阈值
-- **知识积累**: 记录成功模式和改进策略
-- **多样性维护**: 确保因子库的结构多样性
+#### **F3. 知识管理与复用系统**
+- **成功模式记录**: 将成功Alpha保存到`AIResearchReports`文件夹
+- **模板库建设**: 建立可复用的表达式模板库
+- **失败案例分析**: 记录失败原因和改进策略
+- **区域策略优化**: 根据不同区域特性调整策略（IND/USA/EUR/ASI）
 
-#### **F4. 多维度智能评估**
-- **五维评估体系**: Effectiveness, Stability, Turnover, Diversity, Overfitting Risk
-- **LLM经济合理性验证**: 确保因子有明确的经济逻辑
-- **动态阈值调整**: 根据市场环境自适应调整标准
-- **可解释性保证**: 维护因子的可理解性和可解释性
+#### **F4. 多维度质量检查**
+- **性能检查清单**:
+  - Sharpe > 1.58 (Regular) 或 ≥ 1.0 (Power Pool)
+  - Fitness > 1.0 (Regular) 或豁免 (Power Pool)
+  - Turnover < 70%
+  - Robust Universe Sharpe > 1.0
+- **相关性控制**:
+  - PC < 0.7 (Regular) 或豁免 (Power Pool)
+  - SC < 0.7 (Regular) 或 < 0.5 (Power Pool内部)
+- **复杂度管理**:
+  - 表达式简洁性检查
+  - 经济学逻辑验证
+  - 区域规则合规性检查
 
-#### **F5. 互联网搜索备用策略 (Internet Search Backup Strategy)**
-- **论坛失败检测**: 自动识别论坛访问失败或搜索无结果
-- **多层次搜索源**: 
-    - **学术资源**: arXiv, SSRN, CNKI知网, 百度学术, 微软学术
-    - **技术社区**: Stack Overflow, GitHub, Reddit r/quant
-    - **专业博客**: QuantInsti, Quantpedia, QuantStart
-    - **新闻媒体**: Bloomberg, Financial Times, Reuters
-- **智能关键词生成**: 基于当前问题自动生成最优搜索词组合
-- **搜索结果质量评估**: LLM评估搜索结果的相关性和可靠性
+#### **F5. 多渠道信息获取策略 (Multi-Channel Information Acquisition Strategy)**
+- **主要信息源**: 
+  - **平台文档**: 使用`read_specific_documentation`获取官方指南
+  - **论坛搜索**: 使用`search_forum_posts`搜索相关讨论和经验分享
+  - **数据集分析**: 使用`get_datasets`和`get_datafields`了解数据特性
+- **备用搜索策略**:
+  - **论坛失败处理**: 如果`search_forum_posts`失败，使用`web_search`工具
+  - **关键词生成**: 基于区域+数据集+问题类型生成搜索关键词
+    - 示例: "IND Model dataset alpha factors", "USA Analyst momentum strategies"
+  - **实用资源优先级**:
+    1. WorldQuant BRAIN官方论坛
+    2. `HowToUseAllDatasets`和`HowToUseAIDatasets`文件夹
+    3. 现有成功Alpha报告（AIResearchReports文件夹）
+- **信息验证方法**:
+  - **交叉验证**: 对比多个来源的信息一致性
+  - **实战测试**: 通过`create_multi_simulation`验证思路可行性
+  - **经验参考**: 参考相似区域/数据集的成功案例
 
-#### **F6. 基于实战经验的优化策略 (Experience-Based Optimization Strategies)**
+#### **F6. 实战优化策略 (Practical Optimization Strategies)**
 
-##### **F6.1 数据集深度分析技术实现**
-- **OS表现评估**: 
-    - 使用华子哥插件查看数据集整体OS表现，低于平均水平（黄色）暂时不考虑
-    - 优先选择OS表现优异的数据集，可提升回测命中率3-5倍
-- **AI辅助字段分类算法**:
-    ```python
-    def classify_fields_by_economics(fields_data, descriptions):
-        # AI分析字段描述，按经济学逻辑分类
-        categories = ai_classify_fields(descriptions)
-        # 计算字段间相关性矩阵
-        correlation_matrix = calculate_correlation_matrix(fields_data)
-        # 每个相关性组保留3个代表性字段（相关性>0.7）
-        representative_fields = select_representative_fields(correlation_matrix, categories)
-        return representative_fields
-    ```
-- **搜索空间压缩技术**:
-    - 原始空间: C(2036,3) ≈ 14亿组合
-    - 压缩后: C(39,3) = 9139个表达式
-    - 压缩比: 约10万倍，大幅提升回测效率
+##### **F6.1 数据集选择与分析方法**
+- **OS表现优先原则**: 
+  - 参考`HowToUseAIDatasets`中的数据集分析经验
+  - 优先选择历史表现优异的数据集（Model, Analyst, Risk等）
+  - 避免OS表现低于平均水平的数据集
+- **字段筛选策略**:
+  - 使用`get_datafields`获取字段列表和描述
+  - 基于经济学逻辑选择相关字段（价值、动量、质量、情绪等）
+  - 参考成功案例中的字段组合模式
+- **搜索效率优化**:
+  - 批量测试：每次`create_multi_simulation`提交8个表达式
+  - 变体生成：基于成功逻辑生成窗口期、decay值、算子变体
+  - 快速迭代：失败后立即分析原因并调整策略
 
-##### **F6.2 操作符组合优化策略**
-- **Tail家族操作符最佳实践**:
-    ```python
-    tail_combinations = {
-        "left_tail": [
-            "left_tail(rank(close), maximum=0.02)",
-            "left_tail(ts_rank(close,120), maximum=0.02)",
-            "left_tail(group_rank(close,industry), maximum=0.02)"
-        ],
-        "equivalent_replacements": {
-            "tail(x, lower=0, upper=0.2, newval=nan)": "left_tail(x, maximum=0.2)",
-            "tail(x, lower=0.2, upper=1, newval=nan)": "right_tail(x, minimum=0.2)"
-        }
-    }
-    ```
-- **参数设置策略**: 使用rank类函数将数据压缩到[0,1]区间，然后设置tail参数
-- **经济学逻辑验证**: 所有操作符组合必须有明确的经济学逻辑支撑
+##### **F6.2 操作符使用最佳实践**
+- **Tail操作符实用技巧**:
+  - `left_tail(rank(close), maximum=0.02)` - 选择排名最低的2%
+  - `right_tail(rank(close), minimum=0.98)` - 选择排名最高的2%
+  - 与`rank()`函数组合使用，确保数据在[0,1]区间
+- **常用操作符组合**:
+  - 趋势跟踪：`ts_delta(x, days)` + `rank()`
+  - 均值回归：`ts_rank(x, window)` + `group_rank()`
+  - 平滑处理：`ts_mean(x, window)` + `ts_decay()`
+- **参数设置指南**:
+  - 窗口期：5, 22, 66, 120, 252, 504（交易日逻辑）
+  - decay值：0, 1, 2, 3, 5（整数，降换手用）
+  - truncation：0.001, 0.01（控制权重集中度）
 
-##### **F6.3 表达式验证与质量控制**
-- **PLY验证器集成**:
-    ```python
-    def validate_expressions_batch(expressions):
-        validator = ExpressionValidator()
-        valid_expressions = []
-        for expr in expressions:
-            if validator.validate(expr):
-                valid_expressions.append(expr)
-            else:
-                # 尝试自动修复
-                fixed_expr = auto_fix_expression(expr)
-                if fixed_expr and validator.validate(fixed_expr):
-                    valid_expressions.append(fixed_expr)
-        return valid_expressions
-    ```
-- **质量保证流水线**: 语法验证 → 经济学逻辑验证 → 区域规则检查 → 相关性预检 → 性能预测
-- **回测资源保护**: 提前拦截无效表达式，避免浪费宝贵的回测次数
+##### **F6.3 表达式质量检查方法**
+- **语法验证步骤**:
+  1. 检查括号匹配和操作符参数
+  2. 验证字段名称和操作符可用性（参考`get_operators`）
+  3. 确保数据类型匹配（Matrix/Vector/Scalar）
+- **经济学逻辑验证**:
+  - 表达式是否有明确的经济学意义？
+  - 是否符合市场常识（动量、反转、价值等）？
+  - 是否过度复杂或存在数据挖掘偏差？
+- **预检优化**:
+  - 相关性预判：相似逻辑的表达式可能相关性高
+  - 性能预测：简单表达式通常更稳健
+  - 复杂度控制：Power Pool要求≤8操作符，≤3字段
 
-##### **F6.4 区域特定优化策略**
-- **IND区域12座塔难度分级**:
-    - ⭐⭐ Model: 单字段也能出货，大胆尝试不同中性化
-    - ⭐⭐⭐ Analyst/Option/Risk/News/Sentiment/PV: MCP推荐经济学模板，思路对就"嘎嘎出货"
-    - ⭐⭐⭐⭐ Earnings/Imbalance/Other/Institutions/Fundamental: 值得投入精力
-    - ⭐⭐⭐⭐⭐ Insiders/Macro/Short Interest: 需要大量"手搓"逻辑，优先做前面类别
-- **中性化选择标准**:
-    ```python
-    neutralization_priority = {
-        "IND": {"primary": "Market", "secondary": ["Industry", "Sector"]},
-        "USA": {"primary": "Industry", "secondary": ["Market", "Sector"]},
-        "EUR": {"primary": "Industry", "secondary": ["Market"]}
-    }
-    ```
-- **性能阈值设置**:
-    - IND区域: margin最好万15以上（印度股市手续费较高）
-    - 所有区域: Robust Sharpe < 0.5时直接停止调试，性价比极低
+##### **F6.4 区域特定策略调整**
+- **IND区域优化重点**:
+  - ⭐⭐ Model数据集：单字段也能成功，多尝试不同中性化
+  - ⭐⭐⭐ Analyst/Option/Risk：使用经济学模板，成功率高
+  - ⭐⭐⭐⭐ Earnings/Fundamental：需要更多调试，但值得投入
+  - Market中性化在IND区域效果较好
+- **性能阈值参考**:
+  - IND区域：margin最好万15以上（考虑较高手续费）
+  - 所有区域：Robust Sharpe < 0.5时考虑停止，性价比低
+  - 及时止损：连续失败时切换数据集或策略
+- **中性化选择**:
+  - IND：优先Market，其次Industry/Sector
+  - USA：优先Industry，其次Market
+  - 根据具体表达式效果调整
 
-##### **F6.5 模板工程标准化**
-- **三字段相加模板生成器**:
-- **Robust Universe Sharpe优化策略**:
-    - **数据预处理**: ts_backfill/winsorize处理缺失值和异常值
-    - **时间窗口优化**: 优先使用120/252天长周期提升稳定性
-    - **表达式简化**: 降低复杂度，避免过度拟合
-    - **字段组合优化**: 选择相关性低、互补性强的字段组合
-    - **参数调优**: Decay=2, Truncation=0.001的黄金组合
-    ```python
-    def generate_three_field_template(fields_by_category):
-        templates = []
-        # 同类别字段组合（经济学逻辑一致）
-        for category, fields in fields_by_category.items():
-            if len(fields) >= 3:
-                top_fields = select_top_fields(fields, 3, metric='sharpe')
-                template = f"zscore({top_fields[0]}) * zscore({top_fields[1]})"
-                templates.append(template)
-        return templates
-    ```
-- **模板库维护**: 建立可复用的模板库，按成功率和相关性分类
-- **模板效果评估**: 基于历史回测数据评估模板效果，动态优化模板库
+##### **F6.5 模板化工作流程**
+- **成功模板复用**:
+  - 收集成功表达式到模板库
+  - 按数据集和区域分类存储
+  - 基于模板生成变体进行测试
+- **三字段组合策略**:
+  - 选择经济学逻辑一致的字段组合
+  - 使用`zscore()`或`rank()`标准化
+  - 简单相加或相乘组合
+- **Robust Sharpe提升方法**:
+  1. 数据预处理：`ts_backfill()`处理缺失值
+  2. 长窗口优化：使用120/252天提升稳定性
+  3. 简化表达式：降低复杂度，避免过拟合
+  4. Decay=2, Truncation=0.001的黄金组合
 
-##### **F6.6 互联网搜索优化策略**
-- **搜索关键词智能生成**:
-    ```python
-    def generate_search_keywords(problem_context, region):
-        base_keywords = ["WorldQuant Brain alpha factors", "quantitative finance alpha mining"]
-        region_specific = {
-            "IND": ["India market alpha", "NSE alpha factors"],
-            "USA": ["US equity alpha", "NYSE alpha factors"],
-            "EUR": ["European market alpha", "Eurozone alpha factors"]
-        }
-        # 组合生成最优搜索关键词
-        return combine_keywords(base_keywords, region_specific, problem_context)
-    ```
-- **多源搜索策略**: 学术资源(arXiv, SSRN, CNKI) + 技术社区(Stack Overflow, GitHub) + 专业博客(QuantInsti, Quantpedia)
-- **搜索结果质量评估**: LLM评估搜索结果的相关性和可靠性，过滤低质量信息
+##### **F6.6 信息搜索与知识管理**
+- **高效搜索方法**:
+  - 关键词组合：区域 + 数据集 + "alpha factors"
+  - 优先搜索：`HowToUseAIDatasets`文件夹中的经验分享
+  - 论坛搜索：使用`search_forum_posts`获取实战经验
+- **知识积累系统**:
+  - 成功报告：保存到`AIResearchReports`文件夹
+  - 失败记录：分析失败原因，避免重复错误
+  - 模板库：建立可复用的表达式模板
+- **持续改进循环**:
+  1. 测试 → 2. 分析结果 → 3. 调整策略 → 4. 再次测试
+  5. 记录成功/失败 → 6. 优化知识库 → 返回1
 
 ---
 
@@ -262,7 +459,17 @@
 ### **Phase 1: 目标与情报 (Initialization & Intelligence)**
 
 1. 调用 `get_pyramid_alphas` 寻找未被点亮的区域，且 Delay 里 D1 优先于 D0。
-2. **[CONTEXTUAL INTELLIGENCE]**:
+2. **[POWER POOL比赛检查]**:
+   - **时间检查**: 检查当前日期是否在2026年1月5日-18日之间
+   - **决策逻辑**:
+     - 如果在比赛期间: 优先挖掘IND区域的Power Pool Alpha
+     - 如果不在比赛期间: 按常规流程进行
+   - **Power Pool模式激活条件**:
+     - ✅ 当前日期在比赛期间
+     - ✅ 目标区域为IND
+     - ✅ 用户有Power Pool提交配额（每日1个，每月10个）
+   - **模式切换**: 如果满足条件，工作流将切换到Power Pool优化模式，应用简化规则和豁免检查
+3. **[CONTEXTUAL INTELLIGENCE]**:
     - **主要方法**: 调用 **`read_specific_documentation`** 和 **`search_forum_posts`**。
     - **备用搜索策略**: 当论坛搜索失败或超时(限定 **2** 分钟以内)时，使用以下替代方案：
         - **web_search**: 使用通用网络搜索获取Alpha因子相关信息
@@ -331,67 +538,74 @@
     - 性能阈值设定: IND区域margin最好万15以上，所有区域Robust Sharpe < 0.5时直接停止调试
 8. 分析 Datafields，结合文档中的思路进行**跨策略构思**。
 
-### **Phase 2: AI驱动的智能Alpha生成 (AI-Powered Alpha Generation)**
+### **Phase 2: 系统化Alpha生成 (Systematic Alpha Generation)**
 
-#### **Step 1: AlphaForge生成-预测架构初始化**
-- **目标**: 使用生成-预测神经网络创建高质量候选池
+#### **Step 1: 候选Alpha生成与筛选**
+- **目标**: 基于现有知识和工具生成高质量的候选Alpha池
 - **操作**:
-    1. 训练代理模型学习Alpha因子适应度分布
-    2. 使用生成器网络生成初始候选因子池（≥20个）
-    3. 应用多样性损失确保候选池结构多样性
-    4. 筛选满足基本条件的因子：IC绝对值 > 0.015，最大相关性 < 0.8
+    1. **模板收集**: 使用`read_specific_documentation`和`search_forum_posts`收集成功模板
+    2. **经验复用**: 参考`HowToUseAIDatasets`和`HowToUseAllDatasets`中的成功案例
+    3. **变体生成**: 基于成功表达式生成8个变体（改变窗口期、decay值、算子替换）
+    4. **批量测试**: 使用`create_multi_simulation`批量测试，最大化效率
 
-#### **Step 2: LLM-MCTS智能细化框架**
-- **目标**: 通过树搜索推理系统优化候选因子
+#### **Step 2: 结构化优化与改进**
+- **目标**: 基于测试结果系统化优化Alpha表达式
 - **操作**:
-    1. **节点选择**: 使用UCT准则选择最有潜力的Alpha节点
-    2. **维度导向改进**: 基于多维度评估选择改进方向：
-       - Effectiveness (效果): RankIC, IC
-       - Stability (稳定性): RankIR, 时间一致性
-       - Turnover (换手率): 日均换手率
-       - Diversity (多样性): 与现有因子相关性
-       - Overfitting Risk (过拟合风险): LLM评估
-    3. **LLM生成改进**:
-       - 生成概念性改进建议
-       - 转换为具体Alpha公式
-       - 验证语法正确性
-    4. **频繁子树避免**: 识别并避免常见结构模式，鼓励创新
+    1. **结果分析**: 使用`get_multisimulation_result`分析测试结果
+    2. **问题诊断**: 识别失败原因（Sharpe不足、Turnover过高、相关性失败等）
+    3. **改进策略**: 基于故障排查查找表选择改进方向
+    4. **迭代优化**: 生成改进后的变体进行下一轮测试
 
-#### **Step 3: 动态Alpha Zoo构建**
-- **目标**: 建立动态调整的高质量因子库
+#### **Step 3: 知识积累与模板建设**
+- **目标**: 建立可复用的知识库和模板系统
 - **操作**:
-    1. 将有效Alpha添加到Alpha Zoo
-    2. 实施相对排名评估机制（非固定阈值）
-    3. 记录因子性能历史和改进轨迹
-    4. 维护因子多样性约束
+    1. **成功记录**: 将成功Alpha保存到`AIResearchReports`文件夹
+    2. **模板分类**: 按数据集、区域、逻辑类型分类存储成功模板
+    3. **失败分析**: 记录失败原因，避免重复错误
+    4. **策略优化**: 基于历史数据优化生成策略
 
-#### **Step 4: 智能变体生成策略 (基于搜索空间优化)**
-- **传统方法保留**: 仍支持0-op→1-op→2-op递进模式
-- **AI增强变体**: 
-    1. **字段分类与筛选**:
-       - 使用AI对数据集字段进行经济学维度分类（参考mdl264案例：4种预测类型→13个经济学类别）
-       - 通过相关性分析筛选代表性字段（相关性>0.7的每组保留3个）
-       - 裸字段回测筛选：Sharpe < 0.5的字段直接筛除
-       - 应用"三字段相加"等高效模板策略
-    2. **搜索空间压缩**:
-       - 从C(2036,3)≈14亿压缩到C(39,3)=9139个表达式
-       - 基于字段分类显著降低无效组合
-       - 10万倍搜索空间缩减技术
-    3. **操作符组合优化**:
-       - Tail家族操作符与rank函数组合: `left_tail(rank(close), maximum=0.02)`
-       - Tail操作符相互替换: `tai(x, lower=0, upper=0.2, newval=nan) = left_tail(x, maximum=0.2)`
-       - 参数设置策略: 使用rank类函数将数据压缩到[0,1]区间
-       - Sharpe拯救神技: `ts_delta(xx,days)` 对2 year Sharpe of 1.XX below cutoff of 1.58有奇效
-    4. **变体类型**:
-       - 参数调优变体（窗口期、decay值变化）
-       - 算子替换变体（相似功能不同实现）
-       - 结构重组变体（保持逻辑的嵌套变化）
-       - 经济理论导向变体（动量、反转、流动性等）
-    5. **表达式验证与质量控制**:
-       - 集成PLY验证器确保语法正确性
-       - 质量保证流水线：语法验证→经济学逻辑验证→区域规则检查→相关性预检→性能预测
-       - 无效表达式早期识别和自动修复机制
-       - 回测资源保护策略，避免浪费宝贵回测次数
+#### **Step 4: 实用变体生成策略**
+- **基础原则**: 坚持0-op→1-op→2-op渐进复杂度
+- **变体生成方法**: 
+    1. **参数调优变体**:
+       - 窗口期变化: 5→22→66→120→252
+       - decay值变化: 0→1→2→3→5
+       - truncation调整: 0.001→0.01→0.05
+    2. **算子替换变体**:
+       - `ts_delta` ↔ `ts_rank` ↔ `ts_mean`
+       - `rank` ↔ `zscore` ↔ `group_rank`
+       - `left_tail` ↔ `right_tail` ↔ `tail`
+    3. **字段组合变体**:
+       - 同数据集不同字段组合
+       - 跨数据集字段组合
+       - 经济学逻辑一致的字段组合
+    4. **结构重组变体**:
+       - 加法结构 ↔ 乘法结构
+       - 嵌套顺序调整
+       - 逻辑组合方式变化
+- **Power Pool Alpha生成策略（比赛期间激活）**:
+  - **简化原则**: 优先生成简单、清晰的Alpha表达式
+  - **复杂度控制**:
+    - 操作符数量限制: 生成时自动限制≤8个操作符
+    - 数据字段限制: 生成时自动限制≤3个数据字段
+    - 避免过度嵌套: 保持表达式结构扁平化
+  - **质量优先**: 注重Alpha的经济逻辑清晰度和可解释性
+  - **描述生成**: 为每个Power Pool候选Alpha生成描述模板
+    ```
+    Idea: [基于经济逻辑的核心假设，至少50字符]
+    Rationale for data used: [解释为什么选择这些数据字段]
+    Rationale for operators used: [解释操作符的经济学意义]
+    ```
+    - **格式要求**: 每个key必须从行首开始，使用换行分隔
+    - **分隔要求**: 每个部分之间用空行分隔（两个换行符）
+    - **字符要求**: 总描述长度必须≥100字符（三个部分合计）
+    - **禁止**: 禁止使用'+'或其他连接符将三个部分连成一行
+  - **多样性保证**: 确保Power Pool候选Alpha在数据集、逻辑类型、操作符使用上的多样性
+- **表达式质量检查**:
+  1. **语法验证**: 检查括号匹配、操作符语法、字段名称
+  2. **逻辑验证**: 确保表达式有明确经济学意义
+  3. **复杂度检查**: 控制表达式复杂度，避免过拟合
+  4. **预检优化**: 预判可能的问题（相关性、换手率等）
 
 ### **Phase 3: 智能模拟与动态监控 (Intelligent Simulation & Monitoring)**
 
@@ -420,13 +634,21 @@
     - 获取结果: `get_multisimulation_result` 或单模拟结果
     - 综合评估: Sharpe, Fitness, IC, Turnover, Diversity
     - **关键检查清单**:
-      - ✅ Sharpe > 1.58
-      - ✅ Fitness > 1.0  
-      - ✅ Turnover < 70%
-      - ✅ Diversity > 0.3
-      - ✅ **Robust Universe Sharpe > 1.0** (关键检查)
-      - ✅ 2Y Sharpe > 1.58 (如有)
-      - ✅ Margin > 万15 (IND区域特定)
+      - **常规Alpha检查**:
+        - ✅ Sharpe > 1.58
+        - ✅ Fitness > 1.0  
+        - ✅ Turnover < 70%
+        - ✅ Diversity > 0.3
+        - ✅ **Robust Universe Sharpe > 1.0** (关键检查)
+        - ✅ 2Y Sharpe > 1.58 (如有)
+        - ✅ Margin > 万15 (IND区域特定)
+      - **Power Pool Alpha检查（比赛期间）**:
+        - ✅ Sharpe ≥ 1.0
+        - ✅ Turnover 1%-70%（包含两端）
+        - ✅ 通过Sub-universe检查
+        - ✅ 复杂度检查（操作符≤8，数据字段≤3）
+        - ✅ **Robust Universe Sharpe > 1.0**（仍然重要）
+        - ✅ 中性化正确（IND区域Risk Handled）
     - **筛选标准**: 所有检查项必须通过，任一失败则返回**Phase 4**优化
 
 ### **Phase 4: AI驱动的迭代优化循环 (AI-Powered Iterative Loop)**
@@ -487,23 +709,113 @@
    - 在调用 工具 check_correlation 时，检查相关性是取返回值里correlation_data.max的值，不能使用 max_correlation 字段，也不能根据all_passed为true就认为通过。
    - 若 PC >= 0.7 或 SC >= 0.7，则 Alpha 被禁止提交，返回 Phase 4 修改逻辑 (尝试大幅改变窗口或核心字段，或者使用“Different groupings and neutralizations”)。
    - 若 PC >= 0.7, 需要保证Sharpe 与生产Alpha比提高至少10%
-3. **经济合理性验证**:
+
+3. **Power Pool Alpha专项检查（比赛期间激活）**:
+   - **时间检查**: 如果当前日期在2026年1月5日-18日之间，且Alpha为IND区域，进入Power Pool检查流程
+   - **复杂度验证**:
+     - 检查唯一操作符数量 ≤ 8（包括重复操作符）
+     - 检查唯一数据字段数量 ≤ 3（不包括分组字段）
+     - 如果复杂度超标，返回Phase 4简化表达式
+   - **性能标准调整**:
+     - Sharpe阈值: ≥ 1.0（替代常规的1.58）
+     - Turnover范围: 1%-70%（包含两端）
+     - Fitness检查: 豁免（不检查）
+   - **相关性特殊处理**:
+     - 生产相关性（PC）: 豁免检查
+     - Power Pool外部自相关性: 豁免检查
+     - Power Pool内部自相关性: 必须 < 0.5
+     - 如果内部自相关性 > 0.5，需要Sharpe比最相关Power Pool Alpha高10%
+     - **平台专门检查**: 必须通过POWER_POOL_CORRELATION检查（在`get_submission_check`中显示）
+   - **描述生成**:
+     - 必须生成三个字段的Description：Idea、Rationale for data used、Rationale for operators used
+     - 总长度不超过100个单词
+     - **描述格式要求**:
+       - 使用以下模板，每个key必须从行首开始，使用换行分隔：
+         ```
+         Idea: [核心逻辑]
+         Rationale for data used: [数据解释]
+         Rationale for operators used: [操作符解释]
+         ```
+       - 每个部分之间用空行分隔（两个换行符）
+       - 禁止使用'+'或其他连接符将三个部分连成一行
+     - **属性要求**:
+       - **Name**: 必须设置为Alpha ID（例如：88AVQ6am）
+         - **最佳实践**: 直接使用Alpha ID，不需要添加前缀（Power Pool有专门的tag标识）
+       - **Category**: **建议暂时不设置**（工具调用经常报错）
+         - **问题**: Category值格式要求严格，数据集映射复杂，容易导致工具调用失败
+         - **测试策略**: 先提交不设置Category的Alpha测试平台反应
+         - **备用方案**: 如果平台要求必须设置，使用智能Category推断
+       - **Description**: 必须使用上述模板生成，确保总长度不超过100个单词
+         - **格式验证**: 检查三个字段是否完整，空行分隔是否正确
+       - **Tags**: Power Pool Alpha必须添加"PowerPoolSelected"标签
+   - **中性化要求**:
+     - IND区域必须使用Risk Handled Neutralization
+     - 验证中性化设置符合Power Pool要求
+
+4. **经济合理性验证**:
     - LLM评估因子的经济逻辑合理性
     - 检查维度一致性和可解释性
     - 避免过拟合和统计假象
-4. 调用 `get_submission_check` (仅在 PC < 0.7 后)。
+
+5. 调用 `get_submission_check` (仅在 PC < 0.7 后，或Power Pool Alpha豁免PC检查)。
     - **Pass**: 
       1. **自动提交检查**: 验证Alpha是否满足所有提交条件：
-         - ✅ `get_submission_check` 返回结果为 "Pass"
-         - ✅ 相关性检查通过 (PC < 0.7 且 SC < 0.7)
-         - ✅ 性能指标达标 (Sharpe > 1.58, Fitness > 1.0, Turnover < 70%, Diversity > 0.3, Robust Universe Sharpe > 1.0)
-         - ✅ 经济合理性验证通过
-      2. **自动提交执行**: 如果满足所有条件，自动调用 `submit_alpha` 工具进行提交：
+         - **常规Alpha检查**:
+           - ✅ `get_submission_check` 返回结果为 "Pass"
+           - ✅ 相关性检查通过 (PC < 0.7 且 SC < 0.7)
+           - ✅ 性能指标达标 (Sharpe > 1.58, Fitness > 1.0, Turnover < 70%, Diversity > 0.3, Robust Universe Sharpe > 1.0)
+           - ✅ 经济合理性验证通过
+           - ✅ **相关性时效性评估**: 
+             - PC < 0.6且使用独特字段组合 → 低风险，可入队等待
+             - 0.6 ≤ PC < 0.65 → 中风险，建议近期提交
+             - PC ≥ 0.65或使用常见字段组合 → 高风险，**建议即时提交**不入队
+         - **Power Pool Alpha检查（比赛期间）**:
+           - ✅ `get_submission_check` 返回结果为 "Pass"
+           - ✅ 复杂度检查通过 (操作符 ≤ 8, 数据字段 ≤ 3)
+           - ✅ 性能指标达标 (Sharpe ≥ 1.0, Turnover 1%-70%)
+           - ✅ Power Pool内部自相关性 < 0.5（或Sharpe高10%）
+           - ✅ POWER_POOL_CORRELATION检查通过（平台专门检查）
+           - ✅ 属性要求满足（Name为Alpha ID，Category建议不设置以避免工具错误，Description三个字段且总长度≤100单词，Power Pool必须添加"PowerPoolSelected"标签）
+           - ✅ 中性化设置正确（IND区域Risk Handled）
+           - ✅ 豁免检查确认（PC、外部SC、Fitness、IS Ladder）
+      2. **Alpha属性设置**: 使用 `set_alpha_properties` 工具设置Alpha的元数据：
          - 获取Alpha ID
+         - **Name**: 直接使用Alpha ID（例如：88AVQ6am）
+           - **优化策略**: 不需要添加PP_等前缀，Power Pool Alpha有专门的tag标识
+           - **搜索便利性**: Alpha ID是平台唯一标识，便于直接搜索
+         - **Category**: **建议暂时不设置**（工具调用经常报错）
+           - **问题分析**: Category值格式要求严格（必须大写如ANALYST），数据集映射复杂，容易导致工具调用失败
+           - **替代方案**: 如果平台要求必须设置，建立智能Category推断：
+             ```python
+             def infer_category(expression, dataset_type):
+                 if dataset_type in ["MODEL", "ANALYST"]: return "ANALYST"
+                 elif dataset_type in ["SENTIMENT", "NEWS"]: return "Sentiment"
+                 elif dataset_type in ["FUNDAMENTAL", "EARNINGS"]: return "Fundamental"
+                 elif dataset_type == "PV": return "Price Volume"
+                 else: return "None"
+             ```
+         - **Description**: 生成三个字段的描述（Idea、Rationale for data used、Rationale for operators used），总长度不超过100个单词
+           - **Power Pool要求**: 必须严格按照以下格式，每个key从行首开始，用空行分隔：
+             ```
+             Idea: [核心逻辑，至少50字符]
+             Rationale for data used: [数据解释]
+             Rationale for operators used: [操作符解释]
+             ```
+         - **Tags**: 
+           - **Power Pool Alpha**: 必须添加"PowerPoolSelected"标签
+           - **常规Alpha**: 根据需求添加相应标签
+      3. **相关性时效性决策**:
+         - **Power Pool Alpha（比赛期间）**: 优先即时提交，充分利用配额
+         - **[Power Pool + Regular] Alpha**: 不占Pure Power Pool配额，即时提交
+         - **常规Alpha高相关性风险** (PC ≥ 0.65或使用常见字段组合): 即时提交，不入队等待
+         - **常规Alpha中低风险** (PC < 0.65且使用独特字段组合): 根据队列状态决定即时提交或入队
+      4. **自动提交执行**: 如果决定即时提交，自动调用 `submit_alpha` 工具进行提交：
          - 调用 `submit_alpha(alpha_id="...")`
          - 验证提交结果
+         - **Power Pool配额跟踪**: 更新每日/每月提交计数
+         - **队列管理**: 如果入队，添加到`IND_Alpha_Submission_Queue`并分配提交日期
          - 记录提交日志
-      3. **知识积累与继续挖掘**: 提交成功后：
+      5. **知识积累与继续挖掘**: 提交成功后：
          - 执行 **Phase 6** 的知识积累和报告生成
          - 完成知识积累后，返回 **Phase 1** 继续挖掘新的Alpha
          - 实现"挖掘→提交→积累→再挖掘"的持续循环
