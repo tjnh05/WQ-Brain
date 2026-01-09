@@ -31,3 +31,8 @@ database.sqlite
 alpha_mining_papers/
 downloaded_papers/
 message_images/
+
+# IFLOW相关文档
+IFLOW_Eng.md
+IFLOW_优化建议.md
+README_IFLOW_AUTOMATOR.md
