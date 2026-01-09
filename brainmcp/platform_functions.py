@@ -2875,11 +2875,35 @@ async def create_multiSim(
         Dictionary containing multisimulation results and individual alpha details
     """
     try:
+        # Ensure authentication
+        try:
+            await brain_client.ensure_authenticated()
+        except Exception as auth_error:
+            return {
+                "error": f"Authentication required: {str(auth_error)}",
+                "suggestion": "Please call authenticate() first with your BRAIN platform credentials"
+            }
+        
         # Validate input
         if len(alpha_expressions) < 2:
             return {"error": "At least 2 alpha expressions are required"}
         if len(alpha_expressions) > 8:
             return {"error": "Maximum 8 alpha expressions allowed per request"}
+        
+        # Validate each expression
+        for i, expr in enumerate(alpha_expressions):
+            if not expr or not expr.strip():
+                return {"error": f"Alpha expression {i+1} is empty"}
+            if len(expr.strip()) < 5:
+                return {"error": f"Alpha expression {i+1} is too short (minimum 5 characters)"}
+        
+        # Validate parameter types and ranges
+        if decay < 0 or decay > 5:
+            return {"error": f"Decay value must be between 0 and 5, got {decay}"}
+        if truncation < 0 or truncation > 1:
+            return {"error": f"Truncation value must be between 0 and 1, got {truncation}"}
+        if delay not in [0, 1]:
+            return {"error": f"Delay must be 0 or 1, got {delay}"}
         
         # Create multisimulation data
         multisimulation_data = []
@@ -2910,7 +2934,20 @@ async def create_multiSim(
         response = brain_client.session.post(f"{brain_client.base_url}/simulations", json=multisimulation_data)
         
         if response.status_code != 201:
-            return {"error": f"Failed to create multisimulation. Status: {response.status_code},, you need to call three mcp tools get_operators, get_platform_setting_options and get_datafields to check whether you correctly use the operators, setting the simulation settings, and existing data fields."}
+            error_detail = ""
+            if response.status_code == 400:
+                error_detail = " (Bad Request - check parameters)"
+            elif response.status_code == 401:
+                error_detail = " (Unauthorized - authentication required)"
+            elif response.status_code == 403:
+                error_detail = " (Forbidden - insufficient permissions)"
+            elif response.status_code == 422:
+                error_detail = " (Unprocessable Entity - invalid simulation settings)"
+            
+            return {
+                "error": f"Failed to create multisimulation. Status: {response.status_code}{error_detail}",
+                "suggestion": "Please check: 1) Call get_operators() to verify operators, 2) Call get_platform_setting_options() to validate settings, 3) Call get_datafields() to confirm data fields exist"
+            }
         
         # Get multisimulation location
         location = response.headers.get('Location', '')
@@ -2921,127 +2958,229 @@ async def create_multiSim(
         return await _wait_for_multisimulation_completion(location, len(alpha_expressions))
         
     except Exception as e:
-        return {"error": f"Error creating multisimulation: {str(e)}, , you need to call three mcp tools get_operators, get_platform_setting_options and get_datafields to check whether you correctly use the operators, setting the simulation settings, and existing data fields."}
+        return {
+            "error": f"Error creating multisimulation: {str(e)}",
+            "suggestion": "Please check: 1) Call get_operators() to verify operators, 2) Call get_platform_setting_options() to validate settings, 3) Call get_datafields() to confirm data fields exist"
+        }
 
 async def _wait_for_multisimulation_completion(location: str, expected_children: int) -> Dict[str, Any]:
     """Wait for multisimulation to complete and return results"""
     try:
-        # Simple progress indicator for users
-        print(f"Waiting for multisimulation to complete... (this may take several minutes)")
-        print(f"Expected {expected_children} alpha simulations")
+        import time
+        start_time = time.time()
+        max_total_time = 1200  # 20 minutes maximum total wait time
+        
+        # Enhanced progress indicator
+        print(f"⏳ Waiting for multisimulation to complete...")
+        print(f"📊 Expected {expected_children} alpha simulations")
+        print(f"⏱️  Maximum wait time: {max_total_time//60} minutes")
         print()
-        # Wait for children to appear - much more tolerant for 8+ minute multisimulations
+        
+        # Wait for children to appear with better timeout control
         children = []
-        max_wait_attempts = 200  # Increased significantly for 8+ minute multisimulations
+        max_wait_attempts = 120  # Reduced but with better timing
         wait_attempt = 0
+        last_progress_update = 0
         
         while wait_attempt < max_wait_attempts and len(children) == 0:
             wait_attempt += 1
+            elapsed_time = time.time() - start_time
+            
+            # Check total timeout
+            if elapsed_time > max_total_time:
+                return {
+                    "error": f"Multisimulation timeout after {elapsed_time//60:.0f} minutes",
+                    "elapsed_time_seconds": elapsed_time,
+                    "suggestion": "Multisimulation may still be processing. You can check status later or try with fewer expressions."
+                }
+            
+            # Progress update every 30 seconds
+            if elapsed_time - last_progress_update > 30:
+                print(f"⏳ Still waiting... {elapsed_time//60:.0f}m {elapsed_time%60:.0f}s elapsed")
+                last_progress_update = elapsed_time
             
             try:
-                multisim_response = brain_client.session.get(location)
+                multisim_response = brain_client.session.get(location, timeout=30)
                 if multisim_response.status_code == 200:
                     multisim_data = multisim_response.json()
                     children = multisim_data.get('children', [])
                     
                     if children:
+                        print(f"✅ Children appeared after {elapsed_time:.1f} seconds")
+                        print(f"📋 Found {len(children)} child simulations")
                         break
                     else:
-                        # Wait before next attempt - use longer intervals for multisimulations
-                        retry_after = multisim_response.headers.get("Retry-After", 5)
-                        wait_time = float(retry_after)
+                        # Use server-suggested wait time or default
+                        retry_after = multisim_response.headers.get("Retry-After", 10)
+                        wait_time = min(float(retry_after), 30)  # Cap at 30 seconds
+                        if wait_time > 5:
+                            print(f"⏸️  Server suggests waiting {wait_time:.1f} seconds...")
                         await asyncio.sleep(wait_time)
                 else:
-                    await asyncio.sleep(5)
+                    print(f"⚠️  Status {multisim_response.status_code}, waiting 10 seconds...")
+                    await asyncio.sleep(10)
             except Exception as e:
-                await asyncio.sleep(5)
+                print(f"⚠️  Error checking status: {str(e)[:50]}..., waiting 10 seconds...")
+                await asyncio.sleep(10)
         
         if not children:
-            return {"error": f"Children did not appear within {max_wait_attempts} attempts (multisimulation may still be processing)"}
+            elapsed_time = time.time() - start_time
+            return {
+                "error": f"Children did not appear within {elapsed_time//60:.0f} minutes",
+                "elapsed_time_seconds": elapsed_time,
+                "attempts": wait_attempt,
+                "suggestion": "Multisimulation may still be processing or encountered an error. Check platform status."
+            }
         
-        # Process each child to get alpha results
+        # Process each child to get alpha results with better progress tracking
         alpha_results = []
+        completed_count = 0
+        failed_count = 0
+        
+        print(f"🔍 Processing {len(children)} child simulations...")
+        
         for i, child_id in enumerate(children):
+            child_num = i + 1
+            print(f"📊 Processing simulation {child_num}/{len(children)}...")
+            
             try:
                 # The children are full URLs, not just IDs
                 child_url = child_id if child_id.startswith('http') else f"{brain_client.base_url}/simulations/{child_id}"
                 
-                # Wait for this alpha to complete - more tolerant timing
+                # Wait for this alpha to complete with timeout
                 finished = False
-                max_alpha_attempts = 100  # Increased for longer alpha processing
+                max_alpha_attempts = 60  # Reduced with better timing
                 alpha_attempt = 0
+                child_start_time = time.time()
+                max_child_time = 300  # 5 minutes per child maximum
                 
                 while not finished and alpha_attempt < max_alpha_attempts:
                     alpha_attempt += 1
+                    child_elapsed = time.time() - child_start_time
+                    
+                    # Check child timeout
+                    if child_elapsed > max_child_time:
+                        print(f"⏰ Child {child_num} timeout after {child_elapsed:.1f} seconds")
+                        break
                     
                     try:
-                        alpha_progress = brain_client.session.get(child_url)
+                        alpha_progress = brain_client.session.get(child_url, timeout=15)
                         if alpha_progress.status_code == 200:
                             alpha_data = alpha_progress.json()
                             retry_after = alpha_progress.headers.get("Retry-After", 0)
                             
                             if retry_after == 0:
                                 finished = True
+                                print(f"✅ Child {child_num} completed in {child_elapsed:.1f}s")
                                 break
                             else:
-                                wait_time = float(retry_after)
+                                wait_time = min(float(retry_after), 30)
+                                if wait_time > 10 and alpha_attempt % 3 == 0:
+                                    print(f"⏸️  Child {child_num} waiting {wait_time:.1f}s (attempt {alpha_attempt})")
                                 await asyncio.sleep(wait_time)
                         else:
+                            if alpha_attempt % 5 == 0:
+                                print(f"⚠️  Child {child_num} status {alpha_progress.status_code}")
                             await asyncio.sleep(5)
                     except Exception as e:
+                        if alpha_attempt % 5 == 0:
+                            print(f"⚠️  Child {child_num} error: {str(e)[:50]}...")
                         await asyncio.sleep(5)
                 
                 if finished:
                     # Get alpha details from the completed simulation
                     alpha_id = alpha_data.get("alpha")
                     if alpha_id:
-                        # Now get the actual alpha details from the alpha endpoint
-                        alpha_details = brain_client.session.get(f"{brain_client.base_url}/alphas/{alpha_id}")
-                        if alpha_details.status_code == 200:
-                            alpha_detail_data = alpha_details.json()
+                        try:
+                            alpha_details = brain_client.session.get(f"{brain_client.base_url}/alphas/{alpha_id}", timeout=15)
+                            if alpha_details.status_code == 200:
+                                alpha_detail_data = alpha_details.json()
+                                alpha_results.append({
+                                    'alpha_id': alpha_id,
+                                    'location': child_url,
+                                    'details': alpha_detail_data,
+                                    'processing_time': child_elapsed
+                                })
+                                completed_count += 1
+                            else:
+                                alpha_results.append({
+                                    'alpha_id': alpha_id,
+                                    'location': child_url,
+                                    'error': f'Failed to get alpha details: {alpha_details.status_code}',
+                                    'processing_time': child_elapsed
+                                })
+                                failed_count += 1
+                        except Exception as detail_error:
                             alpha_results.append({
                                 'alpha_id': alpha_id,
                                 'location': child_url,
-                                'details': alpha_detail_data
+                                'error': f'Error getting alpha details: {str(detail_error)}',
+                                'processing_time': child_elapsed
                             })
-                        else:
-                            alpha_results.append({
-                                'alpha_id': alpha_id,
-                                'location': child_url,
-                                'error': f'Failed to get alpha details: {alpha_details.status_code}'
-                            })
+                            failed_count += 1
                     else:
                         alpha_results.append({
                             'location': child_url,
-                            'error': 'No alpha ID found in completed simulation'
+                            'error': 'No alpha ID found in completed simulation',
+                            'processing_time': child_elapsed
                         })
+                        failed_count += 1
                 else:
                     alpha_results.append({
                         'location': child_url,
-                        'error': f'Alpha simulation did not complete within {max_alpha_attempts} attempts'
+                        'error': f'Alpha simulation did not complete within {max_alpha_attempts} attempts',
+                        'processing_time': child_elapsed
                     })
+                    failed_count += 1
                     
             except Exception as e:
                 alpha_results.append({
-                    'location': f"child_{i+1}",
+                    'location': f"child_{child_num}",
                     'error': str(e)
                 })
+                failed_count += 1
+            
+            # Brief pause between children to avoid overwhelming the server
+            if i < len(children) - 1:
+                await asyncio.sleep(1)
         
-        # Return comprehensive results
-        print(f"Multisimulation completed! Retrieved {len(alpha_results)} alpha results")
+        # Return comprehensive results with statistics
+        total_time = time.time() - start_time
+        success_rate = (completed_count / len(children) * 100) if children else 0
+        
+        print(f"✅ Multisimulation completed!")
+        print(f"📊 Summary:")
+        print(f"   Total time: {total_time//60:.0f}m {total_time%60:.0f}s")
+        print(f"   Children found: {len(children)}")
+        print(f"   Successfully processed: {completed_count}")
+        print(f"   Failed: {failed_count}")
+        print(f"   Success rate: {success_rate:.1f}%")
+        
         return {
             'success': True,
-            'message': f'Successfully created {expected_children} regular alpha simulations',
-            'total_requested': expected_children,
-            'total_created': len(alpha_results),
+            'message': f'Multisimulation completed in {total_time//60:.0f}m {total_time%60:.0f}s',
+            'statistics': {
+                'total_time_seconds': total_time,
+                'children_found': len(children),
+                'successfully_processed': completed_count,
+                'failed': failed_count,
+                'success_rate_percent': success_rate,
+                'total_requested': expected_children
+            },
             'multisimulation_id': location.split('/')[-1],
             'multisimulation_location': location,
             'alpha_results': alpha_results,
-            'note': "if you got a negative alpha sharpe, you can just add a minus sign in front of the last line of the Alpha to flip then think the next step."
+            'notes': [
+                "If you got a negative alpha sharpe, you can just add a minus sign in front of the last line of the Alpha to flip then think the next step.",
+                f"Processing completed at {datetime.now().isoformat()}"
+            ]
         }
         
     except Exception as e:
-        return {"error": f"Error waiting for multisimulation completion: {str(e)}, you need to call three mcp tools get_operators, get_platform_setting_options and get_datafields to check whether you correctly use the operators, setting the simulation settings, and existing data fields."}
+        return {
+            "error": f"Error waiting for multisimulation completion: {str(e)}",
+            "suggestion": "Please check: 1) Call get_operators() to verify operators, 2) Call get_platform_setting_options() to validate settings, 3) Call get_datafields() to confirm data fields exist"
+        }
 
 @mcp.tool()
 async def get_daily_and_quarterly_payment(email: str = "", password: str = "") -> Dict[str, Any]:
