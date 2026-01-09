@@ -1,0 +1,100 @@
+# Sentiment数据集Alpha表达式
+# 基于IND区域⭐⭐⭐难度：Sentiment数据集容易出货
+# 参考成功模式：ts_delta(rank(field1) + rank(field2), 66) + MARKET中性化
+# 字段说明（假设字段名）：
+# sent_social - 社交媒体情感
+# sent_news - 新闻情感
+# sent_analyst - 分析师情感
+
+# 基础表达式 - 66天窗口
+ts_delta(rank(sent_social) + rank(sent_news), 66)
+
+# 变体1 - 120天窗口，更长周期动量
+ts_delta(rank(sent_social) + rank(sent_news), 120)
+
+# 变体2 - 252天窗口，年度动量
+ts_delta(rank(sent_social) + rank(sent_news), 252)
+
+# 变体3 - 使用zscore标准化
+ts_delta(zscore(sent_social) + zscore(sent_news), 66)
+
+# 变体4 - 使用不同字段组合 (社交媒体+分析师)
+ts_delta(rank(sent_social) + rank(sent_analyst), 66)
+
+# 变体5 - 使用ts_rank替代ts_delta
+ts_rank(rank(sent_social) + rank(sent_news), 66)
+
+# 变体6 - 使用group_rank分组排名
+ts_delta(group_rank(sent_social, industry) + group_rank(sent_news, industry), 66)
+
+# 变体7 - 使用ts_decay_linear平滑
+ts_delta(ts_decay_linear(rank(sent_social), 22) + ts_decay_linear(rank(sent_news), 22), 66)
+
+# 变体8 - 三字段组合
+ts_delta(rank(sent_social) + rank(sent_news) + rank(sent_analyst), 66)
+
+# 变体9 - 使用ts_zscore标准化
+ts_delta(ts_zscore(sent_social, 66) + ts_zscore(sent_news, 66), 66)
+
+# 变体10 - 使用ts_mean平滑
+ts_delta(ts_mean(rank(sent_social), 22) + ts_mean(rank(sent_news), 22), 66)
+
+# 变体11 - 使用winsorize处理异常值
+ts_delta(rank(winsorize(sent_social, 0.01)) + rank(winsorize(sent_news, 0.01)), 66)
+
+# 变体12 - 使用ts_backfill填充缺失值
+ts_delta(rank(ts_backfill(sent_social, 5)) + rank(ts_backfill(sent_news, 5)), 66)
+
+# 变体13 - 使用left_tail处理尾部数据
+ts_delta(left_tail(rank(sent_social), maximum=0.02) + left_tail(rank(sent_news), maximum=0.02), 66)
+
+# 变体14 - 使用right_tail处理尾部数据
+ts_delta(right_tail(rank(sent_social), minimum=0.98) + right_tail(rank(sent_news), minimum=0.98), 66)
+
+# 变体15 - 使用tail操作符
+ts_delta(tail(rank(sent_social), lower=0, upper=0.2, newval=nan) + tail(rank(sent_news), lower=0, upper=0.2, newval=nan), 66)
+
+# 变体16 - 使用group_zscore分组标准化
+ts_delta(group_zscore(sent_social, industry) + group_zscore(sent_news, industry), 66)
+
+# 变体17 - 使用ts_delta_ratio比率变化
+ts_delta(rank(sent_social/sent_news) + rank(sent_analyst/sent_social), 66)
+
+# 变体18 - 使用ts_corr相关性
+ts_delta(ts_corr(sent_social, sent_news, 22) + ts_corr(sent_analyst, sent_social, 22), 66)
+
+# 变体19 - 使用ts_std标准差
+ts_delta(ts_std(rank(sent_social), 22) + ts_std(rank(sent_news), 22), 66)
+
+# 变体20 - 使用ts_skew偏度
+ts_delta(ts_skew(sent_social, 66) + ts_skew(sent_news, 66), 66)
+
+# 变体21 - 使用ts_kurt峰度
+ts_delta(ts_kurt(sent_social, 66) + ts_kurt(sent_news, 66), 66)
+
+# 变体22 - 使用ts_max最大值
+ts_delta(ts_max(rank(sent_social), 22) + ts_max(rank(sent_news), 22), 66)
+
+# 变体23 - 使用ts_min最小值
+ts_delta(ts_min(rank(sent_social), 22) + ts_min(rank(sent_news), 22), 66)
+
+# 变体24 - 使用ts_sum求和
+ts_delta(ts_sum(rank(sent_social), 22) + ts_sum(rank(sent_news), 22), 66)
+
+# 变体25 - 使用ts_median中位数
+ts_delta(ts_median(rank(sent_social), 22) + ts_median(rank(sent_news), 22), 66)
+
+# 变体26 - 使用ts_var方差
+ts_delta(ts_var(sent_social, 66) + ts_var(sent_news, 66), 66)
+
+# 变体27 - 使用ts_autocorr自相关
+ts_delta(ts_autocorr(sent_social, 22, 1) + ts_autocorr(sent_news, 22, 1), 66)
+
+# 变体28 - 使用ts_pct_change百分比变化
+ts_delta(ts_pct_change(sent_social, 22) + ts_pct_change(sent_news, 22), 66)
+
+# 变体29 - 使用ts_diff差分
+ts_delta(ts_diff(rank(sent_social), 22) + ts_diff(rank(sent_news), 22), 66)
+
+# 变体30 - 使用ts_delay延迟
+ts_delta(ts_delay(rank(sent_social), 5) + ts_delay(rank(sent_news), 5), 66)

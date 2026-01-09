@@ -1,0 +1,106 @@
+# News17数据集Alpha表达式
+# 基于成功模式：ts_delta(rank(field1) + rank(field2), 66) + MARKET中性化
+# 字段说明：
+# nws17_acb - 盈利发布新闻情感 (Earnings announcement sentiment)
+# nws17_ber - 分析师评级变化 (Analyst rating changes)
+# nws17_relevance - 新闻相关性评分 (News relevance score)
+
+# 基础表达式 - 66天窗口
+ts_delta(rank(nws17_acb) + rank(nws17_ber), 66)
+
+# 变体1 - 120天窗口，更长周期动量
+ts_delta(rank(nws17_acb) + rank(nws17_ber), 120)
+
+# 变体2 - 252天窗口，年度动量
+ts_delta(rank(nws17_acb) + rank(nws17_ber), 252)
+
+# 变体3 - 使用zscore标准化
+ts_delta(zscore(nws17_acb) + zscore(nws17_ber), 66)
+
+# 变体4 - 使用不同字段组合 (情感+相关性)
+ts_delta(rank(nws17_acb) + rank(nws17_relevance), 66)
+
+# 变体5 - 使用ts_rank替代ts_delta
+ts_rank(rank(nws17_acb) + rank(nws17_ber), 66)
+
+# 变体6 - 使用group_rank分组排名
+ts_delta(group_rank(nws17_acb, industry) + group_rank(nws17_ber, industry), 66)
+
+# 变体7 - 使用ts_decay_linear平滑
+ts_delta(ts_decay_linear(rank(nws17_acb), 22) + ts_decay_linear(rank(nws17_ber), 22), 66)
+
+# 变体8 - 三字段组合
+ts_delta(rank(nws17_acb) + rank(nws17_ber) + rank(nws17_relevance), 66)
+
+# =================================================================
+# 高级变体 - 基于Tail家族操作符和AlphaForge多样性策略
+# =================================================================
+
+# 高级变体9 - 使用left_tail处理尾部数据 (参考操作符研究之tail家族)
+left_tail(rank(nws17_acb), maximum=0.02) + left_tail(rank(nws17_ber), maximum=0.02)
+
+# 高级变体10 - 使用right_tail处理头部数据
+right_tail(rank(nws17_acb), minimum=0.98) + right_tail(rank(nws17_ber), minimum=0.98)
+
+# 高级变体11 - 使用tail操作符替代left_tail
+tail(rank(nws17_acb), lower=0, upper=0.02, newval=nan) + tail(rank(nws17_ber), lower=0, upper=0.02, newval=nan)
+
+# 高级变体12 - 三字段相加模板 (参考mdl264成功模板)
+zscore(nws17_acb) + zscore(nws17_ber) + zscore(nws17_relevance)
+
+# 高级变体13 - 带权重的三字段相加
+0.4*zscore(nws17_acb) + 0.4*zscore(nws17_ber) + 0.2*zscore(nws17_relevance)
+
+# 高级变体14 - 基于AlphaForge多样性策略：组合不同窗口期
+0.5*ts_delta(rank(nws17_acb), 66) + 0.5*ts_delta(rank(nws17_ber), 120)
+
+# 高级变体15 - 混合不同算子增加多样性
+0.3*ts_delta(rank(nws17_acb), 66) + 0.3*ts_rank(rank(nws17_ber), 120) + 0.4*zscore(nws17_relevance)
+
+# 高级变体16 - 使用group_zscore增加横截面多样性
+group_zscore(nws17_acb, industry) + group_zscore(nws17_ber, industry)
+
+# 高级变体17 - 使用winsorize处理异常值
+ts_delta(winsorize(rank(nws17_acb), 0.01, 0.99) + winsorize(rank(nws17_ber), 0.01, 0.99), 66)
+
+# 高级变体18 - 使用ts_decay_linear平滑的变体组合
+ts_delta(ts_decay_linear(rank(nws17_acb), 5) + ts_decay_linear(rank(nws17_ber), 22), 66)
+
+# 高级变体19 - 使用vec_算子处理向量数据 (如果适用)
+# vec_corr(rank(nws17_acb), rank(nws17_ber), 22)
+
+# 高级变体20 - 分层组合：短期动量 + 长期趋势
+ts_delta(rank(nws17_acb), 5) + ts_rank(rank(nws17_ber), 252)
+
+# 高级变体21 - 使用ts_zscore标准化时间序列
+ts_delta(ts_zscore(nws17_acb, 66) + ts_zscore(nws17_ber, 66), 22)
+
+# 高级变体22 - 基于相关性的组合（如果vec_corr可用）
+# vec_corr(rank(nws17_acb), rank(nws17_relevance), 22) + vec_corr(rank(nws17_ber), rank(nws17_relevance), 22)
+
+# 高级变体23 - 使用trade_when降低换手率（适用于事件驱动Alpha）
+# trade_when(ts_delta(rank(nws17_acb), 66), nws17_relevance > 0.5)
+
+# 高级变体24 - 使用ts_backfill处理缺失值
+ts_delta(ts_backfill(rank(nws17_acb), 22) + ts_backfill(rank(nws17_ber), 22), 66)
+
+# 高级变体25 - 复合信号：情感动量 + 评级变化相关性
+ts_delta(rank(nws17_acb), 66) * ts_delta(rank(nws17_ber), 66)
+
+# 高级变体26 - 使用group_rank和industry分组
+group_rank(nws17_acb, industry) - group_rank(nws17_ber, industry)
+
+# 高级变体27 - 标准化后的横截面排名差异
+zscore(nws17_acb) - zscore(nws17_ber)
+
+# 高级变体28 - 时间序列排名与横截面排名结合
+ts_rank(rank(nws17_acb), 120) + rank(nws17_ber)
+
+# 高级变体29 - 使用ts_decay_linear衰减的长期动量
+ts_decay_linear(ts_delta(rank(nws17_acb), 252), 66)
+
+# 高级变体30 - 多因子组合：情感、评级、相关性加权平均
+(rank(nws17_acb) * 0.5 + rank(nws17_ber) * 0.3 + rank(nws17_relevance) * 0.2)
+
+# 注意：所有表达式在IND区域使用MARKET中性化，TOP500股票，D1延迟，Decay=2，Truncation=0.01
+# 测试参数：region="IND", universe="TOP500", delay=1, decay=2, neutralization="MARKET", truncation=0.01

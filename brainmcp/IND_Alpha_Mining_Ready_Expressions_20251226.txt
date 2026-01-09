@@ -1,0 +1,109 @@
+# IND地区Alpha挖掘准备表达式 - 2025年12月26日
+# 平台API暂时不可用，准备好以下表达式待恢复后立即测试
+
+## IND地区配置参数
+- **InstrumentType**: EQUITY
+- **Region**: IND
+- **Universe**: TOP500 (IND地区唯一支持)
+- **Delay**: 1 (D1优先)
+- **Neutralization**: MARKET (IND地区最佳实践)
+- **Decay**: 2 (黄金组合)
+- **Truncation**: 0.01 (黄金组合)
+- **Test Period**: P0Y0M (默认1年6个月)
+- **Unit Handling**: VERIFY
+- **NaN Handling**: OFF
+- **Language**: FASTEXPR
+- **Visualization**: true
+- **Pasteurization**: ON
+- **Max Trade**: OFF
+
+## 数据集选择：Analyst (⭐⭐⭐难度 - 容易出货)
+根据IND地区实战经验文档，Analyst数据集属于⭐⭐⭐难度，AI推荐模板效果好，容易出货。
+
+### 高覆盖率字段选择：
+1. **anl4_netprofita_low** (89.95%覆盖率) - 调整后净收入最低估计
+2. **sales_estimate_minimum_quarterly** (96.13%覆盖率) - 季度销售额最低估计
+
+## 准备好的8个Alpha表达式
+
+### 表达式1：单字段基础排名
+`ts_rank(anl4_netprofita_low, 66)`
+- **经济学逻辑**：分析师对净收入的悲观估计（最低值）的66天时间序列排名
+- **窗口期**：66天（经济学时间窗口）
+- **操作符**：ts_rank
+
+### 表达式2：单字段基础排名
+`ts_rank(sales_estimate_minimum_quarterly, 66)`
+- **经济学逻辑**：分析师对销售额的悲观估计（最低值）的66天时间序列排名
+- **窗口期**：66天（经济学时间窗口）
+- **操作符**：ts_rank
+
+### 表达式3：Delta提升Sharpe
+`ts_delta(ts_rank(anl4_netprofita_low, 66), 5)`
+- **经济学逻辑**：净收入悲观估计排名的5天变化（动量信号）
+- **Sharpe拯救**：使用ts_delta操作符提升2年Sharpe（IND地区文档推荐）
+- **窗口期**：66天排名 + 5天Delta
+
+### 表达式4：Delta提升Sharpe
+`ts_delta(ts_rank(sales_estimate_minimum_quarterly, 66), 5)`
+- **经济学逻辑**：销售额悲观估计排名的5天变化（动量信号）
+- **Sharpe拯救**：使用ts_delta操作符提升2年Sharpe
+- **窗口期**：66天排名 + 5天Delta
+
+### 表达式5：双字段相加组合
+`ts_rank(anl4_netprofita_low, 120) + ts_rank(sales_estimate_minimum_quarterly, 120)`
+- **经济学逻辑**：净收入和销售额悲观估计的120天排名组合
+- **多样性**：两个不同字段组合提升多样性
+- **窗口期**：120天（更长周期提升稳定性）
+
+### 表达式6：双字段相乘组合
+`ts_rank(anl4_netprofita_low, 22) * ts_rank(sales_estimate_minimum_quarterly, 22)`
+- **经济学逻辑**：净收入和销售额悲观估计的22天排名交互效应
+- **非线性关系**：乘法捕捉字段间的非线性关系
+- **窗口期**：22天（短期信号）
+
+### 表达式7：双Delta组合
+`ts_delta(ts_rank(anl4_netprofita_low, 66), 22) + ts_delta(ts_rank(sales_estimate_minimum_quarterly, 66), 22)`
+- **经济学逻辑**：两个字段排名的22天变化组合
+- **Sharpe优化**：双重ts_delta应用
+- **窗口期**：66天排名 + 22天Delta
+
+### 表达式8：双字段差异组合
+`ts_rank(anl4_netprofita_low, 252) - ts_rank(sales_estimate_minimum_quarterly, 252)`
+- **经济学逻辑**：净收入与销售额悲观估计的252天排名差异
+- **相对价值**：捕捉两个字段间的相对表现
+- **窗口期**：252天（长期趋势）
+
+## 经济学逻辑解释
+1. **悲观估计信号**：使用最低估计（low/minimum）捕捉分析师的悲观情绪，这可能是反转信号
+2. **时间序列排名**：ts_rank将横截面排名转换为时间序列维度，捕捉相对表现变化
+3. **Delta动量**：ts_delta捕捉排名的变化率，提供动量信号
+4. **多字段组合**：结合净收入和销售额两个维度，提升信号的稳健性
+
+## 预期检查标准（IND地区特定）
+1. **Sharpe** ≥ 1.58
+2. **Fitness** ≥ 1.0
+3. **Turnover** < 70%
+4. **Diversity** > 0.3
+5. **Robust Universe Sharpe** > 1.0
+6. **2Y Sharpe** ≥ 1.58（如有）
+7. **Margin** ≥ 万15（IND地区手续费较高）
+8. **PC** < 0.7（生产相关性）
+9. **SC** < 0.7（自相关性）
+
+## 恢复执行计划
+1. 平台API恢复后立即进行认证
+2. 使用create_multiSim提交8个表达式（或单模拟逐一创建）
+3. 监控模拟状态，应用僵尸模拟熔断机制
+4. 根据结果进入Phase 4迭代优化
+
+## 备用策略
+如果Analyst数据集表现不佳，按优先级尝试：
+1. **Model数据集**（⭐⭐难度）：单字段测试，不同中性化
+2. **Option/Risk/News/Sentiment/PV数据集**（⭐⭐⭐难度）
+3. **Earnings/Imbalance/Other/Institutions/Fundamental数据集**（⭐⭐⭐⭐难度）
+
+---
+**生成时间**: 2025-12-26
+**状态**: 准备就绪，等待平台恢复
+**下一步**: 监控平台状态，恢复后立即执行

@@ -1,0 +1,27 @@
+# USA Alpha表达式 - 新字段组合测试
+# 创建时间：2025-12-29
+# 目标：使用不同字段组合降低相关性，提升Sharpe
+
+# 1. 净利润中位数 - 基础模板
+ts_delta(ts_rank(anl4_netprofit_median, 120), 120)
+
+# 2. 息税前利润中位数 - 基础模板
+ts_delta(ts_rank(anl4_ebit_median, 120), 120)
+
+# 3. 经营活动现金流中位数 - 基础模板
+ts_delta(ts_rank(anl4_cfo_median, 120), 120)
+
+# 4. EBITDA中位数 - 基础模板
+ts_delta(ts_rank(anl4_medianepsbfam, 120), 120)
+
+# 5. 每股账面价值中位数 - 基础模板
+ts_delta(ts_rank(anl4_bvps_median, 120), 120)
+
+# 6. 每股现金流中位数 - 基础模板
+ts_delta(ts_rank(anl4_afv4_cfps_median, 120), 120)
+
+# 7. 二元模板：净利润 vs 息税前利润
+ts_regression(ts_zscore(anl4_netprofit_median, 120), ts_zscore(anl4_ebit_median, 120), 120)
+
+# 8. 三元模板：现金流、净利润、EBITDA组合
+ts_zscore(anl4_cfo_median, 120) * ts_zscore(anl4_netprofit_median, 120) * ts_zscore(anl4_medianepsbfam, 120)

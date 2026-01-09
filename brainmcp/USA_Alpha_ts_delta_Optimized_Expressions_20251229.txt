@@ -1,0 +1,51 @@
+# USA地区Alpha ts_delta优化表达式 - 2025年12月29日
+# 基于成功模板：ts_delta(ts_zscore(anl4_afv4_median_eps, 22), 22) - Sharpe: 1.07
+
+## 成功因素分析：
+1. 使用ts_delta操作符（IND区域Sharpe拯救神技）
+2. 22天窗口期（一个月交易日）
+3. 使用ts_zscore标准化数据
+4. INDUSTRY中性化（USA地区推荐）
+5. Decay=2, Truncation=0.01（黄金组合）
+
+## 优化策略：
+1. 基于成功模板生成变体
+2. 尝试不同窗口期：5, 22, 66, 120, 252天
+3. 使用不同的EPS相关字段
+4. 尝试不同的标准化方法（zscore, rank, ts_rank）
+5. 添加额外的时序操作符
+
+## 表达式列表：
+
+1. 原始成功模板变体（66天窗口）
+ts_delta(ts_zscore(anl4_afv4_median_eps, 66), 66)
+
+2. EPS最高估计的时序Delta（22天窗口）
+ts_delta(ts_zscore(anl4_afv4_eps_high, 22), 22)
+
+3. EPS最低估计的时序Delta（5天窗口）
+ts_delta(ts_zscore(anl4_afv4_dts_spe, 5), 5)
+
+4. EPS中位数估计的时序排名Delta（120天窗口）
+ts_delta(ts_rank(anl4_afv4_median_eps, 120), 120)
+
+5. GAAP EPS中位数估计的时序Delta（252天窗口）
+ts_delta(ts_zscore(anl4_median_epsreported, 252), 252)
+
+6. EBIT中位数估计的时序Delta（66天窗口）
+ts_delta(ts_zscore(anl4_ebit_median, 66), 66)
+
+7. EPS估计数量的时序Delta（22天窗口）
+ts_delta(ts_zscore(anl4_qf_az_eps_number, 22), 22)
+
+8. 双重时序Delta（22天窗口）
+ts_delta(ts_delta(anl4_afv4_median_eps, 22), 22)
+
+## 参数设置：
+- 区域：USA
+- 延迟：1
+- Universe：TOP3000
+- 中性化：INDUSTRY
+- Decay：2
+- Truncation：0.01
+- 测试周期：P0Y0M（1年6个月）

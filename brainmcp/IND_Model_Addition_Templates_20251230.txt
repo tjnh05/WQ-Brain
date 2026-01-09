@@ -1,0 +1,189 @@
+# IND区域Model类加法模板Alpha表达式 - 2025年12月30日
+# 基于Alpha Zoo知识库成功模板：ts_delta(rank(f1)+rank(f2),66) 和 ts_rank(rank(f1)+rank(f2),120)
+# 专注于解决生产相关性高和Robust Universe Sharpe低的问题
+
+## 配置参数（统一设置）
+- **InstrumentType**: EQUITY
+- **Region**: IND
+- **Universe**: TOP500
+- **Delay**: 1 (D1优先)
+- **Decay**: 3 (必须是整数，降低换手率)
+- **Truncation**: 0.01 (黄金组合)
+- **Neutralization**: MARKET (IND区域历史最佳实践)
+- **Test Period**: P0Y0M (标准1年6个月)
+- **Unit Handling**: VERIFY
+- **NaN Handling**: OFF
+- **Language**: FASTEXPR
+- **Visualization**: true
+- **Pasteurization**: ON
+- **Max Trade**: OFF
+
+## 可用数据字段
+### model110 (大数据和机器学习模型)
+1. mdl110_alternative - 另类因子综合评分
+2. mdl110_analyst_sentiment - 分析师情绪综合评分
+3. mdl110_growth - 增长因子综合评分
+4. mdl110_price_momentum_reversal - 价格动量反转指标
+5. mdl110_quality - 质量因子综合评分
+6. mdl110_score - 所有因子总和评分
+7. mdl110_tree - 非线性树组件综合评分
+8. mdl110_value - 价值因子综合评分
+
+### model39 (估值动量数据)
+1. global_price_momentum_percentile_2 - 价格动量百分位数排名（全球）
+2. global_value_momentum_rank - 全球相对价值动量排名
+3. global_value_momentum_rank_float - 精确全球相对价值动量排名
+4. industry_price_momentum_score_2 - 行业相对价格动量得分
+5. industry_value_momentum_rank - 行业相对价值动量排名
+6. industry_value_momentum_rank_float - 精确行业相对价值动量排名
+7. long_term_price_momentum_score_2 - 长期（12个月）价格动量得分
+8. mid_term_price_momentum_score_2 - 中期（6个月）价格动量得分
+9. short_term_price_momentum_score_2 - 短期（3个月或1周）价格动量得分
+10. sector_value_momentum_rank - 板块相对价值动量排名
+11. sector_value_momentum_rank_float - 精确板块相对价值动量排名
+
+## 设计原理
+基于Alpha Zoo知识库的成功经验：
+1. **加法组合**：`rank(field1) + rank(field2)` 显著提升Robust Sharpe
+2. **时间序列操作符**：`ts_delta` (66天窗口) 和 `ts_rank` (120天窗口) 表现最佳
+3. **长窗口期**：120/252天窗口提升稳定性，降低换手率
+4. **中性化**：MARKET中性化在IND区域通常表现最佳
+5. **字段选择**：跨数据集组合(model110 + model39)降低相关性
+
+## 16个加法模板Alpha表达式
+
+### A组：ts_delta双字段加法（66天窗口）
+**经济学逻辑**：捕捉双因子组合的短期变化动量
+
+1. **表达式A1**：`ts_delta(rank(mdl110_growth) + rank(global_value_momentum_rank_float), 66)`
+   - **逻辑**：增长因子 + 全球价值动量排名的66天变化
+   - **预期**：高Sharpe，合理换手率，PC<0.7
+
+2. **表达式A2**：`ts_delta(rank(mdl110_value) + rank(industry_price_momentum_score_2), 66)`
+   - **逻辑**：价值因子 + 行业价格动量得分的66天变化
+   - **预期**：稳健性高，Robust Sharpe>1.0
+
+3. **表达式A3**：`ts_delta(rank(mdl110_quality) + rank(sector_value_momentum_rank_float), 66)`
+   - **逻辑**：质量因子 + 板块价值动量排名的66天变化
+   - **预期**：低相关性，高Diversity
+
+4. **表达式A4**：`ts_delta(rank(mdl110_price_momentum_reversal) + rank(long_term_price_momentum_score_2), 66)`
+   - **逻辑**：价格动量反转 + 长期价格动量的66天变化
+   - **预期**：捕捉动量与反转的交互效应
+
+### B组：ts_rank双字段加法（120天窗口）
+**经济学逻辑**：捕捉双因子组合的长期排名动量
+
+5. **表达式B1**：`ts_rank(rank(mdl110_score) + rank(global_price_momentum_percentile_2), 120)`
+   - **逻辑**：综合评分 + 全球价格动量百分位数的120天排名
+   - **预期**：高Fitness，PC<0.65
+
+6. **表达式B2**：`ts_rank(rank(mdl110_alternative) + rank(mid_term_price_momentum_score_2), 120)`
+   - **逻辑**：另类因子 + 中期价格动量得分的120天排名
+   - **预期**：差异化信号，低相关性
+
+7. **表达式B3**：`ts_rank(rank(mdl110_tree) + rank(short_term_price_momentum_score_2), 120)`
+   - **逻辑**：非线性树组件 + 短期价格动量的120天排名
+   - **预期**：非线性交互，独特信号结构
+
+8. **表达式B4**：`ts_rank(rank(mdl110_analyst_sentiment) + rank(industry_value_momentum_rank_float), 120)`
+   - **逻辑**：分析师情绪 + 行业价值动量排名的120天排名
+   - **预期**：情绪与价值的复合信号
+
+### C组：ts_delta双字段加法（120天窗口，更长周期）
+**经济学逻辑**：更长窗口期提升稳健性，降低换手率
+
+9. **表达式C1**：`ts_delta(rank(mdl110_growth) + rank(global_value_momentum_rank_float), 120)`
+   - **逻辑**：增长因子 + 全球价值动量排名的120天变化
+   - **预期**：比66天窗口更稳健，Robust Sharpe>1.1
+
+10. **表达式C2**：`ts_delta(rank(mdl110_value) + rank(industry_price_momentum_score_2), 120)`
+    - **逻辑**：价值因子 + 行业价格动量得分的120天变化
+    - **预期**：稳健性最佳，适合提交
+
+### D组：ts_rank双字段加法（252天窗口，超长周期）
+**经济学逻辑**：超长窗口期最大化稳健性，适合保守策略
+
+11. **表达式D1**：`ts_rank(rank(mdl110_quality) + rank(sector_value_momentum_rank_float), 252)`
+    - **逻辑**：质量因子 + 板块价值动量排名的252天排名
+    - **预期**：极低换手率，高Robust Sharpe
+
+12. **表达式D2**：`ts_rank(rank(mdl110_price_momentum_reversal) + rank(long_term_price_momentum_score_2), 252)`
+    - **逻辑**：价格动量反转 + 长期价格动量的252天排名
+    - **预期**：长期稳定性，PC<0.6
+
+### E组：ts_delta三字段加法（66天窗口，三元交互）
+**经济学逻辑**：三因子组合增强信号复杂度，降低相关性
+
+13. **表达式E1**：`ts_delta(rank(mdl110_growth) + rank(mdl110_value) + rank(global_value_momentum_rank_float), 66)`
+    - **逻辑**：增长因子 + 价值因子 + 全球价值动量排名的66天变化
+    - **预期**：多维信号，PC显著降低
+
+14. **表达式E2**：`ts_delta(rank(mdl110_quality) + rank(mdl110_price_momentum_reversal) + rank(industry_price_momentum_score_2), 66)`
+    - **逻辑**：质量因子 + 价格动量反转 + 行业价格动量的66天变化
+    - **预期**：复杂交互，独特信号
+
+### F组：ts_rank三字段加法（120天窗口，三元交互）
+**经济学逻辑**：三因子长期排名动量，最大化差异化
+
+15. **表达式F1**：`ts_rank(rank(mdl110_score) + rank(mdl110_alternative) + rank(global_price_momentum_percentile_2), 120)`
+    - **逻辑**：综合评分 + 另类因子 + 全球价格动量百分位数的120天排名
+    - **预期**：终极差异化，PC<0.55
+
+16. **表达式F2**：`ts_rank(rank(mdl110_tree) + rank(mdl110_analyst_sentiment) + rank(short_term_price_momentum_score_2), 120)`
+    - **逻辑**：非线性树组件 + 分析师情绪 + 短期价格动量的120天排名
+    - **预期**：非线性情绪动量信号
+
+## 执行策略
+
+### 第一轮：测试A组和B组（8个表达式）
+**优先级**：立即测试成功概率最高的模板
+1. 创建多模拟包含A1-A4, B1-B4
+2. 使用标准参数：Decay=3, Truncation=0.01, MARKET中性化
+3. 监控关键指标：PC, Robust Sharpe, Turnover
+
+### 第二轮：根据结果调整
+**如果PC普遍>0.7**：
+1. 切换到C组和D组（更长窗口期）
+2. 考虑SECTOR或INDUSTRY中性化
+3. 尝试truncation=0.001进一步平滑
+
+**如果Robust Sharpe普遍<1.0**：
+1. 切换到E组和F组（三元加法）
+2. 增加Decay至5
+3. 测试不同中性化组合
+
+### 第三轮：探索性测试
+**如果前两轮失败**：
+1. 测试other335和other436数据集字段
+2. 尝试`group_rank`替代`rank`
+3. 使用`tail`操作符处理极端值
+
+## 预期性能指标
+1. **Sharpe** ≥ 1.58 (目标：2.0+)
+2. **Fitness** ≥ 1.0 (目标：1.2+)
+3. **Turnover** < 40% (目标：15-30%)
+4. **Robust Universe Sharpe** > 1.0 (目标：1.1+)
+5. **PC** < 0.7 (目标：<0.65)
+6. **SC** < 0.7 (目标：<0.6)
+
+## 风险控制
+1. **权重集中**：关注CONCENTRATED_WEIGHT检查项
+2. **相关性动态**：提交前必须通过PC和SC检查
+3. **过度拟合**：避免过于复杂嵌套，优先测试简单加法模板
+4. **及时止损**：如果Robust Sharpe<0.5，停止调试该表达式
+
+## 恢复执行流程
+1. BRAIN平台连接恢复后立即认证
+2. 使用create_multiSim提交8个表达式（优先A组和B组）
+3. 应用僵尸模拟熔断机制（15分钟超时检查）
+4. 根据结果进入Phase 4迭代优化循环
+
+---
+**设计时间**: 2025-12-30
+**设计依据**: 
+1. Alpha Zoo知识库成功模板分析
+2. 历史成功Alpha模式：ts_delta(rank+rank,66) 和 ts_rank(rank+rank,120)
+3. IND地区Model数据集实战经验
+**状态**: 设计完成，等待平台恢复
+**下一步**: 监控连接状态，恢复后立即执行加法模板策略

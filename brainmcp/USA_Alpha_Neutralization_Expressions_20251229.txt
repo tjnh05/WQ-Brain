@@ -1,0 +1,27 @@
+# USA Alpha表达式 - 不同中性化策略测试
+# 创建时间：2025-12-29
+# 目标：降低生产相关性，提升Sharpe
+
+# 1. MARKET中性化
+ts_delta(ts_rank(anl4_afv4_median_eps, 120), 120)
+
+# 2. SECTOR中性化  
+ts_delta(ts_rank(anl4_afv4_median_eps, 120), 120)
+
+# 3. NONE中性化
+ts_delta(ts_rank(anl4_afv4_median_eps, 120), 120)
+
+# 4. MARKET中性化 + 特征抹除
+ts_delta(ts_rank(ts_backfill(anl4_afv4_median_eps, 120), 120), 120)
+
+# 5. SECTOR中性化 + 特征抹除
+ts_delta(ts_rank(ts_backfill(anl4_afv4_median_eps, 120), 120), 120)
+
+# 6. 二元模板降低相关性
+ts_regression(ts_zscore(anl4_afv4_median_eps, 120), ts_zscore(anl4_afv4_dts_spe, 120), 120)
+
+# 7. 三元模板降低相关性
+ts_zscore(anl4_afv4_median_eps, 120) * ts_zscore(anl4_afv4_dts_spe, 120) * ts_zscore(anl4_afv4_median_eps - anl4_afv4_dts_spe, 120)
+
+# 8. 增长率模板
+ts_delta(ts_delta(anl4_afv4_median_eps, 252)/ts_delay(anl4_afv4_median_eps, 252), 252)

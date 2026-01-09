@@ -1,0 +1,27 @@
+# USA Alpha Expressions with Long Windows and Different Operator Combinations
+# Created: 2025-12-29
+# Based on analysis of analyst4 and analyst15 datasets
+
+# 1. 更长窗口期：252天（一年交易日）
+ts_delta(ts_rank(anl4_afv4_median_eps, 252), 252)
+
+# 2. 不同算子组合：ts_rank(ts_delta(...))
+ts_rank(ts_delta(anl4_afv4_median_eps, 252), 252)
+
+# 3. ts_zscore组合
+ts_zscore(ts_delta(anl4_afv4_median_eps, 252), 252)
+
+# 4. 结合analyst15的行业EPS增长
+ts_delta(ts_rank(anl15_ind_hist_eps_gro, 252), 252)
+
+# 5. 双字段组合：EPS中位数与行业增长
+ts_delta(ts_rank(anl4_afv4_median_eps - anl15_ind_hist_eps_gro, 252), 252)
+
+# 6. 使用ts_decay_linear平滑
+ts_decay_linear(ts_delta(anl4_afv4_median_eps, 252), 252)
+
+# 7. 三字段组合：EPS中位数、行业增长、标准差
+ts_delta(ts_rank(anl4_afv4_median_eps + anl15_ind_hist_eps_gro - anl15_ind_12_m_st_dev, 252), 252)
+
+# 8. 使用ts_backfill处理缺失值
+ts_delta(ts_rank(ts_backfill(anl4_afv4_median_eps, 252), 252), 252)

@@ -1,0 +1,44 @@
+# USA地区Alpha最终优化表达式 - 2025年12月29日
+# 基于第二次测试结果优化：使用INDUSTRY中性化、不同窗口期、ts_delta提升Sharpe
+
+## 优化策略：
+1. 使用INDUSTRY中性化（USA地区推荐）
+2. 尝试不同窗口期组合：5, 22, 66, 120, 252天
+3. 使用ts_delta提升Sharpe（IND区域经验）
+4. 简化表达式，避免过度复杂
+5. 使用rank()包裹基础数据字段
+
+## 表达式列表：
+
+1. EPS中位数估计的时序Delta（66天窗口）
+ts_delta(rank(anl4_afv4_median_eps), 66)
+
+2. EPS最高与最低估计的差值排名（120天窗口）
+rank(anl4_afv4_eps_high - anl4_afv4_dts_spe)
+
+3. EPS中位数估计的时序Z-score变化（22天窗口）
+ts_delta(ts_zscore(anl4_afv4_median_eps, 22), 22)
+
+4. EPS估计数量的百分比变化（5天窗口）
+ts_delta(anl4_qf_az_eps_number, 5) / ts_delay(anl4_qf_az_eps_number, 5)
+
+5. 实际EPS与中位数估计的比值排名
+rank(actual_eps_value_quarterly / (anl4_afv4_median_eps + 0.000001))
+
+6. EBIT中位数估计的时序排名（252天窗口）
+ts_rank(rank(anl4_ebit_median), 252)
+
+7. GAAP EPS中位数估计的衰减加权（120天窗口）
+ts_decay_linear(rank(anl4_median_epsreported), 120)
+
+8. 三重字段的简化组合（使用加法而非乘法）
+rank(anl4_afv4_median_eps) + rank(anl4_afv4_eps_high) - rank(anl4_afv4_dts_spe)
+
+## 参数设置：
+- 区域：USA
+- 延迟：1
+- Universe：TOP3000
+- 中性化：INDUSTRY（USA地区推荐）
+- Decay：2（降低换手率）
+- Truncation：0.01（黄金组合）
+- 测试周期：P0Y0M（1年6个月）

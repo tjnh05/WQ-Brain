@@ -1,0 +1,156 @@
+# IND区域Model类差异化Alpha表达式 - 2025年12月30日
+# 针对生产相关性高和Robust Universe Sharpe低的优化设计
+# 基于"降低相关性的方法.md"策略：特征抹除、特色融合、特点增强
+
+## IND地区配置参数（Model数据集专用）
+- **InstrumentType**: EQUITY
+- **Region**: IND
+- **Universe**: TOP500 (IND地区唯一支持)
+- **Delay**: 1 (D1优先)
+- **Neutralization**: MARKET (历史最佳实践)
+- **Decay**: 3 (降低换手率，必须是整数)
+- **Truncation**: 0.01 (黄金组合)
+- **Test Period**: P0Y0M (默认1年6个月)
+- **Unit Handling**: VERIFY
+- **NaN Handling**: OFF
+- **Language**: FASTEXPR
+- **Visualization**: true
+- **Pasteurization**: ON
+- **Max Trade**: OFF
+
+## 可用数据字段
+### model110 (Big data and machine learning based model)
+1. mdl110_alternative - Aggregate score for the alternative factors
+2. mdl110_analyst_sentiment - Aggregate score for the sentiment factors
+3. mdl110_growth - Aggregate score for the growth factors
+4. mdl110_price_momentum_reversal - Price momentum vs reversion indicator
+5. mdl110_quality - Aggregate score for the quality factors
+6. mdl110_score - Sum of sentiment, quality, value, growth, price momentum, alternative and tree factors
+7. mdl110_tree - Aggregate score for the non-linear tree component
+8. mdl110_value - Aggregate score for the value factors
+
+### model39 (Valuation Momentum Data)
+1. global_price_momentum_percentile_2 - Percentile rank of price momentum (global)
+2. global_value_momentum_rank - Global-relative value-momentum ranking
+3. global_value_momentum_rank_float - Precise global-relative value-momentum ranking
+4. industry_price_momentum_score_2 - Price momentum score relative to industry
+5. industry_value_momentum_rank - Industry-relative value-momentum ranking
+6. industry_value_momentum_rank_float - Precise industry-relative value-momentum ranking
+7. long_term_price_momentum_score_2 - Long-term (12 months) price momentum score
+8. mid_term_price_momentum_score_2 - Medium-term (6 months) price momentum score
+9. short_term_price_momentum_score_2 - Short-term (3 months or 1 week) price momentum score
+10. sector_value_momentum_rank - Sector-relative value-momentum ranking
+11. sector_value_momentum_rank_float - Precise sector-relative value-momentum ranking
+
+## 差异化策略设计原理
+
+### 1. 特征抹除（Feature Neutralization）
+- 使用zscore/scale标准化消除共性信息
+- 长时间窗口(252/504天)提升稳定性
+- 目的：降低与大众Alpha的信号重合度
+
+### 2. 特色融合（Diversified Combination）
+- 二元/三元模板组合低相关性字段
+- 跨数据集组合(model110 + model39)
+- 目的：制造差异化信号结构
+
+### 3. 特点增强（Signal Amplification）
+- 非线性运算放大差异化信号
+- 三重交互捕捉复杂关系
+- 目的：增强独特信号的强度
+
+## 8个差异化Alpha表达式
+
+### 表达式1：双zscore标准化（特征抹除）
+`ts_zscore(mdl110_score, 504) * ts_zscore(global_value_momentum_rank_float, 504)`
+- **经济学逻辑**：模型综合评分与全球价值动量排名的标准化交互
+- **差异化策略**：504天zscore标准化消除共性信息
+- **预期效果**：低相关性 + 高Robust Sharpe
+
+### 表达式2：增长率回归中性化（特色融合）
+`regression_neut(ts_delta(mdl110_growth, 252), ts_delta(global_price_momentum_percentile_2, 252))`
+- **经济学逻辑**：增长因子变化对价格动量变化的回归残差
+- **差异化策略**：regression_neut实现向量正交
+- **预期效果**：有效降低生产相关性
+
+### 表达式3：三重交互非线性放大（特点增强）
+`ts_zscore(mdl110_alternative, 252) * ts_zscore(mdl110_tree, 252) * ts_zscore(short_term_price_momentum_score_2, 252)`
+- **经济学逻辑**：另类因子、非线性树组件和短期价格动量的三维交互
+- **差异化策略**：三字段乘法制造独特信号结构
+- **预期效果**：非线性放大差异化信号
+
+### 表达式4：ts_delta Sharpe提升神技
+`ts_delta(ts_rank(mdl110_quality, 252), 120)`
+- **经济学逻辑**：质量因子排名的120天变化率
+- **差异化策略**：ts_delta操作符提升2年Sharpe（IND地区文档推荐）
+- **预期效果**：高Sharpe + 合理换手率
+
+### 表达式5：向量中性化降相关性
+`vector_neut(mdl110_price_momentum_reversal, industry_price_momentum_score_2)`
+- **经济学逻辑**：价格动量反转信号在行业价格动量上的正交投影
+- **差异化策略**：vector_neut实现彻底的去相关性
+- **预期效果**：极低生产相关性
+
+### 表达式6：条件逻辑动态切换
+`if_else(ts_delta(mdl110_value, 66) > 0, ts_rank(global_value_momentum_rank, 252), -ts_rank(global_value_momentum_rank, 252))`
+- **经济学逻辑**：价值因子上升时做多全球价值动量，下降时做空
+- **差异化策略**：if_else条件逻辑制造非对称信号
+- **预期效果**：动态适应性 + 低相关性
+
+### 表达式7：复合增长率计算
+`ts_delta(ts_delta(mdl110_analyst_sentiment, 252)/ts_delay(mdl110_analyst_sentiment, 252), 252)`
+- **经济学逻辑**：分析师情绪因子的复合增长率变化
+- **差异化策略**：复杂增长率计算制造独特信号
+- **预期效果**：高Fitness + 合理Turnover
+
+### 表达式8：三字段zscore交互（终极差异化）
+`ts_zscore(mdl110_score, 504) * ts_zscore(sector_value_momentum_rank_float, 504) * ts_zscore(long_term_price_momentum_score_2, 504)`
+- **经济学逻辑**：综合评分、行业价值动量、长期价格动量的标准化交互
+- **差异化策略**：三字段504天zscore + 乘法交互
+- **预期效果**：最大化差异化，最小化相关性
+
+## 执行优先级
+
+### 第一优先级（连接恢复后立即执行）
+1. 表达式4：ts_delta Sharpe提升神技（成功率最高）
+2. 表达式1：双zscore标准化（稳健性强）
+3. 表达式8：三字段zscore交互（差异化最大）
+
+### 第二优先级（验证第一轮结果后）
+4. 表达式2：增长率回归中性化
+5. 表达式5：向量中性化降相关性
+6. 表达式3：三重交互非线性放大
+
+### 第三优先级（探索性测试）
+7. 表达式6：条件逻辑动态切换
+8. 表达式7：复合增长率计算
+
+## 预期性能指标
+1. **Sharpe** ≥ 1.58 (目标：2.0+)
+2. **Fitness** ≥ 1.0 (目标：1.5+)
+3. **Turnover** < 40% (目标：10-30%)
+4. **Robust Universe Sharpe** > 1.0 (目标：1.2+)
+5. **PC** < 0.7 (目标：<0.6)
+6. **SC** < 0.7 (目标：<0.6)
+
+## 风险控制措施
+1. **权重集中监控**：定期检查CONCENTRATED_WEIGHT检查项
+2. **相关性动态跟踪**：提交前必须通过PC和SC检查
+3. **性能稳定性**：关注2Y Sharpe和Robust Universe Sharpe
+4. **过度拟合防范**：避免过于复杂的嵌套运算
+
+## 恢复执行流程
+1. BRAIN平台连接恢复后立即进行身份验证
+2. 使用create_multiSim提交8个表达式（或分批提交）
+3. 应用僵尸模拟熔断机制（15分钟超时检查）
+4. 根据结果进入Phase 4迭代优化循环
+5. 成功Alpha立即进入提交前检查流程
+
+---
+**设计时间**: 2025-12-30
+**设计依据**: 
+1. 历史成功Alpha模式分析
+2. "降低相关性的方法.md"策略文档
+3. IND地区实战经验积累
+**状态**: 设计完成，等待平台恢复
+**下一步**: 监控平台状态，恢复后立即执行差异化策略

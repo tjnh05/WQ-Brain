@@ -1,0 +1,72 @@
+{
+  "timestamp": "20260109_113630",
+  "params": {
+    "type": "REGULAR",
+    "instrument_type": "EQUITY",
+    "region": "IND",
+    "universe": "TOP500",
+    "delay": 1,
+    "decay": 2.0,
+    "neutralization": "INDUSTRY",
+    "truncation": 0.001,
+    "test_period": "P0Y0M",
+    "unit_handling": "VERIFY",
+    "nan_handling": "OFF",
+    "language": "FASTEXPR",
+    "visualization": true,
+    "pasteurization": "ON",
+    "max_trade": "OFF",
+    "selection_handling": "POSITIVE",
+    "selection_limit": 1000,
+    "component_activation": "IS"
+  },
+  "expressions": [
+    "ts_av_diff(rank(industry_value_momentum_rank_float), 252)",
+    "ts_av_diff(rank(country_value_momentum_rank_float), 252)",
+    "ts_av_diff(zscore(ts_backfill(industry_value_momentum_rank_float, 5)), 120)",
+    "ts_av_diff(rank(industry_value_momentum_rank_float), 120)",
+    "ts_delta(rank(industry_value_momentum_rank_float), 66)",
+    "ts_mean(rank(industry_value_momentum_rank_float), 22) + ts_delta(rank(country_value_momentum_rank_float), 66)",
+    "ts_av_diff(zscore(ts_backfill(country_value_momentum_rank_float, 5)), 66)",
+    "ts_delta(rank(country_value_momentum_rank_float), 22) + ts_mean(rank(industry_value_momentum_rank_float), 120)"
+  ],
+  "results": [
+    {
+      "error": "Not authenticated and no stored credentials available. Please call authenticate() first.",
+      "note": ", you need to call three mcp tools get_operators, get_platform_setting_options and get_datafields to check whether you correctly use the operators, setting the simulation settings, and existing data fields."
+    },
+    {
+      "error": "Not authenticated and no stored credentials available. Please call authenticate() first.",
+      "note": ", you need to call three mcp tools get_operators, get_platform_setting_options and get_datafields to check whether you correctly use the operators, setting the simulation settings, and existing data fields."
+    },
+    {
+      "error": "Not authenticated and no stored credentials available. Please call authenticate() first.",
+      "note": ", you need to call three mcp tools get_operators, get_platform_setting_options and get_datafields to check whether you correctly use the operators, setting the simulation settings, and existing data fields."
+    },
+    {
+      "error": "Not authenticated and no stored credentials available. Please call authenticate() first.",
+      "note": ", you need to call three mcp tools get_operators, get_platform_setting_options and get_datafields to check whether you correctly use the operators, setting the simulation settings, and existing data fields."
+    },
+    {
+      "error": "Not authenticated and no stored credentials available. Please call authenticate() first.",
+      "note": ", you need to call three mcp tools get_operators, get_platform_setting_options and get_datafields to check whether you correctly use the operators, setting the simulation settings, and existing data fields."
+    },
+    {
+      "error": "Not authenticated and no stored credentials available. Please call authenticate() first.",
+      "note": ", you need to call three mcp tools get_operators, get_platform_setting_options and get_datafields to check whether you correctly use the operators, setting the simulation settings, and existing data fields."
+    },
+    {
+      "error": "Not authenticated and no stored credentials available. Please call authenticate() first.",
+      "note": ", you need to call three mcp tools get_operators, get_platform_setting_options and get_datafields to check whether you correctly use the operators, setting the simulation settings, and existing data fields."
+    },
+    {
+      "error": "Not authenticated and no stored credentials available. Please call authenticate() first.",
+      "note": ", you need to call three mcp tools get_operators, get_platform_setting_options and get_datafields to check whether you correctly use the operators, setting the simulation settings, and existing data fields."
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "success": 0,
+    "errors": 8
+  }
+}

@@ -1,0 +1,116 @@
+# PV数据集Alpha表达式
+# 基于IND区域⭐⭐⭐难度：PV数据集容易出货
+# 参考成功模式：ts_delta(rank(field1) + rank(field2), 66) + MARKET中性化
+# 字段说明（假设字段名）：
+# pv_volume - 交易量
+# pv_price - 价格
+# pv_vwap - 成交量加权平均价
+# pv_turnover - 换手率
+
+# 基础表达式 - 66天窗口
+ts_delta(rank(pv_volume) + rank(pv_price), 66)
+
+# 变体1 - 120天窗口，更长周期动量
+ts_delta(rank(pv_volume) + rank(pv_price), 120)
+
+# 变体2 - 252天窗口，年度动量
+ts_delta(rank(pv_volume) + rank(pv_price), 252)
+
+# 变体3 - 使用zscore标准化
+ts_delta(zscore(pv_volume) + zscore(pv_price), 66)
+
+# 变体4 - 使用不同字段组合 (交易量+VWAP)
+ts_delta(rank(pv_volume) + rank(pv_vwap), 66)
+
+# 变体5 - 使用ts_rank替代ts_delta
+ts_rank(rank(pv_volume) + rank(pv_price), 66)
+
+# 变体6 - 使用group_rank分组排名
+ts_delta(group_rank(pv_volume, industry) + group_rank(pv_price, industry), 66)
+
+# 变体7 - 使用ts_decay_linear平滑
+ts_delta(ts_decay_linear(rank(pv_volume), 22) + ts_decay_linear(rank(pv_price), 22), 66)
+
+# 变体8 - 三字段组合
+ts_delta(rank(pv_volume) + rank(pv_price) + rank(pv_vwap), 66)
+
+# 变体9 - 使用ts_zscore标准化
+ts_delta(ts_zscore(pv_volume, 66) + ts_zscore(pv_price, 66), 66)
+
+# 变体10 - 使用ts_mean平滑
+ts_delta(ts_mean(rank(pv_volume), 22) + ts_mean(rank(pv_price), 22), 66)
+
+# 变体11 - 使用winsorize处理异常值
+ts_delta(rank(winsorize(pv_volume, 0.01)) + rank(winsorize(pv_price, 0.01)), 66)
+
+# 变体12 - 使用ts_backfill填充缺失值
+ts_delta(rank(ts_backfill(pv_volume, 5)) + rank(ts_backfill(pv_price, 5)), 66)
+
+# 变体13 - 使用left_tail处理尾部数据
+ts_delta(left_tail(rank(pv_volume), maximum=0.02) + left_tail(rank(pv_price), maximum=0.02), 66)
+
+# 变体14 - 使用right_tail处理尾部数据
+ts_delta(right_tail(rank(pv_volume), minimum=0.98) + right_tail(rank(pv_price), minimum=0.98), 66)
+
+# 变体15 - 使用tail操作符
+ts_delta(tail(rank(pv_volume), lower=0, upper=0.2, newval=nan) + tail(rank(pv_price), lower=0, upper=0.2, newval=nan), 66)
+
+# 变体16 - 使用group_zscore分组标准化
+ts_delta(group_zscore(pv_volume, industry) + group_zscore(pv_price, industry), 66)
+
+# 变体17 - 使用ts_delta_ratio比率变化
+ts_delta(rank(pv_volume/pv_price) + rank(pv_vwap/pv_volume), 66)
+
+# 变体18 - 使用ts_corr相关性
+ts_delta(ts_corr(pv_volume, pv_price, 22) + ts_corr(pv_vwap, pv_volume, 22), 66)
+
+# 变体19 - 使用ts_std标准差
+ts_delta(ts_std(rank(pv_volume), 22) + ts_std(rank(pv_price), 22), 66)
+
+# 变体20 - 使用ts_skew偏度
+ts_delta(ts_skew(pv_volume, 66) + ts_skew(pv_price, 66), 66)
+
+# 变体21 - 使用ts_kurt峰度
+ts_delta(ts_kurt(pv_volume, 66) + ts_kurt(pv_price, 66), 66)
+
+# 变体22 - 使用ts_max最大值
+ts_delta(ts_max(rank(pv_volume), 22) + ts_max(rank(pv_price), 22), 66)
+
+# 变体23 - 使用ts_min最小值
+ts_delta(ts_min(rank(pv_volume), 22) + ts_min(rank(pv_price), 22), 66)
+
+# 变体24 - 使用ts_sum求和
+ts_delta(ts_sum(rank(pv_volume), 22) + ts_sum(rank(pv_price), 22), 66)
+
+# 变体25 - 使用ts_median中位数
+ts_delta(ts_median(rank(pv_volume), 22) + ts_median(rank(pv_price), 22), 66)
+
+# 变体26 - 使用ts_var方差
+ts_delta(ts_var(pv_volume, 66) + ts_var(pv_price, 66), 66)
+
+# 变体27 - 使用ts_autocorr自相关
+ts_delta(ts_autocorr(pv_volume, 22, 1) + ts_autocorr(pv_price, 22, 1), 66)
+
+# 变体28 - 使用ts_pct_change百分比变化
+ts_delta(ts_pct_change(pv_volume, 22) + ts_pct_change(pv_price, 22), 66)
+
+# 变体29 - 使用ts_diff差分
+ts_delta(ts_diff(rank(pv_volume), 22) + ts_diff(rank(pv_price), 22), 66)
+
+# 变体30 - 使用ts_delay延迟
+ts_delta(ts_delay(rank(pv_volume), 5) + ts_delay(rank(pv_price), 5), 66)
+
+# 变体31 - 价格-成交量关系
+ts_delta(rank(pv_price/pv_volume) + rank(pv_vwap/pv_volume), 66)
+
+# 变体32 - 换手率动量
+ts_delta(rank(pv_turnover) + rank(pv_volume), 66)
+
+# 变体33 - 成交量异常检测
+ts_delta(rank(pv_volume/ts_mean(pv_volume, 66)) + rank(pv_price/ts_mean(pv_price, 66)), 66)
+
+# 变体34 - VWAP偏差
+ts_delta(rank(pv_price - pv_vwap) + rank(pv_volume), 66)
+
+# 变体35 - 成交量波动率
+ts_delta(ts_std(pv_volume, 22) + ts_std(pv_price, 22), 66)

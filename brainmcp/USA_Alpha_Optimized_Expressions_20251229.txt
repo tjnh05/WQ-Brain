@@ -1,0 +1,43 @@
+# USA地区Alpha优化表达式 - 2025年12月29日
+# 基于第一次测试结果优化：使用更长窗口期、简化表达式、不同中性化
+
+## 优化策略：
+1. 使用120/252天长窗口期提升稳定性
+2. 简化表达式复杂度，避免过度拟合
+3. 尝试MARKET中性化（USA地区常见）
+4. 使用ts_delta提升Sharpe（根据IND区域经验）
+
+## 表达式列表：
+
+1. 简化版：EPS中位数估计的时序Delta（120天窗口）
+ts_delta(ts_zscore(anl4_afv4_median_eps, 120), 120)
+
+2. 简化版：EPS最高与最低估计的差值（252天窗口）
+ts_zscore(anl4_afv4_eps_high, 252) - ts_zscore(anl4_afv4_dts_spe, 252)
+
+3. 简化版：EPS中位数估计的时序排名（120天窗口）
+ts_rank(ts_zscore(anl4_afv4_median_eps, 120), 120)
+
+4. 简化版：EPS估计数量的时序变化（252天窗口）
+ts_delta(anl4_qf_az_eps_number, 252) / ts_delay(anl4_qf_az_eps_number, 252)
+
+5. 简化版：实际EPS与中位数估计的比值（120天窗口）
+ts_zscore(actual_eps_value_quarterly, 120) / ts_zscore(anl4_afv4_median_eps, 120)
+
+6. 简化版：EBIT中位数估计的时序回归斜率（252天窗口）
+ts_regression(ts_zscore(anl4_ebit_median, 252), ts_step(1), 252, rettype=2)
+
+7. 简化版：GAAP EPS中位数估计的衰减加权（120天窗口）
+ts_decay_linear(ts_zscore(anl4_median_epsreported, 120), 120)
+
+8. 简化版：三重交互项的简化版本（使用乘法而非zscore）
+anl4_afv4_median_eps * anl4_afv4_eps_high * inverse(anl4_afv4_dts_spe + 0.000001)
+
+## 参数设置：
+- 区域：USA
+- 延迟：1
+- Universe：TOP3000
+- 中性化：MARKET（USA地区推荐）
+- Decay：2（降低换手率）
+- Truncation：0.001（更严格的截断）
+- 测试周期：P0Y0M（1年6个月）

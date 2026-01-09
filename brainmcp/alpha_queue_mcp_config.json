@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "alpha-queue": {
+      "command": "python3",
+      "args": [
+        "/Users/mac/WQ-Brain/brainmcp/alpha_queue_fastmcp.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/Users/mac/WQ-Brain/brainmcp"
+      }
+    }
+  }
+}

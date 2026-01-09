@@ -1,0 +1,28 @@
+# USA地区Alpha相关性降低表达式测试
+# 创建时间：2025-12-29
+# 目标：降低生产相关性，使其低于0.7阈值
+
+# 基于最佳表达式：ts_delta(ts_rank(anl4_afv4_median_eps, 252), 120)
+# 当前状态：Sharpe 0.93，2年Sharpe 1.51，生产相关性 0.7462
+
+# 策略1：尝试不同的窗口期组合
+1. ts_delta(ts_rank(anl4_afv4_median_eps, 504), 120)  # 更长ts_rank窗口
+2. ts_delta(ts_rank(anl4_afv4_median_eps, 120), 504)  # 更长ts_delta窗口
+3. ts_delta(ts_rank(anl4_afv4_median_eps, 252), 66)   # 更短ts_delta窗口
+4. ts_delta(ts_rank(anl4_afv4_median_eps, 66), 252)   # 更短ts_rank窗口
+
+# 策略2：尝试不同的操作符组合
+5. ts_delta(ts_zscore(anl4_afv4_median_eps, 252), 120)  # 使用zscore代替rank
+6. ts_zscore(ts_delta(anl4_afv4_median_eps, 120), 252)  # 交换操作符顺序
+
+# 策略3：尝试添加额外的平滑
+7. ts_delta(ts_rank(ts_mean(anl4_afv4_median_eps, 5), 252), 120)  # 添加ts_mean平滑
+8. ts_delta(ts_rank(anl4_afv4_median_eps, 252), 120) * 0.5 + ts_delta(ts_rank(est_sales, 252), 120) * 0.5  # 二元组合
+
+# 所有表达式使用以下参数：
+# - 区域：USA
+# - Universe：TOP3000
+# - Delay：1
+# - Decay：2
+# - 中性化：INDUSTRY
+# - Truncation：0.01

@@ -1,0 +1,37 @@
+# USA地区Alpha表达式 - 2025年12月29日
+# 基于analyst4数据集，使用多元模板降低相关性
+
+## 表达式列表：
+
+1. 一元模板：EPS中位数估计的时序排名反转
+reverse(ts_rank(ts_zscore(anl4_afv4_median_eps, 500), 500))
+
+2. 一元模板：EPS估计标准差的时序回归斜率
+ts_regression(ts_zscore(anl4_afv4_dts_spe, 500), ts_step(1), 500, rettype=2)
+
+3. 二元模板：EPS中位数与最高估计的回归残差
+ts_regression(ts_zscore(anl4_afv4_median_eps, 500), ts_zscore(anl4_afv4_eps_high, 500), 500, rettype=2)
+
+4. 二元模板：EPS中位数与估计数量的向量正交
+vector_neut(anl4_afv4_median_eps, anl4_qf_az_eps_number)
+
+5. 三元模板：EPS中位数在EBIT中位数和GAAP EPS上的联合中性化
+vector_neut(vector_neut(anl4_afv4_median_eps, anl4_ebit_median), anl4_median_epsreported)
+
+6. 三元模板：三重交互项 - EPS中位数、最高估计、标准差
+ts_zscore(anl4_afv4_median_eps, 500) * ts_zscore(anl4_afv4_eps_high, 500) * ts_zscore(anl4_afv4_dts_spe, 500)
+
+7. 一元模板：EPS预测类型的衰减加权动量
+ts_decay_linear(ts_delta(anl4_epsr_flag, 252), 500)
+
+8. 二元模板：实际EPS与中位数估计的相关性加权
+ts_corr(ts_zscore(actual_eps_value_quarterly, 252), ts_zscore(anl4_afv4_median_eps, 252), 252) * anl4_afv4_median_eps
+
+## 参数设置：
+- 区域：USA
+- 延迟：1
+- Universe：TOP3000
+- 中性化：INDUSTRY（USA地区推荐）
+- Decay：2（降低换手率）
+- Truncation：0.01（改善权重覆盖）
+- 测试周期：P0Y0M（1年6个月）

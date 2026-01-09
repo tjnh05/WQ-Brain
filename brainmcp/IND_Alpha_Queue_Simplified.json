@@ -1,0 +1,421 @@
+{
+  "metadata": {
+    "created": "2025-12-31",
+    "updated": "2026-01-09",
+    "author": "BW53146",
+    "region": "IND",
+    "version": "2.0-simplified",
+    "description": "简化队列 - 统一状态管理"
+  },
+  "alphas": [
+    {
+      "id": "wp6oKV9v",
+      "status": "pending",
+      "date": "2026-01-06",
+      "expression": "ts_av_diff(tail(rank(mdl110_value), lower=0, upper=0.05, newval=0), 66) + ts_av_diff(rank(sector_value_momentum_rank_float), 252)",
+      "scheduled": "2026-01-18",
+      "priority": 8.8
+    },
+    {
+      "id": "akJajNR5",
+      "status": "pending",
+      "date": "2026-01-06",
+      "expression": "ts_av_diff(tail(rank(mdl110_value), lower=0, upper=0.05, newval=0), 120) + ts_av_diff(rank(sector_value_momentum_rank_float), 504)",
+      "scheduled": "2026-01-24",
+      "priority": 7.92
+    },
+    {
+      "id": "j2LazY59",
+      "status": "pending",
+      "date": "2026-01-06",
+      "expression": "ts_av_diff(tail(rank(mdl110_value), lower=0, upper=0.2, newval=0), 66) + ts_av_diff(rank(sector_value_momentum_rank_float), 120)",
+      "scheduled": "2026-01-26",
+      "priority": 5.67
+    },
+    {
+      "id": "O0eRZm57",
+      "status": "pending",
+      "date": "2026-01-08",
+      "expression": "ts_av_diff(rank(sector_value_momentum_rank_float), 252)",
+      "scheduled": "2026-01-12",
+      "priority": 9.7
+    },
+    {
+      "id": "0moNqrjr",
+      "status": "pending",
+      "date": "2026-01-08",
+      "expression": "ts_av_diff(rank(industry_value_momentum_rank_float), 252)",
+      "scheduled": "2026-01-14",
+      "priority": 9.8
+    },
+    {
+      "id": "KPe53rmE",
+      "status": "pending",
+      "date": "2026-01-08",
+      "expression": "ts_av_diff(rank(global_value_momentum_rank_float), 252)",
+      "scheduled": "2026-01-15",
+      "priority": 9.6
+    },
+    {
+      "id": "A16LxZ1d",
+      "status": "pending",
+      "date": "2026-01-08",
+      "expression": "ts_av_diff(rank(global_value_momentum_rank_float), 504)",
+      "scheduled": "2026-01-16",
+      "priority": 9.6
+    },
+    {
+      "id": "O0eo7QoJ",
+      "status": "pending",
+      "date": "2026-01-09",
+      "expression": "",
+      "scheduled": "",
+      "priority": 5.0
+    },
+    {
+      "id": "vR0d2dbw",
+      "status": "pending",
+      "date": "2026-01-09",
+      "expression": "",
+      "scheduled": "",
+      "priority": 5.0
+    },
+    {
+      "id": "zqaA6LYV",
+      "status": "pending",
+      "date": "2026-01-09",
+      "expression": "ts_delta(rank(anl46_indicator), 66)",
+      "scheduled": "",
+      "priority": 5.0
+    },
+    {
+      "id": "kqRNzn88",
+      "status": "pending",
+      "date": "2026-01-09",
+      "expression": "ts_delta(rank(mdl110_value), 66) + ts_delta(rank(sector_value_momentum_rank_float), 504)",
+      "scheduled": "",
+      "priority": 5.0
+    },
+    {
+      "id": "88AVQ6am",
+      "status": "pending",
+      "date": "2026-01-09",
+      "expression": "ts_av_diff(rank(sector_value_momentum_rank_float), 504)",
+      "scheduled": "",
+      "priority": 5.0
+    },
+    {
+      "id": "O0ebxvM1",
+      "status": "high_correlation",
+      "date": "2026-01-11",
+      "reason": "pc > 0.7"
+    },
+    {
+      "id": "lexQjkR2",
+      "status": "high_correlation",
+      "date": "2026-01-12",
+      "reason": "pc > 0.7"
+    },
+    {
+      "id": "58RaGa9o",
+      "status": "high_correlation",
+      "date": "2026-01-14",
+      "reason": "pc > 0.7"
+    },
+    {
+      "id": "d5qE37ME",
+      "status": "high_correlation",
+      "date": "2026-01-15",
+      "reason": "sc > 0.7"
+    },
+    {
+      "id": "9qoak6RV",
+      "status": "high_correlation",
+      "date": "2026-01-16",
+      "reason": "sc > 0.7"
+    },
+    {
+      "id": "np03geKw",
+      "status": "high_correlation",
+      "date": "2026-01-18",
+      "reason": "pc > 0.7"
+    },
+    {
+      "id": "vR0dOnkQ",
+      "status": "high_correlation",
+      "date": "2026-01-06",
+      "reason": "pc > 0.7"
+    },
+    {
+      "id": "vR0AR9YG",
+      "status": "high_correlation",
+      "date": "2026-01-07",
+      "reason": "pc > 0.7 (original: 0.7891, optimized variants: 0.792-0.8272)"
+    },
+    {
+      "id": "O0e6bQPq",
+      "status": "high_correlation",
+      "date": "2026-01-07",
+      "reason": "与 E53mOoOP 相关性为 1 (完全相关)"
+    },
+    {
+      "id": "j2L1YOJo",
+      "status": "high_correlation",
+      "date": "2026-01-08",
+      "reason": "pc > 0.7 且 sc > 0.7 (PC=0.7891, SC=0.792)"
+    },
+    {
+      "id": "d5qdWv62",
+      "status": "high_correlation",
+      "date": "2026-01-08",
+      "reason": "pc > 0.7 且 sc > 0.7 (PC=0.792, SC=0.795)"
+    },
+    {
+      "id": "XgqzzVLl",
+      "status": "high_correlation",
+      "date": "2026-01-09",
+      "reason": "PPAC > 0.7, PC > 0.7"
+    },
+    {
+      "id": "QPeg11RQ",
+      "status": "pending",
+      "date": "2026-01-09",
+      "expression": "rank(analyst_revision_primary_earnings_score)",
+      "scheduled": "2026-01-09",
+      "priority": 9.5
+    },
+    {
+      "id": "gJvdx5km",
+      "status": "pending",
+      "date": "2026-01-09",
+      "expression": "rank(sector_value_momentum_rank)",
+      "scheduled": "2026-01-11",
+      "priority": 6.8
+    },
+    {
+      "id": "e7AvLPkz",
+      "status": "pending",
+      "date": "2026-01-09",
+      "expression": "ts_delta(sector_value_momentum_rank, 252)",
+      "scheduled": "2026-01-12",
+      "priority": 7.1
+    },
+    {
+      "id": "lex9rYpA",
+      "status": "pending",
+      "date": "2026-01-09",
+      "expression": "ts_rank(sector_value_momentum_rank, 120)",
+      "scheduled": "2026-01-13",
+      "priority": 8.0
+    },
+    {
+      "id": "zqa0OEKV",
+      "status": "pending",
+      "date": "2026-01-09",
+      "expression": "ts_delta(global_value_momentum_rank, 120)",
+      "scheduled": "2026-01-14",
+      "priority": 6.1
+    },
+    {
+      "id": "d5qoQdoY",
+      "status": "pending",
+      "date": "2026-01-09",
+      "expression": "ts_rank(sector_value_momentum_rank, 120)",
+      "scheduled": "2026-01-15",
+      "priority": 8.4
+    },
+    {
+      "id": "9qomR8Lo",
+      "status": "pending",
+      "date": "2026-01-09",
+      "expression": "add(ts_delta(sector_value_momentum_rank, 120), ts_rank(residualized_return_india_top500_equity, 120))",
+      "scheduled": "2026-01-11",
+      "priority": 7.5
+    },
+    {
+      "id": "0mo67dx6",
+      "status": "pending",
+      "date": "2026-01-09",
+      "expression": "ts_delta(sector_value_momentum_rank, 66)",
+      "scheduled": "2026-01-17",
+      "priority": 7.2
+    },
+    {
+      "id": "pw0Z6EMq",
+      "status": "pending",
+      "date": "2026-01-09",
+      "expression": "ts_rank(sector_value_momentum_rank, 252)",
+      "scheduled": "2026-01-18",
+      "priority": 8.5
+    },
+    {
+      "id": "qMb3AdYZ",
+      "status": "pending",
+      "date": "2026-01-09",
+      "expression": "ts_av_diff(rank(sector_value_momentum_rank), 66)",
+      "scheduled": "2026-01-19",
+      "priority": 8.0
+    },
+    {
+      "id": "om2rKvJv",
+      "status": "pending",
+      "date": "2026-01-09",
+      "expression": "ts_zscore(sector_value_momentum_rank, 120)",
+      "scheduled": "2026-01-20",
+      "priority": 8.2
+    },
+    {
+      "id": "d5qoxm3E",
+      "status": "pending",
+      "date": "2026-01-09",
+      "expression": "add(ts_delta(sector_value_momentum_rank, 66), ts_rank(sector_value_momentum_rank, 120))",
+      "scheduled": "2026-01-21",
+      "priority": 7.8
+    }
+  ],
+  "schedule": {
+    "2025-12-31": {
+      "alpha_id": "ZYZxVkwd",
+      "note": "ZYZxVkwd (submitted)"
+    },
+    "2026-01-01": {
+      "alpha_id": "QPel2R9w",
+      "note": "QPel2R9w (submitted)"
+    },
+    "2026-01-02": {
+      "alpha_id": "kqRX6b0P",
+      "note": "kqRX6b0P (submitted)"
+    },
+    "2026-01-03": {
+      "alpha_id": "blpP8l0N",
+      "note": "blpP8l0N (submitted)"
+    },
+    "2026-01-04": {
+      "alpha_id": "e7A267Mp",
+      "note": "e7A267Mp (submitted)"
+    },
+    "2026-01-07": {
+      "alpha_id": "P0e5NwoE",
+      "note": "P0e5NwoE (submitted)"
+    },
+    "2026-01-08": {
+      "alpha_id": "zqa2Xq5R",
+      "note": "zqa2Xq5R (submitted)"
+    },
+    "2026-01-09": {
+      "alpha_id": "d5qE8e8E",
+      "note": "d5qE8e8E (submitted)"
+    },
+    "2026-01-10": {
+      "alpha_id": "vR0YQZMQ",
+      "note": "vR0YQZMQ (submitted)"
+    },
+    "2026-01-11": {
+      "alpha_id": "88AVQ6am",
+      "note": "88AVQ6am (submit failed, PC=0.8258 > 0.7, Power Pool豁免可能未应用)"
+    },
+    "2026-01-12": {
+      "alpha_id": "O0eRZm57",
+      "note": "O0eRZm57 (planned, Power Pool, 高风险建议即时提交)"
+    },
+    "2026-01-13": {
+      "alpha_id": "vR0e1VxQ",
+      "note": "vR0e1VxQ (submitted)"
+    },
+    "2026-01-14": {
+      "alpha_id": "0moNqrjr",
+      "note": "0moNqrjr (planned, Power Pool, 高风险建议即时提交)"
+    },
+    "2026-01-15": {
+      "alpha_id": "KPe53rmE",
+      "note": "KPe53rmE (planned, Power Pool, 高风险建议即时提交)"
+    },
+    "2026-01-16": {
+      "alpha_id": "A16LxZ1d",
+      "note": "A16LxZ1d (planned, Power Pool, 高风险建议即时提交)"
+    },
+    "2026-01-17": {
+      "alpha_id": "YPZNxk5w",
+      "note": "YPZNxk5w (submitted)"
+    },
+    "2026-01-18": {
+      "alpha_id": "wp6oKV9v",
+      "note": "wp6oKV9v (planned, 常规高风险, 建议即时提交)"
+    },
+    "2026-01-19": {
+      "alpha_id": "O0eo7QoJ",
+      "note": "O0eo7QoJ (fail)"
+    },
+    "2026-01-20": {
+      "alpha_id": "1YvJwRvJ",
+      "note": "1YvJwRvJ (submitted)"
+    },
+    "2026-01-21": {
+      "alpha_id": "GrVW5VX3",
+      "note": "GrVW5VX3 (submitted)"
+    },
+    "2026-01-22": {
+      "alpha_id": "E53mOoOP",
+      "note": "E53mOoOP (submitted)"
+    },
+    "2026-01-23": {
+      "alpha_id": "vR0GzkVr",
+      "note": "vR0GzkVr (submitted)"
+    },
+    "2026-01-24": {
+      "alpha_id": "akJajNR5",
+      "note": "akJajNR5 (planned, 常规高风险, 建议即时提交)"
+    },
+    "2026-01-25": {
+      "alpha_id": "vR0AR9YG",
+      "note": "vR0AR9YG (pc > 0.7)"
+    },
+    "2026-01-26": {
+      "alpha_id": "j2LazY59",
+      "note": "j2LazY59 (planned, 常规高风险, 建议即时提交)"
+    },
+    "2026-01-27": {
+      "alpha_id": "KPezrm8z",
+      "note": "KPezrm8z (submitted)"
+    },
+    "2026-01-28": {
+      "alpha_id": "88AVQ6am",
+      "note": "原88AVQ6am日期已调整"
+    },
+    "2026-01-29": {
+      "alpha_id": "j2LaER7Z",
+      "note": "j2LaER7Z (submitted)"
+    },
+    "2026-01-30": {
+      "alpha_id": "9qo89Xle",
+      "note": "9qo89Xle (submitted)"
+    },
+    "2026-01-31": {
+      "alpha_id": "3qd17LW0",
+      "note": "3qd17LW0 (submitted)"
+    },
+    "2026-02-01": {
+      "alpha_id": "O0eRZm57",
+      "note": "原O0eRZm57日期已调整"
+    },
+    "2026-02-02": {
+      "alpha_id": "0moNqrjr",
+      "note": "原0moNqrjr日期已调整"
+    },
+    "2026-02-03": {
+      "alpha_id": "KPe53rmE",
+      "note": "原KPe53rmE日期已调整"
+    },
+    "2026-02-04": {
+      "alpha_id": "A16LxZ1d",
+      "note": "原A16LxZ1d日期已调整"
+    }
+  },
+  "stats": {
+    "total": 36,
+    "by_status": {
+      "pending": 24,
+      "high_correlation": 12
+    }
+  }
+}
