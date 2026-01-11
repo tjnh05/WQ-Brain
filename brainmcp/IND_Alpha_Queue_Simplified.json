@@ -1,7 +1,7 @@
 {
   "metadata": {
     "created": "2025-12-31",
-    "updated": "2026-01-09",
+    "updated": "2026-01-11",
     "author": "BW53146",
     "region": "IND",
     "version": "2.0-simplified",
@@ -10,59 +10,66 @@
   "alphas": [
     {
       "id": "wp6oKV9v",
-      "status": "pending",
-      "date": "2026-01-06",
+      "status": "submitted",
+      "date": "2026-01-10",
       "expression": "ts_av_diff(tail(rank(mdl110_value), lower=0, upper=0.05, newval=0), 66) + ts_av_diff(rank(sector_value_momentum_rank_float), 252)",
       "scheduled": "2026-01-18",
-      "priority": 8.8
+      "priority": 8.8,
+      "reason": "成功提交为Power Pool Alpha，Sharpe 3.06"
     },
     {
       "id": "akJajNR5",
       "status": "pending",
-      "date": "2026-01-06",
+      "date": "2026-01-09",
       "expression": "ts_av_diff(tail(rank(mdl110_value), lower=0, upper=0.05, newval=0), 120) + ts_av_diff(rank(sector_value_momentum_rank_float), 504)",
       "scheduled": "2026-01-24",
-      "priority": 7.92
+      "priority": 7.92,
+      "reason": "高风险Alpha(常见字段组合)，根据IFLOW.md新策略建议即时提交，不入队等待"
     },
     {
       "id": "j2LazY59",
       "status": "pending",
-      "date": "2026-01-06",
+      "date": "2026-01-09",
       "expression": "ts_av_diff(tail(rank(mdl110_value), lower=0, upper=0.2, newval=0), 66) + ts_av_diff(rank(sector_value_momentum_rank_float), 120)",
       "scheduled": "2026-01-26",
-      "priority": 5.67
+      "priority": 5.67,
+      "reason": "高风险Alpha(常见字段组合)，根据IFLOW.md新策略建议即时提交，不入队等待"
     },
     {
       "id": "O0eRZm57",
-      "status": "pending",
-      "date": "2026-01-08",
+      "status": "high_correlation",
+      "date": "2026-01-09",
       "expression": "ts_av_diff(rank(sector_value_momentum_rank_float), 252)",
       "scheduled": "2026-01-12",
-      "priority": 9.7
+      "priority": 9.7,
+      "reason": "Power Pool Alpha相关性失败(PPAC>0.7, PC>0.7)，需要优化：字段替换(sector→industry/country)，窗口期调整(252→120/66)，数据预处理"
     },
     {
       "id": "0moNqrjr",
-      "status": "pending",
-      "date": "2026-01-08",
+      "status": "submitted",
+      "date": "2026-01-10",
       "expression": "ts_av_diff(rank(industry_value_momentum_rank_float), 252)",
       "scheduled": "2026-01-14",
-      "priority": 9.8
+      "priority": 9.8,
+      "reason": "成功提交为Power Pool Alpha，PC=0.785但豁免通过"
     },
     {
       "id": "KPe53rmE",
-      "status": "pending",
-      "date": "2026-01-08",
+      "status": "high_correlation",
+      "date": "2026-01-09",
       "expression": "ts_av_diff(rank(global_value_momentum_rank_float), 252)",
       "scheduled": "2026-01-15",
-      "priority": 9.6
+      "priority": 9.6,
+      "reason": "Power Pool Alpha相关性失败(PPAC>0.7, PC>0.7)，需要优化：字段替换(global→industry/country)，窗口期调整(252→120)，添加数据预处理"
     },
     {
       "id": "A16LxZ1d",
-      "status": "pending",
-      "date": "2026-01-08",
+      "status": "optimized",
+      "date": "2026-01-10",
       "expression": "ts_av_diff(rank(global_value_momentum_rank_float), 504)",
       "scheduled": "2026-01-16",
-      "priority": 9.6
+      "priority": 9.6,
+      "reason": "IS曲线问题已通过缩短窗口期和双字段组合优化，新版本A162p6EY (Sharpe 3.16, Robust Sharpe 1.59) 已加入队列"
     },
     {
       "id": "O0eo7QoJ",
@@ -82,11 +89,12 @@
     },
     {
       "id": "zqaA6LYV",
-      "status": "pending",
+      "status": "failed",
       "date": "2026-01-09",
       "expression": "ts_delta(rank(anl46_indicator), 66)",
       "scheduled": "",
-      "priority": 5.0
+      "priority": 5.0,
+      "reason": "Sharpe不足(1.3<1.58)，需要优化：添加第二个字段增强信号，尝试Decay=2+Industry中性化，调整truncation=0.001"
     },
     {
       "id": "kqRNzn88",
@@ -98,11 +106,12 @@
     },
     {
       "id": "88AVQ6am",
-      "status": "pending",
-      "date": "2026-01-09",
+      "status": "submitted",
+      "date": "2026-01-10",
       "expression": "ts_av_diff(rank(sector_value_momentum_rank_float), 504)",
       "scheduled": "",
-      "priority": 5.0
+      "priority": 5.0,
+      "reason": "成功提交为Power Pool Alpha，PC=0.8258但豁免通过"
     },
     {
       "id": "O0ebxvM1",
@@ -178,11 +187,12 @@
     },
     {
       "id": "QPeg11RQ",
-      "status": "pending",
-      "date": "2026-01-09",
+      "status": "submitted",
+      "date": "2026-01-10",
       "expression": "rank(analyst_revision_primary_earnings_score)",
       "scheduled": "2026-01-09",
-      "priority": 9.5
+      "priority": 9.5,
+      "reason": "已在2026-01-08提交，stage=OS，dateSubmitted不为null，队列状态需要同步"
     },
     {
       "id": "gJvdx5km",
@@ -271,6 +281,107 @@
       "expression": "add(ts_delta(sector_value_momentum_rank, 66), ts_rank(sector_value_momentum_rank, 120))",
       "scheduled": "2026-01-21",
       "priority": 7.8
+    },
+    {
+      "id": "Vkn55eQM",
+      "status": "failed",
+      "date": "2026-01-09",
+      "expression": "ts_delta(ts_mean(anl4_afv4_eps_mean, 5), 5)",
+      "scheduled": "2026-01-09",
+      "priority": 9.5,
+      "reason": "submit_alpha返回false，可能因权重集中度警告或POWER_POOL_CORRELATION检查pending"
+    },
+    {
+      "id": "6XxJ2pKO",
+      "status": "failed",
+      "date": "2026-01-09",
+      "expression": "ts_delta(ts_mean(anl4_afv4_median_eps, 5), 5)",
+      "scheduled": "2026-01-09",
+      "priority": 9.8,
+      "reason": "submit_alpha返回false，权重集中度警告严重(0.5)，POWER_POOL_CORRELATION检查pending"
+    },
+    {
+      "id": "KPe26a0k",
+      "status": "pending",
+      "date": "2026-01-10",
+      "expression": "ts_av_diff(rank(industry_value_momentum_rank_float), 120)",
+      "scheduled": "2026-02-05",
+      "priority": 8.0
+    },
+    {
+      "id": "A162X9Rd",
+      "status": "pending",
+      "date": "2026-01-10",
+      "expression": "ts_av_diff(rank(mdl110_value), 120) + ts_av_diff(rank(mdl110_score), 252)",
+      "scheduled": "2026-02-06",
+      "priority": 7.0
+    },
+    {
+      "id": "gJv0NRE0",
+      "status": "pending",
+      "date": "2026-01-10",
+      "expression": "ts_av_diff(rank(short_horizon_momentum_score_float), 120)",
+      "scheduled": "2026-02-07",
+      "priority": 9.0
+    },
+    {
+      "id": "A162p6EY",
+      "status": "pending",
+      "date": "2026-01-10",
+      "expression": "ts_av_diff(rank(global_value_momentum_rank_float), 120) + ts_av_diff(rank(industry_value_momentum_rank_float), 66)",
+      "priority": 9.0
+    },
+    {
+      "id": "1Yv28mL6",
+      "status": "pending",
+      "date": "2026-01-10",
+      "expression": "ts_av_diff(rank(region_value_momentum_rank_float), 120) + ts_av_diff(rank(global_value_momentum_rank_float), 66)",
+      "priority": 8.0
+    },
+    {
+      "id": "LLe2ovOa",
+      "status": "submitted",
+      "date": "2026-01-10"
+    },
+    {
+      "id": "JjlkxYeA",
+      "status": "pending",
+      "date": "2026-01-10",
+      "expression": "ts_av_diff(rank(sector_value_momentum_rank_float), 120)",
+      "scheduled": "2026-01-12",
+      "priority": 9.0
+    },
+    {
+      "id": "ZYZ9azkZ",
+      "status": "pending",
+      "date": "2026-01-10",
+      "expression": "ts_av_diff(rank(industry_value_momentum_rank_float), 66)",
+      "scheduled": "2026-01-11",
+      "priority": 8.0
+    },
+    {
+      "id": "d5qJ7bQY",
+      "status": "pending",
+      "date": "2026-01-11",
+      "expression": "ts_av_diff(rank(industry_value_momentum_rank_float), 66)",
+      "scheduled": "2026-01-12",
+      "priority": 9.8
+    },
+    {
+      "id": "QPeRlbQp",
+      "status": "pending",
+      "date": "2026-01-11",
+      "expression": "ts_av_diff(rank(sector_value_momentum_rank_float), 120)",
+      "scheduled": "2026-01-13",
+      "priority": 9.8
+    },
+    {
+      "id": "xAM7z3xq",
+      "status": "pending",
+      "date": "2026-01-11",
+      "expression": "ts_av_diff(rank(global_value_momentum_rank_float), 252)",
+      "scheduled": "2026-01-14",
+      "priority": 9.8
     }
   ],
   "schedule": {
@@ -412,10 +523,13 @@
     }
   },
   "stats": {
-    "total": 36,
+    "total": 49,
     "by_status": {
-      "pending": 24,
-      "high_correlation": 12
+      "submitted": 5,
+      "pending": 26,
+      "high_correlation": 14,
+      "optimized": 1,
+      "failed": 3
     }
   }
 }

@@ -1,0 +1,68 @@
+{
+  "original_alpha": {
+    "id": "0moNqrjr",
+    "expression": "ts_av_diff(rank(industry_value_momentum_rank_float), 252)",
+    "problem": "PC=0.785>0.7\u4e14Sharpe\u672a\u9ad810%",
+    "sharpe": 3.2
+  },
+  "optimization_variants": [
+    {
+      "name": "0moNqrjr_opt1_country",
+      "expression": "ts_av_diff(rank(country_value_momentum_rank_float), 66)",
+      "description": "\u5b57\u6bb5\u66ff\u6362: industry\u2192country\uff0c\u7a97\u53e3\u671f: 252\u219266\u5929"
+    },
+    {
+      "name": "0moNqrjr_opt2_zscore",
+      "expression": "ts_delta(zscore(ts_backfill(industry_value_momentum_rank_float, 5)), 120)",
+      "description": "\u6570\u636e\u9884\u5904\u7406: zscore+backfill\uff0c\u7b97\u5b50: ts_av_diff\u2192ts_delta"
+    },
+    {
+      "name": "0moNqrjr_opt3_dual_field",
+      "expression": "ts_av_diff(rank(industry_value_momentum_rank_float), 120) + ts_av_diff(rank(country_value_momentum_rank_float), 66)",
+      "description": "\u53cc\u5b57\u6bb5\u7ec4\u5408\uff0c\u975e\u5bf9\u79f0\u7a97\u53e3\u671f(120+66)"
+    },
+    {
+      "name": "0moNqrjr_opt4_market_tsrank",
+      "expression": "ts_rank(rank(market_value_momentum_rank_float), 66)",
+      "description": "\u5b8c\u5168\u6539\u53d8: industry\u2192market\uff0cts_av_diff\u2192ts_rank"
+    },
+    {
+      "name": "0moNqrjr_opt5_tail_weight",
+      "expression": "ts_av_diff(tail(rank(industry_value_momentum_rank_float), lower=0, upper=0.1, newval=0), 120)",
+      "description": "\u6743\u91cd\u63a7\u5236: tail\u64cd\u4f5c\u7b26\u9650\u5236\u6781\u7aef\u6743\u91cd"
+    },
+    {
+      "name": "0moNqrjr_opt6_group_rank",
+      "expression": "group_rank(industry_value_momentum_rank_float, industry)",
+      "description": "\u5747\u503c\u56de\u5f52\u7b56\u7565: group_rank\u7b97\u5b50"
+    },
+    {
+      "name": "0moNqrjr_opt7_short_term",
+      "expression": "ts_delta(zscore(ts_backfill(country_value_momentum_rank_float, 5)), 22)",
+      "description": "\u77ed\u671f\u4fe1\u53f7: 22\u5929\u7a97\u53e3\uff0c\u6570\u636e\u9884\u5904\u7406"
+    },
+    {
+      "name": "0moNqrjr_opt8_smooth",
+      "expression": "ts_av_diff(rank(ts_mean(industry_value_momentum_rank_float, 5)), 252)",
+      "description": "\u5e73\u6ed1\u5904\u7406: ts_mean\u9884\u5904\u7406\uff0c\u4fdd\u6301\u539f\u7a97\u53e3\u671f"
+    }
+  ],
+  "simulation_parameters": {
+    "instrument_type": "EQUITY",
+    "region": "IND",
+    "universe": "TOP500",
+    "delay": 1,
+    "decay": 0,
+    "neutralization": "INDUSTRY",
+    "truncation": 0.001,
+    "test_period": "P0Y0M",
+    "unit_handling": "NONE",
+    "nan_handling": "NONE",
+    "language": "FASTEXPR",
+    "visualization": true
+  },
+  "results": {
+    "error": "Failed to create multisimulation. Status: 400,, you need to call three mcp tools get_operators, get_platform_setting_options and get_datafields to check whether you correctly use the operators, setting the simulation settings, and existing data fields."
+  },
+  "timestamp": "20260109_184231"
+}

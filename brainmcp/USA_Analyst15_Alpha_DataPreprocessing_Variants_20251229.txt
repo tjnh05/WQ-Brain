@@ -1,0 +1,47 @@
+# USA Analyst15 Alpha 数据预处理优化变体
+# 创建时间: 2025-12-29
+# 基础表达式: rank(ts_rank(anl15_ind_12_m_tr_mean, 66))
+# 问题: 2年Sharpe 2.11但整体Sharpe 0.43, Fitness 0.13
+# 优化目标: 通过数据预处理改善早期数据质量，提升整体Sharpe和Fitness
+# 参数建议: decay=2, truncation=0.01, neutralization=INDUSTRY (除非特别说明)
+
+# 变体1: ts_backfill回填 - 252天回填缺失值
+ts_rank(ts_backfill(anl15_ind_12_m_tr_mean, 252), 66)
+
+# 变体2: winsorize异常值处理 - 标准差4倍截断
+rank(winsorize(ts_rank(anl15_ind_12_m_tr_mean, 66)))
+
+# 变体3: 原版简化 - 去掉外层rank，测试简化效果
+ts_rank(anl15_ind_12_m_tr_mean, 66)
+
+# 变体4: ts_decay_linear平滑 - 22天线性衰减降低换手率
+ts_decay_linear(ts_rank(anl15_ind_12_m_tr_mean, 66), 22)
+
+# 变体5: 更长窗口期 - 504天窗口测试长期动量
+ts_rank(anl15_ind_12_m_tr_mean, 504)
+
+# 变体6: 组合预处理 - 先winsorize再ts_backfill
+ts_rank(ts_backfill(winsorize(anl15_ind_12_m_tr_mean), 252), 66)
+
+# 变体7: group级别字段 - 使用GICS group分组字段
+ts_rank(anl15_gr_12_m_tr_mean, 66)
+
+# 变体8: sector级别字段 - 使用GICS sector分组字段
+ts_rank(anl15_s_12_m_tr_mean, 66)
+
+# 字段说明:
+# anl15_ind_12_m_tr_mean: GICS industry分组12个月追踪EPS加权平均
+# anl15_gr_12_m_tr_mean: GICS group分组12个月追踪EPS加权平均
+# anl15_s_12_m_tr_mean: GICS sector分组12个月追踪EPS加权平均
+
+# 操作符说明:
+# ts_backfill(x, d): 回填缺失值，使用过去d天内第一个有效值
+# winsorize(x, std=4): 异常值处理，将超出±4倍标准差的值截断
+# ts_decay_linear(x, d): 线性衰减平滑，降低近期噪声影响
+# ts_rank(x, d): 时间序列排名，d天窗口
+
+# 测试目标:
+# 1. 提升整体Sharpe > 1.58
+# 2. 提升Fitness > 1.0
+# 3. 保持2年Sharpe > 1.58
+# 4. 保持相关性 < 0.7

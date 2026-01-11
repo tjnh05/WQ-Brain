@@ -1,0 +1,26 @@
+# USA Analyst15 Alpha Expressions - 2025-12-29
+# 基于GICS分组EPS数据的Alpha表达式
+
+# 表达式1: 简单rank - GICS industry级别12个月追踪EPS均值
+rank(anl15_ind_12_m_tr_mean)
+
+# 表达式2: zscore - GICS group级别12个月追踪EPS均值
+zscore(anl15_gr_12_m_tr_mean)
+
+# 表达式3: ts_rank - GICS sector级别12个月追踪EPS均值，66天窗口
+ts_rank(anl15_s_12_m_tr_mean, 66)
+
+# 表达式4: ts_delta - GICS industry级别12个月追踪EPS均值，22天变化
+ts_delta(anl15_ind_12_m_tr_mean, 22)
+
+# 表达式5: ts_delta + ts_rank组合 - GICS group级别12个月追踪EPS均值
+ts_delta(ts_rank(anl15_gr_12_m_tr_mean, 120), 120)
+
+# 表达式6: rank - GICS group级别每股账面价值均值
+rank(anl15_bps_gr_12_m_tr_mean)
+
+# 表达式7: zscore + ts_rank组合 - GICS sector级别每股账面价值均值
+zscore(ts_rank(anl15_bps_s_12_m_tr_mean, 252))
+
+# 表达式8: 三字段加法组合 - EPS + BPS + SAL组合
+rank(anl15_ind_12_m_tr_mean) + rank(anl15_bps_ind_12_m_tr_mean) + rank(anl15_sal_ind_12_m_tr_mean)

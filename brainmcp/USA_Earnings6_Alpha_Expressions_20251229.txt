@@ -1,0 +1,27 @@
+# USA Earnings6 Alpha 表达式 - 2025年12月29日
+# 基于International Findings Data (earnings6)数据集的Alpha因子
+# 目标：生成通过提交检查的有效Alpha因子
+
+# 表达式1: 简单rank - EPS估计值的横截面排名
+rank(ern6_estimated_eps)
+
+# 表达式2: zscore - 实际EPS的标准化
+zscore(ern6_actual_eps)
+
+# 表达式3: ts_rank - EPS估计值的66天时间序列排名
+ts_rank(ern6_estimated_eps, 66)
+
+# 表达式4: ts_delta - 实际EPS的22天变化
+ts_delta(ern6_actual_eps, 22)
+
+# 表达式5: ts_delta + ts_rank组合 - EPS估计值排名的变化
+ts_delta(ts_rank(ern6_estimated_eps, 120), 120)
+
+# 表达式6: rank - EPS百分比变化的横截面排名
+rank(eps_change_percentage_value)
+
+# 表达式7: ts_rank - 下次财报日期的252天时间序列排名（财报日期意外）
+ts_rank(ern6_next_ed, 252)
+
+# 表达式8: zscore + ts_rank组合 - 实际EPS排名的标准化
+zscore(ts_rank(ern6_actual_eps, 66))

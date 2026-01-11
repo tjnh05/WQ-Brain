@@ -1,0 +1,20 @@
+{
+  "variants": [
+    "ts_delta(ts_mean(global_value_momentum_rank, 5), 120)",
+    "ts_delta(ts_mean(country_value_momentum_rank_float, 66), 5)",
+    "ts_delta(ts_mean(country_value_momentum_rank_float, 120), 252)",
+    "ts_delta(ts_mean(sector_value_momentum_rank, 252), 5)",
+    "ts_delta(ts_mean(global_value_momentum_rank, 120), 252)",
+    "ts_delta(rank(mdl110_price_momentum_reversal) + rank(global_value_momentum_rank), 22)",
+    "ts_rank(rank(global_value_momentum_rank) + rank(industry_value_momentum_rank) + rank(sector_value_momentum_rank), 252)",
+    "ts_av_diff(rank(mdl110_price_momentum_reversal), 252)",
+    "ts_rank(rank(country_value_momentum_rank_float) + rank(mdl110_price_momentum_reversal) + rank(sector_value_momentum_rank), 252)",
+    "ts_av_diff(rank(industry_value_momentum_rank_float), 120)",
+    "ts_delta(rank(industry_value_momentum_rank_float) + rank(country_value_momentum_rank_float), 22)",
+    "ts_delta(rank(global_value_momentum_rank) + rank(country_value_momentum_rank_float), 66)",
+    "ts_rank(rank(mdl110_price_momentum_reversal) + rank(sector_value_momentum_rank) + rank(industry_value_momentum_rank_float), 504)"
+  ],
+  "count": 13,
+  "generation_date": "2026-01-10",
+  "source_database": "/Users/mac/WQ-Brain/brainmcp/field_database_v1.json"
+}

@@ -1,0 +1,27 @@
+# USA Analyst4 Alpha 优化变体 - 2025年12月29日
+# 基于表达式: ts_delta(ts_rank(anl4_afv4_median_eps, 252), 252)
+# 问题: Sharpe 0.8, Fitness 0.38, 生产相关性 0.76
+
+# 变体1: 原始表达式 - 252天窗口期
+ts_delta(ts_rank(anl4_afv4_median_eps, 252), 252)
+
+# 变体2: 120天窗口期 - 测试中期动量
+ts_delta(ts_rank(anl4_afv4_median_eps, 120), 120)
+
+# 变体3: 66天窗口期 - 测试短期动量
+ts_delta(ts_rank(anl4_afv4_median_eps, 66), 66)
+
+# 变体4: 标准差标准化 - 用估计标准差标准化中位数
+ts_delta(ts_rank(anl4_afv4_median_eps / anl4_afv4_dts_spe, 252), 252)
+
+# 变体5: 最高估计 - 使用EPS最高估计值
+ts_delta(ts_rank(anl4_afv4_eps_high, 252), 252)
+
+# 变体6: 最低估计 - 使用EPS最低估计值
+ts_delta(ts_rank(anl4_afv4_eps_low, 252), 252)
+
+# 变体7: 估计数量加权 - 中位数乘以估计数量
+ts_delta(ts_rank(anl4_afv4_median_eps * anl4_qf_az_eps_number, 252), 252)
+
+# 变体8: 估计与实际差异 - 中位数估计与实际EPS的差异
+ts_delta(ts_rank(anl4_afv4_median_eps - actual_eps_value_quarterly, 252), 252)

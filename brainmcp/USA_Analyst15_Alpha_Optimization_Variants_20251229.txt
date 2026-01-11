@@ -1,0 +1,39 @@
+# USA Analyst15 Alpha 优化变体
+# 创建时间: 2025-12-29
+# 基础表达式: ts_rank(anl15_ind_12_m_tr_mean, 66)
+# 优化目标: 提升Sharpe (>1.58)和Fitness (>1.0)
+# 参数建议: decay=2, truncation=0.01, neutralization=INDUSTRY (除非特别说明)
+
+# 变体1: 22天窗口期 - 测试更短期的动量
+ts_rank(anl15_ind_12_m_tr_mean, 22)
+
+# 变体2: 120天窗口期 - 测试中期动量
+ts_rank(anl15_ind_12_m_tr_mean, 120)
+
+# 变体3: 252天窗口期 - 测试长期动量(1年)
+ts_rank(anl15_ind_12_m_tr_mean, 252)
+
+# 变体4: ts_delta组合 - 测试变化率而非排名
+ts_delta(ts_rank(anl15_ind_12_m_tr_mean, 66), 66)
+
+# 变体5: zscore归一化 - 标准化处理
+zscore(ts_rank(anl15_ind_12_m_tr_mean, 66))
+
+# 变体6: rank包裹 - 双重排序
+rank(ts_rank(anl15_ind_12_m_tr_mean, 66))
+
+# 变体7: 双字段加法组合 - 结合industry和group级别信号
+ts_rank(anl15_ind_12_m_tr_mean, 66) + ts_rank(anl15_gr_12_m_tr_mean, 66)
+
+# 变体8: 乘法组合 - 结合industry和sector级别信号
+ts_rank(anl15_ind_12_m_tr_mean, 66) * ts_rank(anl15_s_12_m_tr_mean, 66)
+
+# 字段说明:
+# anl15_ind_12_m_tr_mean: GICS industry分组12个月追踪EPS加权平均
+# anl15_gr_12_m_tr_mean: GICS group分组12个月追踪EPS加权平均
+# anl15_s_12_m_tr_mean: GICS sector分组12个月追踪EPS加权平均
+
+# 测试建议:
+# 1. 使用相同参数(decay=2, truncation=0.01, neutralization=INDUSTRY)
+# 2. 监控2年Sharpe、整体Sharpe、Fitness
+# 3. 检查相关性是否仍低于0.7

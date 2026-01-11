@@ -1,0 +1,26 @@
+{
+  "power_pool_variants": [
+    "ts_delta(ts_mean(field, 5), 5)",
+    "ts_delta(ts_mean(field, 5), 5)",
+    "ts_delta(ts_mean(field, 5), 5)",
+    "ts_delta(ts_mean(field, 5), 5)",
+    "ts_delta(ts_mean(field, 5), 5)"
+  ],
+  "regular_variants": [
+    "ts_delta(ts_mean(field, 5), 5)",
+    "ts_delta(ts_mean(field, 5), 5)",
+    "ts_delta(ts_mean(field, 5), 5)",
+    "ts_delta(ts_mean(field, 5), 5)",
+    "ts_delta(ts_mean(field, 5), 5)",
+    "ts_delta(ts_mean(field, 5), 5)",
+    "ts_delta(ts_mean(field, 5), 5)",
+    "ts_delta(ts_mean(field, 5), 5)"
+  ],
+  "optimization_examples": [
+    "ts_av_diff(rank(mdl110_alternative), 252)",
+    "ts_av_diff(rank(mdl110_tree), 252)",
+    "ts_av_diff(rank(global_value_momentum_rank), 252)",
+    "ts_av_diff(rank(ts_backfill(global_value_momentum_rank_float, 5)), 252)"
+  ],
+  "generation_date": "2026-01-10"
+}

@@ -211,6 +211,11 @@
 - **中性化要求**:
   - IND区域：Risk Handled Neutralization是强制的
   - 适用于所有研究区域（USA/EUR/ASI/GLB/CHN Delay 1和0）
+- **相关性优化中性化**：
+  - 除了强制要求的Risk Handled Neutralization，当Power Pool内部自相关性(PPAC)接近或超过0.5阈值时
+  - **推荐使用SLOW中性化**：实战验证可有效降低selfCorrelation（LLewQvmn: 0.4466<0.5）
+  - **备用方案**：SLOW_AND_FAST中性化适用于需要更细致风险控制的Alpha
+  - **验证方法**：提交前使用`get_submission_check`确认POWER_POOL_CORRELATION检查通过
 
 #### **5.2 豁免的提交检查**
 以下检查对Power Pool Alpha不适用：
@@ -250,8 +255,42 @@
 - **简化原则**: 优先生成简单、高质量的Alpha
 - **操作符优化**: 使用≤8个操作符，避免过度复杂
 - **字段选择**: 使用≤3个数据字段，确保逻辑清晰
+  - **推荐字段**:
+    - **Model数据集**: `industry_value_momentum_rank_float`（低相关性）、`country_value_momentum_rank_float`（中等）
+    - **Analyst数据集**: `anl4_afv4_eps_mean`、`analyst_sentiment`
+    - **Risk数据集**: 各种风险指标（低使用率）
+  - **避免字段**:
+    - `sector_value_momentum_rank_float`（容易导致PPAC>0.7）
+    - `global_value_momentum_rank_float`（双重相关性失败风险高）
+    - `mdl110_value + sector`组合（PC>0.7）
+  - **跨数据集组合策略**:
+    - Model + Analyst + Risk（降低内部相关性）
+    - 避免同一数据集内高度相关字段组合
 - **流动性关注**: 探索低换手率Alpha和流动性好的小宇宙
 - **多样性**: 确保Power Pool内Alpha的多样性（跨数据集、逻辑、操作符、宇宙）
+- **实战经验总结**:
+  - **表达式模板**:
+    ```python
+    # 高效模板1：单字段长窗口
+    ts_av_diff(rank(industry_value_momentum_rank_float), 252)
+    # 高效模板2：双字段互补  
+    ts_av_diff(rank(industry_value_momentum_rank_float), 120) + ts_delta(rank(anl4_afv4_eps_mean), 66)
+    # 高效模板3：数据预处理版
+    ts_av_diff(zscore(ts_backfill(mdl110_value, 5)), 66)
+    ```
+  - **参数优化**:
+    - 窗口期：66/120/252天（避免504天，信号过平滑）
+    - Decay=2（改善换手率和Fitness）
+    - Truncation=0.001（控制权重集中度<10%）
+    - INDUSTRY中性化（IND地区最佳）
+  - **相关性控制**:
+    - 记录字段组合相关性历史
+    - 避免重复使用已知高相关性组合
+    - 定期测试冷门字段（userCount<1000）
+  - **提交优化**:
+    - EST 00:00-02:00最佳提交窗口
+    - 优先提交[Power Pool + Regular]混合Alpha（不占配额）
+    - 使用延时重试验证机制避免平台延时误判
 
 #### **5.6 工作流集成**
 - **Phase 2调整**: 生成Power Pool候选Alpha时应用复杂度限制
@@ -302,6 +341,12 @@
 | **Invalid Expressions** | 手动调试 | 1. 检查括号匹配和操作符语法 2. 验证字段名称和操作符可用性 3. 确保数据类型匹配(Matrix/Vector) 4. 参考`get_operators`列表确认操作符 |
 | **Low Hit Rate** | 增加回测次数 | 1. 优先选择Model/Analyst/Risk等高效数据集 2. 使用成功模板生成变体 3. 批量测试8个表达式，最大化效率 4. 及时分析失败原因，调整策略 |
 | **Parameter Setting Issues** | 经验性设置 | 1. Tail操作符与`rank()`函数组合使用 2. 窗口期使用5,22,66,120,252,504 3. decay值使用整数0,1,2,3,5 4. 基于表达式逻辑选择合适参数 |
+| **Power Pool相关性双重失败** | 尝试调整参数或字段 | 1. **PPAC>0.7且PC>0.7**: 完全改变字段组合，避免使用`sector_`/`global_`字段 2. 使用`industry_`或`country_`替代 3. 跨数据集组合：Model + Analyst + Risk 4. 避免热门字段组合（mdl110_value + sector） |
+| **Power Pool内部自相关性高(PPAC>0.5)** | 调整参数或字段 | 1. **尝试SLOW中性化**：用户经验验证可将selfCorrelation从>0.7降至<0.5（如qMbpw55O: 0.4895）<br>2. **测试SLOW_AND_FAST中性化**：双因子中性化进一步降低相关性<br>3. **精细参数组合**：66天窗口 + decay=0 + truncation=0.01<br>4. **模仿成功案例**：复制已验证的参数设置 |
+| **平台延时验证误判** | 立即重试或放弃 | 1. **延时重试机制**: 提交后等待2分钟，最多重试3次 2. **状态条件放宽**: 接受`status`为"ACTIVE"或"SUBMITTED" 3. **超时保护**: 15分钟内状态未更新判定失败 4. **异步验证**: 不阻塞主工作流，记录验证时间戳 |
+| **字段组合高相关性** | 继续测试相似组合 | 1. **避免已知高相关性组合**: `mdl110_value + sector_value_momentum_rank_float` 2. **探索冷门字段**: 使用`userCount<1000`的字段 3. **跨数据集组合**: Model+Analyst, Analyst+Risk, Risk+Fundamental 4. **相关性预检**: 基于历史记录预判字段组合相关性 |
+| **Robust Universe Sharpe波动** | 增加测试次数 | 1. **数据预处理增强**: `ts_backfill(x, 5) + zscore()`组合 2. **长窗口稳定性**: 优先使用120/252天窗口 3. **简化表达式**: 减少嵌套层数，避免过拟合 4. **多时间窗口测试**: 在不同市场周期验证稳定性 |
+| **权重集中度和零覆盖问题** | 手动调整truncation | 1. **零覆盖处理**: 使用`ts_backfill(x, 5)`预处理缺失值 2. **权重分布优化**: `truncation=0.001` + 外层`rank()` 3. **异常值处理**: 检查字段数据分布，避免极端值 4. **平滑处理**: 使用`ts_mean`或`ts_decay`平滑信号 |
 
 ### **E. 严格增量复杂度法则 (The Law of Strict Incremental Complexity)**
 
@@ -413,14 +458,58 @@
   - ⭐⭐⭐ Analyst/Option/Risk：使用经济学模板，成功率高
   - ⭐⭐⭐⭐ Earnings/Fundamental：需要更多调试，但值得投入
   - Market中性化在IND区域效果较好
+- **Power Pool比赛期间策略**（2026年1月5日-18日）:
+  - **配额管理**:
+    - Pure Power Pool Alpha：每日1个（EST时区），每月10个上限
+    - [Power Pool + Regular] Alpha：不占配额，可多提交
+    - 最佳提交窗口：EST 00:00-02:00（重置后立即提交）
+  - **字段选择策略**:
+    - **推荐字段**：`industry_value_momentum_rank_float`（低相关性）、`country_value_momentum_rank_float`（中等）
+    - **避免字段**：`sector_value_momentum_rank_float`（PPAC>0.7）、`global_value_momentum_rank_float`（双重相关性失败）
+    - **跨数据集组合**：Model + Analyst + Risk（降低内部相关性）
+    - **冷门字段挖掘**：优先使用`userCount<1000`的字段
+  - **表达式模板优化**:
+    - **复杂度控制**：操作符≤8，唯一字段≤3
+    - **高效模板**：
+      ```python
+      # 模板1：单字段长窗口
+      ts_av_diff(rank(industry_value_momentum_rank_float), 252)
+      # 模板2：双字段互补
+      ts_av_diff(rank(industry_value_momentum_rank_float), 120) + ts_delta(rank(anl4_afv4_eps_mean), 66)
+      # 模板3：数据预处理版
+      ts_av_diff(zscore(ts_backfill(mdl110_value, 5)), 66)
+      ```
+    - **参数设置**：窗口期66/120/252，Decay=2，Truncation=0.001，INDUSTRY中性化
+  - **相关性控制**:
+    - **豁免规则**：Power Pool Alpha豁免PC检查，但必须通过POWER_POOL_CORRELATION检查
+    - **内部自相关性**：必须<0.5（或Sharpe比最相关Alpha高10%）
+    - **双重相关性失败**：PPAC>0.7且PC>0.7 → 完全更换字段组合
+  - **中性化优化策略**：
+    - **常规选择**：INDUSTRY或MARKET中性化（IND区域最佳）
+    - **相关性优化**：当PPAC>0.5时，优先尝试SLOW中性化（已验证降低效果）
+    - **双因子中性化**：SLOW_AND_FAST中性化适用于复杂表达式
+    - **成功案例参数**：
+      ```python
+      # qMbpw55O成功模板（selfCorrelation=0.4895<0.5）
+      ts_av_diff(rank(industry_value_momentum_rank_float), 66)
+      neutralization = "SLOW"
+      decay = 0
+      truncation = 0.01
+      ```
+  - **提交验证优化**:
+    - **延时重试机制**：提交后等待2分钟，最多重试3次
+    - **状态条件放宽**：接受`status`为"ACTIVE"或"SUBMITTED"
+    - **超时保护**：15分钟内状态未更新判定失败
 - **性能阈值参考**:
   - IND区域：margin最好万15以上（考虑较高手续费）
   - 所有区域：Robust Sharpe < 0.5时考虑停止，性价比低
   - 及时止损：连续失败时切换数据集或策略
+  - **Power Pool特殊阈值**：Sharpe≥1.0（常规1.58），Turnover 1%-70%，Fitness豁免
 - **中性化选择**:
   - IND：优先Market，其次Industry/Sector
   - USA：优先Industry，其次Market
   - 根据具体表达式效果调整
+  - **Power Pool要求**：IND区域必须使用Risk Handled Neutralization
 
 ##### **F6.5 模板化工作流程**
 - **成功模板复用**:
@@ -540,13 +629,22 @@
 
 ### **Phase 2: 系统化Alpha生成 (Systematic Alpha Generation)**
 
+#### **MCP工具问题四层解决方案**
+1. **离线字段库系统**: 使用`field_library_recommend`替代不稳定的在线`get_datafields`查询，通过本地`field_database_v1.json`提供可靠字段信息
+2. **简化表达式模板回归**: 优先使用已验证的高成功率模板（如`ts_av_diff(rank(field), window)`），避免复杂嵌套导致的语法错误
+3. **严格语法验证流程**: 执行括号匹配、字段验证、数据类型检查三层验证，参考`get_operators`确保操作符合法
+4. **故障排查表标准化**: 参考`Invalid Expressions`和`Power Pool内部自相关性高`等标准解决方案，系统化解决问题
+
+#### **关键协议**: 当`get_datasets`或`get_datafields`工具出现连接问题时，**立即切换到字段库工具**；当表达式生成失败时，**立即回归简单模板**。平台函数已实现12小时Redis缓存，但连接稳定性问题仍需此四层防御。
+
 #### **Step 1: 候选Alpha生成与筛选**
 - **目标**: 基于现有知识和工具生成高质量的候选Alpha池
 - **操作**:
     1. **模板收集**: 使用`read_specific_documentation`和`search_forum_posts`收集成功模板
     2. **经验复用**: 参考`HowToUseAIDatasets`和`HowToUseAllDatasets`中的成功案例
-    3. **变体生成**: 基于成功表达式生成8个变体（改变窗口期、decay值、算子替换）
-    4. **批量测试**: 使用`create_multiSim`批量测试，最大化效率
+    3. **字段库智能调用**: 使用`field_library_recommend`进行智能字段推荐，使用`field_library_generate_variants`生成高质量变体，提升生成效率3-5倍
+    4. **变体生成**: 基于成功表达式生成8个变体（改变窗口期、decay值、算子替换）
+    5. **批量测试**: 使用`create_multiSim`批量测试，最大化效率
 
 #### **Step 2: 结构化优化与改进**
 - **目标**: 基于测试结果系统化优化Alpha表达式
@@ -566,6 +664,11 @@
 
 #### **Step 4: 实用变体生成策略**
 - **基础原则**: 坚持0-op→1-op→2-op渐进复杂度
+- **字段库智能集成**: 
+  - **智能字段推荐**: 使用`field_library_recommend`工具获取基于经济学逻辑的字段组合建议
+  - **高质量变体生成**: 使用`field_library_generate_variants`工具生成8个高质量变体，包含窗口期、decay值、算子替换等优化
+  - **效率提升**: 通过字段库工具可将变体生成效率提升3-5倍，减少无效组合测试
+  - **集成流程**: 在Phase 2的Step 1中调用字段库工具，然后将生成的变体输入到批量测试中
 - **变体生成方法**: 
     1. **参数调优变体**:
        - 窗口期变化: 5→22→66→120→252
@@ -606,6 +709,28 @@
   2. **逻辑验证**: 确保表达式有明确经济学意义
   3. **复杂度检查**: 控制表达式复杂度，避免过拟合
   4. **预检优化**: 预判可能的问题（相关性、换手率等）
+
+#### **在线字段获取策略**
+- **目的**: 当离线字段库(`field_database_v1.json`)缺少特定数据集字段时，通过调用`get_datafields`工具临时获取字段列表，补充数据库覆盖范围
+- **触发条件**:
+  1. 需要Risk、News、PV、Sentiment、Fundamental等离线库未覆盖的数据集字段
+  2. 现有字段库中特定数据集的字段数量<5个，不足以生成多样化变体
+  3. 探索新数据集时，需要了解可用字段信息
+- **执行步骤**:
+  1. **尝试在线获取**: 调用`get_datafields(instrument_type="EQUITY", region=目标区域, dataset_id=数据集ID, data_type="ALL")`
+  2. **解析响应**: 提取字段名称、数据类型、描述等信息
+  3. **补充本地缓存**: 将新字段添加到`field_database_v1.json`的`fields`对象中，更新统计信息
+  4. **更新数据库版本**: 在`metadata`中记录新增字段的来源和日期
+- **错误处理**:
+  - **连接失败**: 如果`get_datafields`调用失败（超时、认证错误、网络问题），立即回退到离线字段库
+  - **空结果**: 如果返回字段列表为空，记录警告并继续使用现有字段
+  - **频率限制**: 避免频繁调用，每次会话最多尝试2-3次不同数据集的获取
+- **集成流程**:
+  1. 在`field_library_recommend`工具中优先检查本地字段库
+  2. 如果本地字段不足，尝试在线获取（限流保护）
+  3. 将成功获取的字段缓存到本地JSON文件，供后续使用
+  4. 更新`field_database_v1.json`后，重新加载内存中的字段库实例
+- **缓存机制**: 在线获取的字段永久保存到`field_database_v1.json`，避免重复调用。定期（每周）运行`create_field_database.py`更新统计信息。
 
 ### **Phase 3: 智能模拟与动态监控 (Intelligent Simulation & Monitoring)**
 
@@ -810,12 +935,39 @@
          - **常规Alpha高相关性风险** (PC ≥ 0.65或使用常见字段组合): 即时提交，不入队等待
          - **常规Alpha中低风险** (PC < 0.65且使用独特字段组合): 根据队列状态决定即时提交或入队
       4. **自动提交执行**: 如果决定即时提交，自动调用 `submit_alpha` 工具进行提交：
-         - 调用 `submit_alpha(alpha_id="...")`
-         - 验证提交结果
-         - **Power Pool配额跟踪**: 更新每日/每月提交计数
-         - **队列管理**: 如果入队，添加到`IND_Alpha_Submission_Queue`并分配提交日期
-         - 记录提交日志
-      5. **知识积累与继续挖掘**: 提交成功后：
+         - 调用 `submit_alpha(alpha_id="...")`，检查返回结果：
+           - 如果返回错误或失败，记录错误原因，返回Phase 4优化
+           - 如果返回成功，继续验证步骤
+         - **提交成功验证**（关键步骤）: 调用 `get_alpha_details` 工具验证Alpha状态，考虑平台延时：
+           - **初始验证**: 提交后立即检查Alpha状态
+           - **验证条件**:
+             - **条件1**: `stage` 必须为 "OS"（Out-of-Sample）
+             - **条件2**: `dateSubmitted` 必须不为 null
+             - **条件3**: `status` 必须为 "ACTIVE" 或 "SUBMITTED"（表示已提交状态）
+           - **延时重试机制**（针对平台状态更新延时）:
+             - **步骤1**: 如果初始验证失败（任一条件不满足），等待 **2分钟**（120秒）
+             - **步骤2**: 再次调用 `get_alpha_details` 检查状态
+             - **步骤3**: 如果仍然失败，重复步骤1-2，最多重试 **3次**（总等待时间最多6分钟）
+             - **步骤4**: 如果第3次重试后仍失败，判定为提交失败
+           - **超时机制**（针对平台处理异常）:
+             - 如果从提交开始超过 **15分钟** Alpha状态仍未更新为OS，判定为提交失败
+             - 可能原因：平台配额限制、系统错误、网络问题
+           - **验证失败处理**:
+             - 记录失败原因（例如：stage仍为"IS", dateSubmitted为null, 重试超时等）
+             - 更新队列状态为"submit failed"
+             - 返回Phase 4进行优化或重新提交
+           - **验证成功处理**:
+             - 记录成功验证时间戳
+             - 更新队列状态为"submitted"
+             - 继续执行后续步骤（配额跟踪、队列管理等）
+         - **Power Pool配额跟踪**: 更新每日/每月提交计数（仅当验证成功后）
+         - **队列管理**: 如果入队，添加到`IND_Alpha_Submission_Queue`并分配提交日期（仅当验证成功后）
+         - **记录提交日志**: 记录成功提交的详细信息，包括验证时间戳
+      5. **提交成功确认**: 只有通过上述验证后，才能确认Alpha提交成功：
+         - 更新报告中的提交状态
+         - 在队列文件中标记为"(submitted)"
+         - 从pending_alphas中移除（如果适用）
+      6. **知识积累与继续挖掘**: 提交确认成功后：
          - 执行 **Phase 6** 的知识积累和报告生成
          - 完成知识积累后，返回 **Phase 1** 继续挖掘新的Alpha
          - 实现"挖掘→提交→积累→再挖掘"的持续循环

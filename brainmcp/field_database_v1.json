@@ -1,0 +1,1865 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created_date": "2026-01-10",
+    "total_fields": 34,
+    "data_sources": [
+      "IND_Model_Addition_Templates_20251230.txt",
+      "IND_Model_Differentiated_Expressions_20251230.txt",
+      "USA_Alpha_Expressions_20251229.txt",
+      "IND_PowerPool_Alpha_Mining_Report_20260109.md",
+      "IND_Alpha_Submission_Queue_20251231.json"
+    ]
+  },
+  "fields": {
+    "mdl110_value": {
+      "name": "mdl110_value",
+      "dataset": "Model",
+      "data_type": "VALUE",
+      "description": "价值因子综合评分（Model 110数据集）",
+      "usage_statistics": {
+        "frequency": 16,
+        "percentage": 13.56
+      },
+      "correlation_risk": {
+        "level": "HIGH",
+        "reasons": [
+          "高频使用字段（使用16次）",
+          "常见高相关性字段",
+          "Model价值因子易产生高相关性"
+        ],
+        "common_combinations": [
+          "sector_value_momentum_rank_float",
+          "industry_value_momentum_rank_float"
+        ]
+      },
+      "power_pool_suitability": "LOW",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.6,
+          "avg_sharpe": 2.5,
+          "notes": "多个成功Alpha"
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [
+          "IND"
+        ],
+        "avoid_combinations": [
+          "sector_value_momentum_rank_float",
+          "industry_value_momentum_rank_float"
+        ],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "sector_value_momentum_rank_float": {
+      "name": "sector_value_momentum_rank_float",
+      "dataset": "Momentum",
+      "data_type": "RANK",
+      "description": "精确板块相对价值动量排名（Model 39数据集）",
+      "usage_statistics": {
+        "frequency": 15,
+        "percentage": 12.71
+      },
+      "correlation_risk": {
+        "level": "HIGH",
+        "reasons": [
+          "高频使用字段（使用15次）",
+          "常见高相关性字段"
+        ],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "LOW",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.7,
+          "avg_sharpe": 2.8,
+          "notes": "动量字段在IND表现良好"
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [
+          "IND"
+        ],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "LOW"
+      }
+    },
+    "global_value_momentum_rank_float": {
+      "name": "global_value_momentum_rank_float",
+      "dataset": "Momentum",
+      "data_type": "RANK",
+      "description": "精确全球相对价值动量排名（Model 39数据集）",
+      "usage_statistics": {
+        "frequency": 10,
+        "percentage": 8.47
+      },
+      "correlation_risk": {
+        "level": "HIGH",
+        "reasons": [
+          "中频使用字段（使用10次）",
+          "常见高相关性字段"
+        ],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "LOW",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.7,
+          "avg_sharpe": 2.8,
+          "notes": "动量字段在IND表现良好"
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [
+          "IND"
+        ],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "LOW"
+      }
+    },
+    "industry_value_momentum_rank_float": {
+      "name": "industry_value_momentum_rank_float",
+      "dataset": "Momentum",
+      "data_type": "RANK",
+      "description": "精确行业相对价值动量排名（Model 39数据集）",
+      "usage_statistics": {
+        "frequency": 10,
+        "percentage": 8.47
+      },
+      "correlation_risk": {
+        "level": "MEDIUM",
+        "reasons": [
+          "中频使用字段（使用10次）"
+        ],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "LOW",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.7,
+          "avg_sharpe": 2.8,
+          "notes": "动量字段在IND表现良好"
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [
+          "IND"
+        ],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "LOW"
+      }
+    },
+    "mdl110_analyst_sentiment": {
+      "name": "mdl110_analyst_sentiment",
+      "dataset": "Model",
+      "data_type": "UNKNOWN",
+      "description": "分析师情绪综合评分（Model 110数据集）",
+      "usage_statistics": {
+        "frequency": 8,
+        "percentage": 6.78
+      },
+      "correlation_risk": {
+        "level": "MEDIUM",
+        "reasons": [
+          "中频使用字段（使用8次）"
+        ],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "mdl110_score": {
+      "name": "mdl110_score",
+      "dataset": "Model",
+      "data_type": "SCORE",
+      "description": "所有因子总和评分（Model 110数据集）",
+      "usage_statistics": {
+        "frequency": 8,
+        "percentage": 6.78
+      },
+      "correlation_risk": {
+        "level": "MEDIUM",
+        "reasons": [
+          "中频使用字段（使用8次）"
+        ],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "LOW"
+      }
+    },
+    "anl4_qf_az_eps_number": {
+      "name": "anl4_qf_az_eps_number",
+      "dataset": "Analyst",
+      "data_type": "UNKNOWN",
+      "description": "anl4_qf_az_eps_number（自动推断）",
+      "usage_statistics": {
+        "frequency": 7,
+        "percentage": 5.93
+      },
+      "correlation_risk": {
+        "level": "MEDIUM",
+        "reasons": [
+          "中频使用字段（使用7次）"
+        ],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "anl4_netprofita_low": {
+      "name": "anl4_netprofita_low",
+      "dataset": "Analyst",
+      "data_type": "UNKNOWN",
+      "description": "anl4_netprofita_low（自动推断）",
+      "usage_statistics": {
+        "frequency": 7,
+        "percentage": 5.93
+      },
+      "correlation_risk": {
+        "level": "MEDIUM",
+        "reasons": [
+          "中频使用字段（使用7次）"
+        ],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "mdl110_growth": {
+      "name": "mdl110_growth",
+      "dataset": "Model",
+      "data_type": "UNKNOWN",
+      "description": "增长因子综合评分（Model 110数据集）",
+      "usage_statistics": {
+        "frequency": 6,
+        "percentage": 5.08
+      },
+      "correlation_risk": {
+        "level": "MEDIUM",
+        "reasons": [
+          "中频使用字段（使用6次）"
+        ],
+        "common_combinations": [
+          "global_value_momentum_rank_float"
+        ]
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [
+          "global_value_momentum_rank_float"
+        ],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "mdl110_price_momentum_reversal": {
+      "name": "mdl110_price_momentum_reversal",
+      "dataset": "Model",
+      "data_type": "UNKNOWN",
+      "description": "价格动量反转指标（Model 110数据集）",
+      "usage_statistics": {
+        "frequency": 6,
+        "percentage": 5.08
+      },
+      "correlation_risk": {
+        "level": "MEDIUM",
+        "reasons": [
+          "中频使用字段（使用6次）"
+        ],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "MEDIUM",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.7,
+          "avg_sharpe": 2.8,
+          "notes": "动量字段在IND表现良好"
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [
+          "IND"
+        ],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "mdl110_quality": {
+      "name": "mdl110_quality",
+      "dataset": "Model",
+      "data_type": "UNKNOWN",
+      "description": "质量因子综合评分（Model 110数据集）",
+      "usage_statistics": {
+        "frequency": 6,
+        "percentage": 5.08
+      },
+      "correlation_risk": {
+        "level": "MEDIUM",
+        "reasons": [
+          "中频使用字段（使用6次）"
+        ],
+        "common_combinations": [
+          "sector_value_momentum_rank_float"
+        ]
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [
+          "sector_value_momentum_rank_float"
+        ],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "anl4_ebit_median": {
+      "name": "anl4_ebit_median",
+      "dataset": "Analyst",
+      "data_type": "UNKNOWN",
+      "description": "anl4_ebit_median（自动推断）",
+      "usage_statistics": {
+        "frequency": 6,
+        "percentage": 5.08
+      },
+      "correlation_risk": {
+        "level": "MEDIUM",
+        "reasons": [
+          "中频使用字段（使用6次）"
+        ],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "mdl110_alternative": {
+      "name": "mdl110_alternative",
+      "dataset": "Model",
+      "data_type": "UNKNOWN",
+      "description": "另类因子综合评分（Model 110数据集）",
+      "usage_statistics": {
+        "frequency": 5,
+        "percentage": 4.24
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "mdl110_tree": {
+      "name": "mdl110_tree",
+      "dataset": "Model",
+      "data_type": "UNKNOWN",
+      "description": "非线性树组件综合评分（Model 110数据集）",
+      "usage_statistics": {
+        "frequency": 5,
+        "percentage": 4.24
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "global_value_momentum_rank": {
+      "name": "global_value_momentum_rank",
+      "dataset": "Momentum",
+      "data_type": "RANK",
+      "description": "global_value_momentum_rank（自动推断）",
+      "usage_statistics": {
+        "frequency": 4,
+        "percentage": 3.39
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "MEDIUM",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.7,
+          "avg_sharpe": 2.8,
+          "notes": "动量字段在IND表现良好"
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [
+          "IND"
+        ],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "LOW"
+      }
+    },
+    "anl4_median_epsreported": {
+      "name": "anl4_median_epsreported",
+      "dataset": "Analyst",
+      "data_type": "UNKNOWN",
+      "description": "anl4_median_epsreported（自动推断）",
+      "usage_statistics": {
+        "frequency": 4,
+        "percentage": 3.39
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "actual_eps_value_quarterly": {
+      "name": "actual_eps_value_quarterly",
+      "dataset": "Earnings",
+      "data_type": "VALUE",
+      "description": "actual_eps_value_quarterly（自动推断）",
+      "usage_statistics": {
+        "frequency": 4,
+        "percentage": 3.39
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "MEDIUM",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "sales_estimate_minimum_quarterly": {
+      "name": "sales_estimate_minimum_quarterly",
+      "dataset": "Other",
+      "data_type": "UNKNOWN",
+      "description": "sales_estimate_minimum_quarterly（自动推断）",
+      "usage_statistics": {
+        "frequency": 4,
+        "percentage": 3.39
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "country_value_momentum_rank_float": {
+      "name": "country_value_momentum_rank_float",
+      "dataset": "Momentum",
+      "data_type": "RANK",
+      "description": "精确国家相对价值动量排名（Model 39数据集）",
+      "usage_statistics": {
+        "frequency": 3,
+        "percentage": 2.54
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "MEDIUM",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.7,
+          "avg_sharpe": 2.8,
+          "notes": "动量字段在IND表现良好"
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [
+          "IND"
+        ],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "LOW"
+      }
+    },
+    "nws17_acb": {
+      "name": "nws17_acb",
+      "dataset": "Other",
+      "data_type": "UNKNOWN",
+      "description": "nws17_acb（自动推断）",
+      "usage_statistics": {
+        "frequency": 3,
+        "percentage": 2.54
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "nws17_ber": {
+      "name": "nws17_ber",
+      "dataset": "Other",
+      "data_type": "UNKNOWN",
+      "description": "nws17_ber（自动推断）",
+      "usage_statistics": {
+        "frequency": 3,
+        "percentage": 2.54
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "anl15_ind_hist_eps_gro": {
+      "name": "anl15_ind_hist_eps_gro",
+      "dataset": "Analyst",
+      "data_type": "UNKNOWN",
+      "description": "anl15_ind_hist_eps_gro（自动推断）",
+      "usage_statistics": {
+        "frequency": 3,
+        "percentage": 2.54
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "anl4_netprofit_median": {
+      "name": "anl4_netprofit_median",
+      "dataset": "Analyst",
+      "data_type": "UNKNOWN",
+      "description": "anl4_netprofit_median（自动推断）",
+      "usage_statistics": {
+        "frequency": 3,
+        "percentage": 2.54
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "industry_value_momentum_rank": {
+      "name": "industry_value_momentum_rank",
+      "dataset": "Momentum",
+      "data_type": "RANK",
+      "description": "industry_value_momentum_rank（自动推断）",
+      "usage_statistics": {
+        "frequency": 2,
+        "percentage": 1.69
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "MEDIUM",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.7,
+          "avg_sharpe": 2.8,
+          "notes": "动量字段在IND表现良好"
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [
+          "IND"
+        ],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "LOW"
+      }
+    },
+    "sector_value_momentum_rank": {
+      "name": "sector_value_momentum_rank",
+      "dataset": "Momentum",
+      "data_type": "RANK",
+      "description": "sector_value_momentum_rank（自动推断）",
+      "usage_statistics": {
+        "frequency": 2,
+        "percentage": 1.69
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "MEDIUM",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.7,
+          "avg_sharpe": 2.8,
+          "notes": "动量字段在IND表现良好"
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [
+          "IND"
+        ],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "LOW"
+      }
+    },
+    "anl46_indicator": {
+      "name": "anl46_indicator",
+      "dataset": "Analyst",
+      "data_type": "INDICATOR",
+      "description": "分析师指标（Analyst 46数据集）",
+      "usage_statistics": {
+        "frequency": 2,
+        "percentage": 1.69
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "anl4_cfo_median": {
+      "name": "anl4_cfo_median",
+      "dataset": "Analyst",
+      "data_type": "UNKNOWN",
+      "description": "anl4_cfo_median（自动推断）",
+      "usage_statistics": {
+        "frequency": 2,
+        "percentage": 1.69
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "anl4_medianepsbfam": {
+      "name": "anl4_medianepsbfam",
+      "dataset": "Analyst",
+      "data_type": "UNKNOWN",
+      "description": "anl4_medianepsbfam（自动推断）",
+      "usage_statistics": {
+        "frequency": 2,
+        "percentage": 1.69
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "anl4_epsr_flag": {
+      "name": "anl4_epsr_flag",
+      "dataset": "Analyst",
+      "data_type": "FLAG",
+      "description": "anl4_epsr_flag（自动推断）",
+      "usage_statistics": {
+        "frequency": 1,
+        "percentage": 0.85
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "mdl177_sensitivityfactor_da": {
+      "name": "mdl177_sensitivityfactor_da",
+      "dataset": "Model",
+      "data_type": "UNKNOWN",
+      "description": "mdl177_sensitivityfactor_da（自动推断）",
+      "usage_statistics": {
+        "frequency": 1,
+        "percentage": 0.85
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "region_value_momentum_rank_float": {
+      "name": "region_value_momentum_rank_float",
+      "dataset": "Momentum",
+      "data_type": "RANK",
+      "description": "精确地区相对价值动量排名（Model 39数据集）",
+      "usage_statistics": {
+        "frequency": 1,
+        "percentage": 0.85
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "MEDIUM",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.7,
+          "avg_sharpe": 2.8,
+          "notes": "动量字段在IND表现良好"
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [
+          "IND"
+        ],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "LOW"
+      }
+    },
+    "anl4_bvps_median": {
+      "name": "anl4_bvps_median",
+      "dataset": "Analyst",
+      "data_type": "UNKNOWN",
+      "description": "anl4_bvps_median（自动推断）",
+      "usage_statistics": {
+        "frequency": 1,
+        "percentage": 0.85
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "anl15_s_hist_eps_gro": {
+      "name": "anl15_s_hist_eps_gro",
+      "dataset": "Analyst",
+      "data_type": "UNKNOWN",
+      "description": "anl15_s_hist_eps_gro（自动推断）",
+      "usage_statistics": {
+        "frequency": 1,
+        "percentage": 0.85
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    },
+    "anl15_gr_hist_eps_gro": {
+      "name": "anl15_gr_hist_eps_gro",
+      "dataset": "Analyst",
+      "data_type": "UNKNOWN",
+      "description": "anl15_gr_hist_eps_gro（自动推断）",
+      "usage_statistics": {
+        "frequency": 1,
+        "percentage": 0.85
+      },
+      "correlation_risk": {
+        "level": "LOW",
+        "reasons": [],
+        "common_combinations": []
+      },
+      "power_pool_suitability": "HIGH",
+      "regional_performance": {
+        "IND": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "USA": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "EUR": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        },
+        "ASI": {
+          "success_rate": 0.0,
+          "avg_sharpe": 0.0,
+          "notes": ""
+        }
+      },
+      "recommendations": {
+        "best_regions": [],
+        "avoid_combinations": [],
+        "suggested_operators": [
+          "rank",
+          "zscore",
+          "ts_delta",
+          "ts_mean"
+        ],
+        "complexity_level": "MEDIUM"
+      }
+    }
+  },
+  "statistics": {
+    "by_dataset": {
+      "Model": 9,
+      "Momentum": 8,
+      "Analyst": 13,
+      "Earnings": 1,
+      "Other": 3
+    },
+    "by_data_type": {
+      "VALUE": 2,
+      "RANK": 8,
+      "UNKNOWN": 21,
+      "SCORE": 1,
+      "INDICATOR": 1,
+      "FLAG": 1
+    },
+    "by_correlation_risk": {
+      "HIGH": 3,
+      "MEDIUM": 9,
+      "LOW": 22
+    },
+    "by_power_pool_suitability": {
+      "LOW": 4,
+      "HIGH": 23,
+      "MEDIUM": 7
+    }
+  },
+  "successful_templates": [
+    {
+      "name": "双字段加法模板",
+      "pattern": "ts_delta(rank(field1) + rank(field2), 66)",
+      "description": "IND地区Model数据集成功模板，Sharpe高，Robust Sharpe稳定",
+      "example": "ts_delta(rank(mdl110_growth) + rank(global_value_momentum_rank_float), 66)",
+      "success_rate": 0.7,
+      "recommended_datasets": [
+        "Model",
+        "Momentum"
+      ]
+    },
+    {
+      "name": "Power Pool简单模板",
+      "pattern": "ts_delta(ts_mean(field, 5), 5)",
+      "description": "Power Pool成功模板，操作符≤2，字段≤1，符合复杂度限制",
+      "example": "ts_delta(ts_mean(anl4_afv4_eps_mean, 5), 5)",
+      "success_rate": 0.8,
+      "recommended_datasets": [
+        "Analyst",
+        "Model"
+      ]
+    },
+    {
+      "name": "三字段zscore交互模板",
+      "pattern": "ts_zscore(field1, 504) * ts_zscore(field2, 504) * ts_zscore(field3, 504)",
+      "description": "差异化模板，降低相关性，适合高PC场景",
+      "example": "ts_zscore(mdl110_score, 504) * ts_zscore(sector_value_momentum_rank_float, 504) * ts_zscore(long_term_price_momentum_score_2, 504)",
+      "success_rate": 0.6,
+      "recommended_datasets": [
+        "Model",
+        "Momentum"
+      ]
+    }
+  ],
+  "high_risk_combinations": [
+    {
+      "combination": [
+        "mdl110_value",
+        "sector_value_momentum_rank_float"
+      ],
+      "risk_level": "HIGH",
+      "reason": "高频使用组合，PC通常>0.7",
+      "suggestion": "替换其中一个字段为低频率字段"
+    },
+    {
+      "combination": [
+        "global_value_momentum_rank_float",
+        "industry_value_momentum_rank_float"
+      ],
+      "risk_level": "HIGH",
+      "reason": "相似动量字段，高度相关",
+      "suggestion": "选择不同粒度字段（如country vs industry）"
+    }
+  ],
+  "power_pool_guidelines": {
+    "complexity_limit": {
+      "max_operators": 8,
+      "max_unique_fields": 3,
+      "recommended": "操作符≤4，字段≤2 成功率更高"
+    },
+    "field_selection": {
+      "high_suitability": [
+        "anl4_afv4_eps_mean",
+        "mdl110_tree",
+        "anl46_indicator"
+      ],
+      "medium_suitability": [
+        "mdl110_growth",
+        "industry_value_momentum_rank_float"
+      ],
+      "low_suitability": [
+        "mdl110_value",
+        "global_value_momentum_rank_float"
+      ]
+    },
+    "operator_recommendations": {
+      "high_success": [
+        "ts_delta",
+        "ts_mean",
+        "rank"
+      ],
+      "medium_success": [
+        "ts_rank",
+        "ts_zscore",
+        "group_rank"
+      ],
+      "specialized": [
+        "vector_neut",
+        "regression_neut",
+        "if_else"
+      ]
+    }
+  }
+}
