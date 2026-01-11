@@ -1946,10 +1946,12 @@ brain_client = BrainApiClient()
 
 # Redis缓存客户端初始化
 try:
-    redis_client = redis.Redis(host='localhost', port=6379, db=0)
+    redis_host = os.environ.get('REDIS_HOST', '127.0.0.1')
+    redis_port = int(os.environ.get('REDIS_PORT', '6379'))
+    redis_client = redis.Redis(host=redis_host, port=redis_port, db=0)
     # 测试连接
     redis_client.ping()
-    print("✅ Redis缓存客户端初始化成功")
+    print(f"✅ Redis缓存客户端初始化成功 - Host: {redis_host}, Port: {redis_port}")
 except Exception as e:
     print(f"⚠️ Redis缓存初始化失败: {e}")
     redis_client = None
